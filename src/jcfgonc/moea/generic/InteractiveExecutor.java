@@ -15,7 +15,7 @@ import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.spi.AlgorithmFactory;
 
-import jcfgonc.blender.visualizer.BlenderVisualizer;
+import paulof.visualizer.BlenderVisualizer;
 import utils.VariousUtils;
 
 public class InteractiveExecutor {

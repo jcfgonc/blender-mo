@@ -58,10 +58,5 @@
 			<artifactId>moeaframework</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>com.github.jcfgonc</groupId>
-			<artifactId>blendermo-visualizer</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
 	</dependencies>
 </project>
