@@ -25,6 +25,7 @@ import frames.SemanticFrame;
 import graph.StringGraph;
 import jcfgonc.blender.logic.FileTools;
 import jcfgonc.blender.logic.LogicUtils;
+import jcfgonc.blender.visualizer.BlenderVisualizer;
 import jcfgonc.moea.generic.InteractiveExecutor;
 import jcfgonc.moea.specific.CustomMutation;
 import jcfgonc.moea.specific.CustomProblem;
@@ -99,7 +100,9 @@ public class BlenderMoLauncher {
 		// TODO: personalize your constructor here
 		CustomProblem problem = new CustomProblem(inputSpace, mappings, frames, frameQueries, random);
 //		problem.setWordPairsSemanticSimilarity(wps);
-		InteractiveExecutor ie = new InteractiveExecutor(problem, "NSGAII", properties, Integer.MAX_VALUE);
+		BlenderVisualizer bv = new BlenderVisualizer();
+		InteractiveExecutor ie = new InteractiveExecutor(problem, "NSGAII", properties, Integer.MAX_VALUE, bv);
+
 		@SuppressWarnings("unused")
 		NondominatedPopulation np = ie.execute();
 

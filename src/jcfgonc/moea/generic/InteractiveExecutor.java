@@ -15,6 +15,7 @@ import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.spi.AlgorithmFactory;
 
+import jcfgonc.blender.visualizer.BlenderVisualizer;
 import utils.VariousUtils;
 
 public class InteractiveExecutor {
@@ -24,12 +25,14 @@ public class InteractiveExecutor {
 	private NondominatedPopulation lastResult;
 	private boolean canceled;
 	private Problem problem;
+	private BlenderVisualizer blenderVisualizer;
 
-	public InteractiveExecutor(Problem problem, String algorithmName, Properties algorithmProperties, int maxGenerations) {
+	public InteractiveExecutor(Problem problem, String algorithmName, Properties algorithmProperties, int maxGenerations, BlenderVisualizer bv) {
 		this.problem = problem;
 		this.algorithmName = algorithmName;
 		this.algorithmProperties = algorithmProperties;
 		this.maxGenerations = maxGenerations;
+		this.blenderVisualizer = bv;
 	}
 
 	public NondominatedPopulation execute() throws InterruptedException {
@@ -54,6 +57,7 @@ public class InteractiveExecutor {
 		do {
 			// update graphs
 			gui.updateStatus(lastResult, generation);
+			blenderVisualizer.update(lastResult, generation);
 
 			algorithm.step();
 			generation++;
