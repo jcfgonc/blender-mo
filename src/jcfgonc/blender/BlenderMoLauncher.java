@@ -25,7 +25,6 @@ import frames.SemanticFrame;
 import graph.StringGraph;
 import jcfgonc.blender.logic.FileTools;
 import jcfgonc.blender.logic.LogicUtils;
-import jcfgonc.blender.visualizer.BlenderVisualizer;
 import jcfgonc.moea.generic.InteractiveExecutor;
 import jcfgonc.moea.specific.CustomMutation;
 import jcfgonc.moea.specific.CustomProblem;
@@ -39,12 +38,12 @@ public class BlenderMoLauncher {
 
 		RandomAdaptor random = new RandomAdaptor(new Well44497b());
 
-		String inputSpacePath = "../ConceptNet5/kb/conceptnet5v5.csv";
-		String mappingPath = "../EEmapper/2020-04-29_21-23-37_mappings.csv";
-		String framesPath = "../PatternMiner/results/resultsV22.csv";
+		String inputSpacePath = "data/conceptnet5v5.csv";
+		String mappingPath = "data/2020-04-29_21-23-37_mappings.csv";
+		String framesPath = "data/pattern_resultsV22.tsv";
 
-		String frameSimilarityFilename = "..\\PatternMiner\\results\\patterns_semantic_similarityV22.tsv";
-		String synonyms_filename = "C:\\Desktop\\github\\my source code\\PatternMiner\\results\\synonyms.txt";
+		String frameSimilarityFilename = "data/patterns_semantic_similarityV22.tsv";
+		String synonyms_filename = "data/synonyms.txt";
 		String wordembedding_filename = "D:\\\\Temp\\\\ontologies\\\\word emb\\\\ConceptNet Numberbatch 19.08\\\\numberbatch-en.txt";
 
 		// read input space
@@ -100,8 +99,8 @@ public class BlenderMoLauncher {
 		// TODO: personalize your constructor here
 		CustomProblem problem = new CustomProblem(inputSpace, mappings, frames, frameQueries, random);
 //		problem.setWordPairsSemanticSimilarity(wps);
-		BlenderVisualizer bv = new BlenderVisualizer();
-		InteractiveExecutor ie = new InteractiveExecutor(problem, "NSGAII", properties, Integer.MAX_VALUE, bv);
+
+		InteractiveExecutor ie = new InteractiveExecutor(problem, "NSGAII", properties, Integer.MAX_VALUE, BlenderMoConfig.POPULATION_SIZE);
 
 		@SuppressWarnings("unused")
 		NondominatedPopulation np = ie.execute();

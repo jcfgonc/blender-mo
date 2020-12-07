@@ -27,12 +27,12 @@ public class InteractiveExecutor {
 	private Problem problem;
 	private BlenderVisualizer blenderVisualizer;
 
-	public InteractiveExecutor(Problem problem, String algorithmName, Properties algorithmProperties, int maxGenerations, BlenderVisualizer bv) {
+	public InteractiveExecutor(Problem problem, String algorithmName, Properties algorithmProperties, int maxGenerations, int populationSize) {
 		this.problem = problem;
 		this.algorithmName = algorithmName;
 		this.algorithmProperties = algorithmProperties;
 		this.maxGenerations = maxGenerations;
-		this.blenderVisualizer = bv;
+		this.blenderVisualizer = new BlenderVisualizer(populationSize);
 	}
 
 	public NondominatedPopulation execute() throws InterruptedException {
@@ -43,6 +43,15 @@ public class InteractiveExecutor {
 		}
 
 		InteractiveExecutorGUI gui = new InteractiveExecutorGUI(this);
+		new Thread() {
+			public void run() {
+				try {
+					blenderVisualizer.execute();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			};
+		}.start();
 
 		int generation = 0;
 		Algorithm algorithm = null;
@@ -57,12 +66,13 @@ public class InteractiveExecutor {
 		do {
 			// update graphs
 			gui.updateStatus(lastResult, generation);
-			blenderVisualizer.update(lastResult, generation);
 
 			algorithm.step();
 			generation++;
 			lastResult = algorithm.getResult();
 
+			// update blender visualizer
+			blenderVisualizer.update(lastResult);
 			if (algorithm.isTerminated() || generation >= maxGenerations || this.canceled) {
 				break; // break while loop
 			}
