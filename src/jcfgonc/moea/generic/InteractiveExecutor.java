@@ -15,7 +15,6 @@ import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.spi.AlgorithmFactory;
 
-import paulof.visualizer.BlenderVisualizer;
 import utils.VariousUtils;
 
 public class InteractiveExecutor {
@@ -25,14 +24,14 @@ public class InteractiveExecutor {
 	private NondominatedPopulation lastResult;
 	private boolean canceled;
 	private Problem problem;
-	private BlenderVisualizer blenderVisualizer;
+//	private BlenderVisualizer blenderVisualizer;
 
 	public InteractiveExecutor(Problem problem, String algorithmName, Properties algorithmProperties, int maxGenerations, int populationSize) {
 		this.problem = problem;
 		this.algorithmName = algorithmName;
 		this.algorithmProperties = algorithmProperties;
 		this.maxGenerations = maxGenerations;
-		this.blenderVisualizer = new BlenderVisualizer(populationSize);
+//		this.blenderVisualizer = new BlenderVisualizer(populationSize);
 	}
 
 	public NondominatedPopulation execute() throws InterruptedException {
@@ -43,15 +42,15 @@ public class InteractiveExecutor {
 		}
 
 		InteractiveExecutorGUI gui = new InteractiveExecutorGUI(this);
-		new Thread() {
-			public void run() {
-				try {
-					blenderVisualizer.execute();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			};
-		}.start();
+//		new Thread() {
+//			public void run() {
+//				try {
+//					blenderVisualizer.execute();
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//			};
+//		}.start();
 
 		int generation = 0;
 		Algorithm algorithm = null;
@@ -72,7 +71,7 @@ public class InteractiveExecutor {
 			lastResult = algorithm.getResult();
 
 			// update blender visualizer
-			blenderVisualizer.update(lastResult);
+//			blenderVisualizer.update(lastResult);
 			if (algorithm.isTerminated() || generation >= maxGenerations || this.canceled) {
 				break; // break while loop
 			}
@@ -136,10 +135,9 @@ public class InteractiveExecutor {
 			} else {
 				objectiveDescription = String.format("Objective %d", oi);
 			}
-			bw.write(String.format("%s", objectiveDescription));
-			if (oi < numberOfObjectives - 1)
-				bw.write('\t');
+			bw.write(String.format("%s\t", objectiveDescription));
 		}
+		bw.write("variable");
 		bw.newLine();
 
 		for (Solution solution : lastResult) {
@@ -154,12 +152,20 @@ public class InteractiveExecutor {
 		fw.close();
 	}
 
+	/**
+	 * called when the user clicks on the abort button
+	 */
 	public void abortOptimization() {
+		// show last non dominated set and terminate execution
 		showAndSaveLastResult();
 		System.exit(-1);
 	}
 
+	/**
+	 * called when the user clicks on the stop button
+	 */
 	public void stopOptimization() {
+		// stop MOEA's loop
 		this.canceled = true;
 	}
 }

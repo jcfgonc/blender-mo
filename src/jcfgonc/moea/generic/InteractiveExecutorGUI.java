@@ -14,7 +14,6 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Locale;
 import java.util.Properties;
 
 import javax.swing.BoxLayout;
@@ -60,7 +59,6 @@ public class InteractiveExecutorGUI extends JFrame {
 	private InteractiveExecutor interactiveExecutor;
 	private JPanel statusPanel;
 	private JLabel epochTitle;
-	private JLabel evaluationsTitle;
 	private int numberOfVariables;
 	private int numberOfObjectives;
 	private int numberOfConstraints;
@@ -87,9 +85,9 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JPanel configPanel;
 	private JSpinner spinner;
 	private JLabel lblNewLabel;
-	private JButton btnNewButton;
+	private JButton printNDS_button;
 	private int generation;
-	private NondominatedPopulation population;
+	private NondominatedPopulation nonDominatedSet;
 
 	/**
 	 * Create the frame.
@@ -113,7 +111,7 @@ public class InteractiveExecutorGUI extends JFrame {
 
 	private void initialize() {
 		setPreferredSize(new Dimension(624, 416));
-		setTitle("MOEA");
+		setTitle("Blender 2.0 - Multiple Objective Optimization");
 		setName("MOEA");
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		contentPane = new JPanel();
@@ -185,10 +183,6 @@ public class InteractiveExecutorGUI extends JFrame {
 		epochLabel = new JLabel("");
 		epochLabel.setHorizontalAlignment(SwingConstants.LEFT);
 		statusPanel.add(epochLabel);
-
-		evaluationsTitle = new JLabel("Evaluations: ");
-		evaluationsTitle.setHorizontalAlignment(SwingConstants.RIGHT);
-		statusPanel.add(evaluationsTitle);
 
 		ndsSizeTitle = new JLabel("Non-Dominated Set Size: ");
 		ndsSizeTitle.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -276,13 +270,13 @@ public class InteractiveExecutorGUI extends JFrame {
 		abortButton.setAlignmentX(0.5f);
 		buttonsPanel.add(abortButton);
 
-		btnNewButton = new JButton("Test");
-		btnNewButton.addActionListener(new ActionListener() {
+		printNDS_button = new JButton("Print Non Dominated Set");
+		printNDS_button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				printPopulation();
+				printNonDominatedSet();
 			}
 		});
-		buttonsPanel.add(btnNewButton);
+		buttonsPanel.add(printNDS_button);
 
 		addComponentListener(new ComponentAdapter() { // window resize event
 			@Override
@@ -392,21 +386,21 @@ public class InteractiveExecutorGUI extends JFrame {
 		}
 	}
 
-	public void updateStatus(NondominatedPopulation population, int generation) {
+	public void updateStatus(NondominatedPopulation nds, int generation) {
 		this.generation = generation;
-		this.population = population;
+		this.nonDominatedSet = nds;
 
 		updateWindow();
 	}
 
-	public void updateWindow() {
+	private void updateWindow() {
 		epochLabel.setText(Integer.toString(generation));
 
-		if (population == null)
+		if (nonDominatedSet == null)
 			return;
 
 		// update the non-dominated sets
-		ndsSizeLabel.setText(Integer.toString(population.size()));
+		ndsSizeLabel.setText(Integer.toString(nonDominatedSet.size()));
 
 		int objectiveIndex = 0;
 		// iterate the scatter plots (each can hold two objectives)
@@ -414,7 +408,7 @@ public class InteractiveExecutorGUI extends JFrame {
 			// empty data series
 			graph.clear();
 			// iterate the solutions
-			for (Solution solution : population) {
+			for (Solution solution : nonDominatedSet) {
 				// pairs of objectives
 				double x;
 				double y;
@@ -444,24 +438,21 @@ public class InteractiveExecutorGUI extends JFrame {
 		horizontalPane.setDividerLocation(horizontalPane.getWidth() - settingsPanel.getMinimumSize().width);
 	}
 
-	private void printPopulation() {
-		if (population == null || population.isEmpty())
+	private void printNonDominatedSet() {
+		if (nonDominatedSet == null || nonDominatedSet.isEmpty())
 			return;
-		Iterator<Solution> pi = population.iterator();
+		Iterator<Solution> pi = nonDominatedSet.iterator();
 		while (pi.hasNext()) {
 			Solution solution = pi.next();
-			System.out.print("[");
 			for (int objectiveIndex = 0; objectiveIndex < numberOfObjectives; objectiveIndex++) {
 				double x = solution.getObjective(objectiveIndex);
-				System.out.print(String.format(Locale.ROOT, "%.3f", x));
+				System.out.print(x);
 				if (objectiveIndex < numberOfObjectives - 1)
-					System.out.print(" ");
+					System.out.print("\t");
 			}
-			System.out.print("]");
 			if (pi.hasNext()) {
-				System.out.print("\t");
+				System.out.println();
 			}
 		}
-		System.out.println();
 	}
 }

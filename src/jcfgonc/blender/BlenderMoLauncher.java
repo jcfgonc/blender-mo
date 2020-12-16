@@ -23,12 +23,16 @@ import com.githhub.aaronbembenek.querykb.Query;
 import frames.FrameReadWrite;
 import frames.SemanticFrame;
 import graph.StringGraph;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import jcfgonc.blender.logic.FileTools;
 import jcfgonc.blender.logic.LogicUtils;
 import jcfgonc.moea.generic.InteractiveExecutor;
 import jcfgonc.moea.specific.CustomMutation;
 import jcfgonc.moea.specific.CustomProblem;
 import structures.Mapping;
+import structures.Ticker;
+import structures.UnorderedPair;
+import wordembedding.WordEmbeddingUtils;
 
 public class BlenderMoLauncher {
 	@SuppressWarnings("unused")
@@ -36,25 +40,18 @@ public class BlenderMoLauncher {
 			IllegalAccessException, UnsupportedLookAndFeelException, InterruptedException {
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
+		Ticker ticker = new Ticker();
 		RandomAdaptor random = new RandomAdaptor(new Well44497b());
 
-		String inputSpacePath = "data/conceptnet5v5.csv";
-		String mappingPath = "data/2020-04-29_21-23-37_mappings.csv";
-		String framesPath = "data/pattern_resultsV22.tsv";
-
-		String frameSimilarityFilename = "data/patterns_semantic_similarityV22.tsv";
-		String synonyms_filename = "data/synonyms.txt";
-		String wordembedding_filename = "D:\\\\Temp\\\\ontologies\\\\word emb\\\\ConceptNet Numberbatch 19.08\\\\numberbatch-en.txt";
-
 		// read input space
-		StringGraph inputSpace = FileTools.readInputSpace(inputSpacePath);
+		StringGraph inputSpace = FileTools.readInputSpace(BlenderMoConfig.inputSpacePath);
 
 		// read mappings file (contains multiple mappings)
-		ArrayList<Mapping<String>> mappings = FileTools.readMappings(mappingPath);
+		ArrayList<Mapping<String>> mappings = FileTools.readMappings(BlenderMoConfig.mappingPath);
 
 		// read frames file
-		ArrayList<SemanticFrame> frames0 = FrameReadWrite.readPatternFrames(framesPath);
-		FrameReadWrite.updatePatternFrameSimilarity(frames0, frameSimilarityFilename);
+		ArrayList<SemanticFrame> frames0 = FrameReadWrite.readPatternFrames(BlenderMoConfig.framesPath);
+		FrameReadWrite.updatePatternFrameSimilarity(frames0, BlenderMoConfig.frameSimilarityFilename);
 		// filter some frames
 		ArrayList<SemanticFrame> frames = new ArrayList<SemanticFrame>(64 * 1024);
 		for (SemanticFrame frame : frames0) {
@@ -72,6 +69,7 @@ public class BlenderMoLauncher {
 		frames0 = null;
 
 		// create frame queries
+		ticker.getTimeDeltaLastCall();
 		ArrayList<Query> frameQueries = new ArrayList<>(frames.size());
 		for (int i = 0; i < frames.size(); i++) {
 			SemanticFrame frame = frames.get(i);
@@ -79,10 +77,13 @@ public class BlenderMoLauncher {
 			Query q = LogicUtils.createQueryFromStringGraph(g);
 			frameQueries.add(q);
 		}
+		System.out.println("took " + ticker.getTimeDeltaLastCall() + "s to create querykb's Queries");
 
-//		ListWordEmbedding we = WordEmbeddingReadWrite.readCSV(wordembedding_filename, true);
-//		MapOfList<String, String> synonyms = WordEmbeddingUtils.readSynonymWordList(synonyms_filename, we);
-//		Object2DoubleOpenHashMap<UnorderedPair<String>> wps = WordEmbeddingUtils.scoreWordPairs(we, synonyms);
+		// read pre-calculated semantic scores of word/relation pairs
+		Object2DoubleOpenHashMap<UnorderedPair<String>> wps = WordEmbeddingUtils.readWordPairScores(BlenderMoConfig.wordPairScores_filename);
+
+		// read vital relations importance
+		Object2DoubleOpenHashMap<String> vitalRelations = FileTools.readVitalRelations(BlenderMoConfig.vitalRelationsPath);
 
 		// // test the mutation using a custom GUI
 		// TestMutation.testMutation(inputSpace, mappings);
@@ -97,14 +98,15 @@ public class BlenderMoLauncher {
 		BlendMutation.setInputSpace(inputSpace);
 		BlendMutation.setRandom(random);
 		// TODO: personalize your constructor here
-		CustomProblem problem = new CustomProblem(inputSpace, mappings, frames, frameQueries, random);
+		CustomProblem problem = new CustomProblem(inputSpace, mappings, frames, frameQueries, vitalRelations, wps, random);
 //		problem.setWordPairsSemanticSimilarity(wps);
 
 		InteractiveExecutor ie = new InteractiveExecutor(problem, "NSGAII", properties, Integer.MAX_VALUE, BlenderMoConfig.POPULATION_SIZE);
 
-		@SuppressWarnings("unused")
+		System.gc();
 		NondominatedPopulation np = ie.execute();
-
+		// terminate daemon threads
+		System.exit(0);
 	}
 
 	private static void registerCustomMutation() {

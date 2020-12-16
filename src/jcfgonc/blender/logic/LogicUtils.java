@@ -25,6 +25,8 @@ import graph.GraphAlgorithms;
 import graph.GraphReadWrite;
 import graph.StringEdge;
 import graph.StringGraph;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import structures.CSVReader;
 import structures.ListOfSet;
@@ -320,5 +322,21 @@ public class LogicUtils {
 			}
 		}
 		return numberMappings;
+	}
+
+	public static double evaluateVitalRelations(StringGraph blendSpace, Object2DoubleOpenHashMap<String> vitalRelations) {
+		// histogram of blend relations
+		Object2IntOpenHashMap<String> relHist = GraphAlgorithms.countRelations(blendSpace);
+
+		// multiply-accumulate
+		double sum = 0;
+		for (Object2IntMap.Entry<String> entry : relHist.object2IntEntrySet()) {
+			String relation = entry.getKey();
+			int occurrences = entry.getIntValue();
+			double weight = vitalRelations.getDouble(relation);
+			sum += occurrences * weight;
+		}
+		double mean = sum / (double) blendSpace.numberOfEdges();
+		return mean;
 	}
 }
