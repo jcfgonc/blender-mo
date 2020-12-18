@@ -8,10 +8,12 @@ import java.awt.FlowLayout;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
+import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.geom.Ellipse2D;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
@@ -38,6 +40,8 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.moeaframework.core.NondominatedPopulation;
@@ -88,6 +92,8 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JButton printNDS_button;
 	private int generation;
 	private NondominatedPopulation nonDominatedSet;
+	private JLabel algorithmTitle;
+	private JLabel algorithmLabel;
 
 	/**
 	 * Create the frame.
@@ -143,6 +149,14 @@ public class InteractiveExecutorGUI extends JFrame {
 		statusPanel.setBorder(new TitledBorder(null, "Status", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		settingsPanel.add(statusPanel);
 		statusPanel.setLayout(new GridLayout(0, 2, 0, 0));
+
+		algorithmTitle = new JLabel("Algorithm: ");
+		algorithmTitle.setHorizontalAlignment(SwingConstants.RIGHT);
+		statusPanel.add(algorithmTitle);
+
+		algorithmLabel = new JLabel("");
+		algorithmLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		statusPanel.add(algorithmLabel);
 
 		variablesTitle = new JLabel("Variables: ");
 		variablesTitle.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -317,6 +331,7 @@ public class InteractiveExecutorGUI extends JFrame {
 		objectivesLabel.setText(Integer.toString(numberOfObjectives));
 		constraintsLabel.setText(Integer.toString(numberOfConstraints));
 		populationSizeLabel.setText(algorithmProperties.getProperty("populationSize"));
+		algorithmLabel.setText(interactiveExecutor.getAlgorithmName());
 
 		reverseGraphsHorizontally = false;
 		reverseGraphsVertically = false;
@@ -333,6 +348,14 @@ public class InteractiveExecutorGUI extends JFrame {
 		this.pack();
 
 		numberNDSGraphs = (int) Math.ceil((double) numberOfObjectives / 2); // they will be plotted in pairs of objectives
+
+		// if too many objectives put the graphs side by side, otherwise stack them vertically
+		if (numberOfObjectives >= 6) {
+			ndsPanel.setLayout(new GridLayout(1, 0, 0, 0));
+		} else {
+			ndsPanel.setLayout(new GridLayout(0, 1, 0, 0));
+		}
+
 		// ndsGraphs = new ArrayList<>();
 		ndsSeries = new ArrayList<>();
 		int objectiveIndex = 0; // for laying out axis' labels
@@ -366,13 +389,14 @@ public class InteractiveExecutorGUI extends JFrame {
 
 			String title = null;// String.format("Non-Dominated Set %d", i);
 			JFreeChart chart = ChartFactory.createScatterPlot(title, xAxisLabel, yAxisLabel, dataset, PlotOrientation.VERTICAL, false, false, false);
-//			JFreeChart chart = ChartFactory.createXYStepChart(title, xAxisLabel, yAxisLabel, dataset, PlotOrientation.VERTICAL, false, false, false);
 
 //			// color
-//			XYPlot plot = chart.getXYPlot();
-//			XYItemRenderer renderer = plot.getRenderer();
-//			renderer.setSeriesPaint(0, Color.green);
-//			// fill shapes
+			XYPlot plot = chart.getXYPlot();
+			XYItemRenderer renderer = plot.getRenderer();
+			renderer.setSeriesPaint(0, Color.RED);
+			Shape shape = new Ellipse2D.Double(-2.5, -2.5, 5, 5);
+			renderer.setSeriesShape(0, shape);
+			// fill shapes
 //			XYStepRenderer rend = (XYStepRenderer) renderer;
 //			rend.setShapesFilled(true);
 

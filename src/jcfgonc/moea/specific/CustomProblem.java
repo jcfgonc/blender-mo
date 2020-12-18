@@ -98,6 +98,12 @@ public class CustomProblem implements Problem, ProblemDescription {
 			}
 		}
 		int numberMatchedFrames = matchedFrames.size();
+		// the MOEA will minimize numberMatchedFrames and because we want blends to have at least one frame and not many
+		// we'll penalize zero frames
+		final int frameLimit = 20;
+		if (numberMatchedFrames == 0 || numberMatchedFrames > frameLimit) {
+			numberMatchedFrames = frameLimit;
+		}
 		matchedFrames = null;
 		blendKB = null;
 
@@ -141,14 +147,14 @@ public class CustomProblem implements Problem, ProblemDescription {
 		double relationVariety = ds.getMean();
 
 		// set solution's objectives here
-//		solution.setObjective(0, 0);// -filterFun(10, blendSpace.numberOfVertices()));
-		solution.setObjective(0, relationVariety);
-		solution.setObjective(1, -numberMappings);
-		solution.setObjective(2, -largestFrameEdgeCount);
-		solution.setObjective(3, -cycles);
-		solution.setObjective(4, blendSemanticSimilarity);
-		solution.setObjective(5, -numberMatchedFrames);
-		solution.setObjective(6, -vrScore);
+		int obj_i = 0;
+		solution.setObjective(obj_i++, relationVariety);
+		solution.setObjective(obj_i++, -numberMappings);
+		solution.setObjective(obj_i++, -largestFrameEdgeCount);
+		solution.setObjective(obj_i++, -cycles);
+		solution.setObjective(obj_i++, blendSemanticSimilarity);
+		solution.setObjective(obj_i++, numberMatchedFrames);
+		solution.setObjective(obj_i++, -vrScore);
 
 		if (blendSpace.numberOfVertices() == 0) {
 			System.err.println("blendSpace.numberOfVertices() == 0");
@@ -165,8 +171,8 @@ public class CustomProblem implements Problem, ProblemDescription {
 		// if required define constraints below
 		// violated constraints are set to 1, otherwise set to 0
 
-		// number of vertices in the blend space
-		if (blendSpace.numberOfVertices() > 20) {
+		// range number of vertices in the blend space
+		if (blendSpace.numberOfVertices() > 10) {
 			solution.setConstraint(0, 1);
 		} else {
 			solution.setConstraint(0, 0);
@@ -174,7 +180,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 		// maximum number of matched frames
 		// TODO remover limite de 4, isto e capaz de ser grave
 		if (numberMatchedFrames > 100) {
-			solution.setConstraint(1, 1);
+			solution.setConstraint(1, 0);
 		} else {
 			solution.setConstraint(1, 0);
 		}
@@ -193,14 +199,6 @@ public class CustomProblem implements Problem, ProblemDescription {
 
 	}
 
-	@SuppressWarnings("unused")
-	private int filterFun(int x, int k) {
-		if (x > k)
-			return 0;
-		else
-			return x;
-	}
-
 	@Override
 	/**
 	 * The number of objectives defined by this problem.
@@ -211,10 +209,15 @@ public class CustomProblem implements Problem, ProblemDescription {
 
 	@Override
 	public String getObjectiveDescription(int varid) {
-		String[] objectives = { "normalized relation variety",  "concept pairs", "edges largest frame", "cycles", "blend mean SS",
-				"matched frames", "vital relations" };
+		String[] objectives = { //
+				"f:normalized relation similarity", //
+				"d:number of concept pairs", //
+				"d:number of edges of largest frame", //
+				"d:number of cycles", //
+				"f:mean of within-blend semantic similarity", //
+				"d:number of matched frames", //
+				"f:mean importance of vital relations" };
 		return objectives[varid];
-//		return "TODO";
 	}
 
 	@Override
@@ -240,7 +243,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 
 	@Override
 	public String getVariableDescription(int varid) {
-		return "Blend Space";
+		return "g:blend space";
 	}
 
 	public StringGraph getInputSpace() {

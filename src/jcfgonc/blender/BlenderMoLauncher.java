@@ -57,9 +57,9 @@ public class BlenderMoLauncher {
 		for (SemanticFrame frame : frames0) {
 			if (frame.getGraph().numberOfEdges() > 10)
 				continue;
-			if (frame.getMatches() < 1)
+			if (frame.getMatches() < 3)
 				continue;
-			if (frame.getRelationTypesStd() > 1)
+			if (frame.getRelationTypesStd() > 0.5)
 				continue;
 			frames.add(frame);
 		}
@@ -94,6 +94,7 @@ public class BlenderMoLauncher {
 		properties.setProperty("operator", "CustomMutation");
 		properties.setProperty("CustomMutation.Rate", Double.toString(1.0));
 		properties.setProperty("populationSize", Integer.toString(BlenderMoConfig.POPULATION_SIZE));
+		properties.setProperty("instances", Integer.toString(100));		
 
 		BlendMutation.setInputSpace(inputSpace);
 		BlendMutation.setRandom(random);
@@ -101,7 +102,7 @@ public class BlenderMoLauncher {
 		CustomProblem problem = new CustomProblem(inputSpace, mappings, frames, frameQueries, vitalRelations, wps, random);
 //		problem.setWordPairsSemanticSimilarity(wps);
 
-		InteractiveExecutor ie = new InteractiveExecutor(problem, "NSGAII", properties, Integer.MAX_VALUE, BlenderMoConfig.POPULATION_SIZE);
+		InteractiveExecutor ie = new InteractiveExecutor(problem, BlenderMoConfig.ALGORITHM, properties, Integer.MAX_VALUE, BlenderMoConfig.POPULATION_SIZE);
 
 		System.gc();
 		NondominatedPopulation np = ie.execute();

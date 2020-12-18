@@ -33,9 +33,16 @@ public class BlendMutation {
 
 	public static void mutateBlend(Blend blend) {
 
-		double r = Math.pow(random.nextDouble(), BlenderMoConfig.EDGE_MUTATION_PROBABILITY_POWER);
-		int numberMutations = (int) Math.floor(r * BlenderMoConfig.EDGE_MUTATION_NUMBER_STEPS) + 1;
-		for (int i = 0; i < numberMutations; i++) {
+		if (BlenderMoConfig.EDGE_MUTATION_NUMBER_STEPS >= 2) {
+			double r = Math.pow(random.nextDouble(), BlenderMoConfig.EDGE_MUTATION_PROBABILITY_POWER);
+			int numberMutations = (int) Math.ceil(r * BlenderMoConfig.EDGE_MUTATION_NUMBER_STEPS);
+			// ceil of 0 could happen
+			if (numberMutations <= 1)
+				numberMutations = 1;
+			for (int i = 0; i < numberMutations; i++) {
+				mutateEdges(blend);
+			}
+		} else {
 			mutateEdges(blend);
 		}
 
@@ -61,7 +68,7 @@ public class BlendMutation {
 
 		} else if (numEdges == 1) { // one edge -> add another edge with the possibility of clearing the blend before
 
-			if (random.nextBoolean()) { // remove the existing edge if god of random wishes so
+			if (random.nextBoolean()) { // remove the existing edge if random wishes so
 				blendSpace.clear();
 			}
 			addRandomEdge(blendSpace, mapping);
