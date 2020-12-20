@@ -31,6 +31,7 @@ public class BlendMutation {
 		BlendMutation.random = random_;
 	}
 
+	@SuppressWarnings("unused")
 	public static void mutateBlend(Blend blend) {
 
 		if (BlenderMoConfig.EDGE_MUTATION_NUMBER_STEPS >= 2) {

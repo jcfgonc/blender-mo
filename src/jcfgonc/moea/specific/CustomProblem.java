@@ -26,13 +26,13 @@ import wordembedding.WordEmbeddingUtils;
 
 public class CustomProblem implements Problem, ProblemDescription {
 
-	private StringGraph inputSpace;
-	private ArrayList<Mapping<String>> mappings;
-	private RandomAdaptor random;
-	private ArrayList<SemanticFrame> frames;
-	private List<Query> frameQueries;
-	private Object2DoubleOpenHashMap<UnorderedPair<String>> wps;
-	private Object2DoubleOpenHashMap<String> vitalRelations;
+	private final StringGraph inputSpace;
+	private final ArrayList<Mapping<String>> mappings;
+	private final RandomAdaptor random;
+	private final ArrayList<SemanticFrame> frames;
+	private final List<Query> frameQueries;
+	private final Object2DoubleOpenHashMap<UnorderedPair<String>> wps;
+	private final Object2DoubleOpenHashMap<String> vitalRelations;
 
 	/**
 	 * Invoked by Custom Launcher when creating this problem. Custom code typically required here.
@@ -40,7 +40,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 	 */
 	public CustomProblem(StringGraph inputSpace, ArrayList<Mapping<String>> mappings, ArrayList<SemanticFrame> frames, ArrayList<Query> frameQueries,
 			Object2DoubleOpenHashMap<String> vitalRelations, Object2DoubleOpenHashMap<UnorderedPair<String>> wps, RandomAdaptor random) {
-		this.setInputSpace(inputSpace);
+		this.inputSpace = inputSpace;
 		this.mappings = mappings;
 		this.frames = frames;
 		this.random = random;
@@ -82,7 +82,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 		KnowledgeBase blendKB = LogicUtils.buildKnowledgeBase(blendSpace);
 		// check for frames matched in the blend
 		Object2IntOpenHashMap<SemanticFrame> matchedFrames = new Object2IntOpenHashMap<SemanticFrame>();
-		int largestFrameEdgeCount = 0;
+		int edgesLargestFrame = 0;
 		for (int i = 0; i < frames.size(); i++) {
 			SemanticFrame frame = frames.get(i);
 			Query frameQuery = frameQueries.get(i);
@@ -92,8 +92,8 @@ public class CustomProblem implements Problem, ProblemDescription {
 				matchedFrames.put(frame, count);
 				// find largest frame
 				int numberOfEdges = frame.getGraph().numberOfEdges();
-				if (numberOfEdges > largestFrameEdgeCount) {
-					largestFrameEdgeCount = numberOfEdges;
+				if (numberOfEdges > edgesLargestFrame) {
+					edgesLargestFrame = numberOfEdges;
 				}
 			}
 		}
@@ -132,7 +132,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 		int numberMappings = LogicUtils.countMappings(blendSpace);
 
 		// cycles
-		int cycles = GraphAlgorithms.countCycles(blendSpace);
+//		int cycles = GraphAlgorithms.countCycles(blendSpace);
 
 		// vital relations
 		double vrScore = LogicUtils.evaluateVitalRelations(blendSpace, vitalRelations);
@@ -144,16 +144,16 @@ public class CustomProblem implements Problem, ProblemDescription {
 //			System.out.printf("%d\t%f\t%f\t%f\t%f\t%s\n", ds.getN(), ds.getMin(), ds.getMean(), ds.getMax(), ds.getStandardDeviation(),
 //					relHist.toString());
 //		}
-		double relationVariety = ds.getMean();
+		double relationSimilarity = ds.getMean(); // 0...1
 
 		// set solution's objectives here
 		int obj_i = 0;
-		solution.setObjective(obj_i++, relationVariety);
-		solution.setObjective(obj_i++, -numberMappings);
-		solution.setObjective(obj_i++, -largestFrameEdgeCount);
-		solution.setObjective(obj_i++, -cycles);
+		solution.setObjective(obj_i++, relationSimilarity);
+		solution.setObjective(obj_i++, -numberMappings);// 20 is the expected max of number of mappings
+		solution.setObjective(obj_i++, -edgesLargestFrame);// 7 is the expected max edges of largest frame
+		// solution.setObjective(obj_i++, -cycles);
+		solution.setObjective(obj_i++, numberMatchedFrames);// 20 is the expected max of number of matched frames and 1 the lowest
 		solution.setObjective(obj_i++, blendSemanticSimilarity);
-		solution.setObjective(obj_i++, numberMatchedFrames);
 		solution.setObjective(obj_i++, -vrScore);
 
 		if (blendSpace.numberOfVertices() == 0) {
@@ -204,7 +204,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 	 * The number of objectives defined by this problem.
 	 */
 	public int getNumberOfObjectives() {
-		return 7;
+		return 6;
 	}
 
 	@Override
@@ -213,9 +213,9 @@ public class CustomProblem implements Problem, ProblemDescription {
 				"f:normalized relation similarity", //
 				"d:number of concept pairs", //
 				"d:number of edges of largest frame", //
-				"d:number of cycles", //
-				"f:mean of within-blend semantic similarity", //
+				// "d:number of cycles", //
 				"d:number of matched frames", //
+				"f:mean of within-blend semantic similarity", //
 				"f:mean importance of vital relations" };
 		return objectives[varid];
 	}
@@ -250,16 +250,8 @@ public class CustomProblem implements Problem, ProblemDescription {
 		return inputSpace;
 	}
 
-	public void setInputSpace(StringGraph inputSpace) {
-		this.inputSpace = inputSpace;
-	}
-
 	public List<Mapping<String>> getMappings() {
 		return mappings;
-	}
-
-	public void setWordPairsSemanticSimilarity(Object2DoubleOpenHashMap<UnorderedPair<String>> wps) {
-		this.wps = wps;
 	}
 
 	@Override

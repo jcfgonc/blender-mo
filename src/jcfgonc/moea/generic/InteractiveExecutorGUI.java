@@ -5,8 +5,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
 import java.awt.Shape;
 import java.awt.event.ActionEvent;
@@ -14,13 +12,18 @@ import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.geom.Ellipse2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
 
+import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -48,8 +51,6 @@ import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 
-import utils.OSTools;
-
 public class InteractiveExecutorGUI extends JFrame {
 
 	private static final long serialVersionUID = 5577378439253898247L;
@@ -62,23 +63,23 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JButton abortButton;
 	private InteractiveExecutor interactiveExecutor;
 	private JPanel statusPanel;
-	private JLabel epochTitle;
+	private JLabel epochLabel;
 	private int numberOfVariables;
 	private int numberOfObjectives;
 	private int numberOfConstraints;
-	private JLabel variablesTitle;
-	private JLabel objectivesTitle;
-	private JLabel constraintsTitle;
-	private JLabel epochLabel;
 	private JLabel variablesLabel;
 	private JLabel objectivesLabel;
 	private JLabel constraintsLabel;
-	private JLabel populationSizeTitle;
+	private JLabel epochStatus;
+	private JLabel variablesStatus;
+	private JLabel objectivesStatus;
+	private JLabel constraintsStatus;
 	private JLabel populationSizeLabel;
+	private JLabel populationSizeStatus;
 	private Properties algorithmProperties;
 	private ArrayList<XYSeries> ndsSeries;
-	private JLabel ndsSizeTitle;
 	private JLabel ndsSizeLabel;
+	private JLabel ndsSizeStatus;
 	private boolean reverseGraphsVertically;
 	private boolean reverseGraphsHorizontally;
 	private JCheckBox checkBoxReverseH;
@@ -92,8 +93,12 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JButton printNDS_button;
 	private int generation;
 	private NondominatedPopulation nonDominatedSet;
-	private JLabel algorithmTitle;
 	private JLabel algorithmLabel;
+	private JLabel algorithmStatus;
+	private JButton debugButton;
+	private JLabel runStatus;
+	private JLabel runLabel;
+	private int run;
 
 	/**
 	 * Create the frame.
@@ -150,61 +155,69 @@ public class InteractiveExecutorGUI extends JFrame {
 		settingsPanel.add(statusPanel);
 		statusPanel.setLayout(new GridLayout(0, 2, 0, 0));
 
-		algorithmTitle = new JLabel("Algorithm: ");
-		algorithmTitle.setHorizontalAlignment(SwingConstants.RIGHT);
-		statusPanel.add(algorithmTitle);
-
-		algorithmLabel = new JLabel("");
-		algorithmLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		algorithmLabel = new JLabel("Algorithm: ");
+		algorithmLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 		statusPanel.add(algorithmLabel);
 
-		variablesTitle = new JLabel("Variables: ");
-		variablesTitle.setHorizontalAlignment(SwingConstants.RIGHT);
-		statusPanel.add(variablesTitle);
+		algorithmStatus = new JLabel("");
+		algorithmStatus.setHorizontalAlignment(SwingConstants.LEFT);
+		statusPanel.add(algorithmStatus);
 
-		variablesLabel = new JLabel("");
-		variablesLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		variablesLabel = new JLabel("Variables: ");
+		variablesLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 		statusPanel.add(variablesLabel);
 
-		objectivesTitle = new JLabel("Objectives: ");
-		objectivesTitle.setHorizontalAlignment(SwingConstants.RIGHT);
-		statusPanel.add(objectivesTitle);
+		variablesStatus = new JLabel("");
+		variablesStatus.setHorizontalAlignment(SwingConstants.LEFT);
+		statusPanel.add(variablesStatus);
 
-		objectivesLabel = new JLabel("");
-		objectivesLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		objectivesLabel = new JLabel("Objectives: ");
+		objectivesLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 		statusPanel.add(objectivesLabel);
 
-		constraintsTitle = new JLabel("Constraints: ");
-		constraintsTitle.setHorizontalAlignment(SwingConstants.RIGHT);
-		statusPanel.add(constraintsTitle);
+		objectivesStatus = new JLabel("");
+		objectivesStatus.setHorizontalAlignment(SwingConstants.LEFT);
+		statusPanel.add(objectivesStatus);
 
-		constraintsLabel = new JLabel("");
-		constraintsLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		constraintsLabel = new JLabel("Constraints: ");
+		constraintsLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 		statusPanel.add(constraintsLabel);
 
-		populationSizeTitle = new JLabel("Population Size: ");
-		populationSizeTitle.setHorizontalAlignment(SwingConstants.RIGHT);
-		statusPanel.add(populationSizeTitle);
+		constraintsStatus = new JLabel("");
+		constraintsStatus.setHorizontalAlignment(SwingConstants.LEFT);
+		statusPanel.add(constraintsStatus);
 
-		populationSizeLabel = new JLabel("");
-		populationSizeLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		populationSizeLabel = new JLabel("Population Size: ");
+		populationSizeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 		statusPanel.add(populationSizeLabel);
 
-		epochTitle = new JLabel("Epoch: ");
-		epochTitle.setHorizontalAlignment(SwingConstants.RIGHT);
-		statusPanel.add(epochTitle);
+		populationSizeStatus = new JLabel("");
+		populationSizeStatus.setHorizontalAlignment(SwingConstants.LEFT);
+		statusPanel.add(populationSizeStatus);
 
-		epochLabel = new JLabel("");
-		epochLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		epochLabel = new JLabel("Epoch: ");
+		epochLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 		statusPanel.add(epochLabel);
 
-		ndsSizeTitle = new JLabel("Non-Dominated Set Size: ");
-		ndsSizeTitle.setHorizontalAlignment(SwingConstants.RIGHT);
-		statusPanel.add(ndsSizeTitle);
+		epochStatus = new JLabel("");
+		epochStatus.setHorizontalAlignment(SwingConstants.LEFT);
+		statusPanel.add(epochStatus);
 
-		ndsSizeLabel = new JLabel("");
-		ndsSizeLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		runLabel = new JLabel("Run: ");
+		runLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		statusPanel.add(runLabel);
+
+		runStatus = new JLabel("");
+		runStatus.setHorizontalAlignment(SwingConstants.LEFT);
+		statusPanel.add(runStatus);
+
+		ndsSizeLabel = new JLabel("Non-Dominated Set Size: ");
+		ndsSizeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 		statusPanel.add(ndsSizeLabel);
+
+		ndsSizeStatus = new JLabel("");
+		ndsSizeStatus.setHorizontalAlignment(SwingConstants.LEFT);
+		statusPanel.add(ndsSizeStatus);
 
 		configPanel = new JPanel();
 		configPanel.setBorder(new TitledBorder(null, "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -292,6 +305,15 @@ public class InteractiveExecutorGUI extends JFrame {
 		});
 		buttonsPanel.add(printNDS_button);
 
+		debugButton = new JButton("debug");
+		debugButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				interactiveExecutor.debug(this);
+			}
+		});
+		debugButton.setToolTipText("does some useful debug thing only I know");
+		buttonsPanel.add(debugButton);
+
 		addComponentListener(new ComponentAdapter() { // window resize event
 			@Override
 			public void componentResized(ComponentEvent e) {
@@ -318,6 +340,7 @@ public class InteractiveExecutorGUI extends JFrame {
 		super.dispose();
 	}
 
+	@SuppressWarnings("unused")
 	private int proportionOfInt(int value, double proportion) {
 		double newval = (double) value * proportion;
 		return (int) newval;
@@ -327,25 +350,17 @@ public class InteractiveExecutorGUI extends JFrame {
 	 * contains the rest of the stuff which cannot be initialized in the initialize function (because of the windowbuilder IDE)
 	 */
 	public void initializeTheRest() {
-		variablesLabel.setText(Integer.toString(numberOfVariables));
-		objectivesLabel.setText(Integer.toString(numberOfObjectives));
-		constraintsLabel.setText(Integer.toString(numberOfConstraints));
-		populationSizeLabel.setText(algorithmProperties.getProperty("populationSize"));
-		algorithmLabel.setText(interactiveExecutor.getAlgorithmName());
+		variablesStatus.setText(Integer.toString(numberOfVariables));
+		objectivesStatus.setText(Integer.toString(numberOfObjectives));
+		constraintsStatus.setText(Integer.toString(numberOfConstraints));
+		populationSizeStatus.setText(algorithmProperties.getProperty("populationSize"));
+		algorithmStatus.setText(interactiveExecutor.getAlgorithmName());
 
 		reverseGraphsHorizontally = false;
 		reverseGraphsVertically = false;
 		// sync controls with boolean vars
 		checkBoxReverseH.setSelected(reverseGraphsHorizontally);
 		checkBoxReverseV.setSelected(reverseGraphsVertically);
-
-		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-		int width = gd.getDisplayMode().getWidth();
-		int height = gd.getDisplayMode().getHeight();
-		this.setLocationRelativeTo(null); // center jframe
-
-		this.setSize(proportionOfInt(width, 0.333), proportionOfInt(height, 0.333));
-		this.pack();
 
 		numberNDSGraphs = (int) Math.ceil((double) numberOfObjectives / 2); // they will be plotted in pairs of objectives
 
@@ -402,29 +417,42 @@ public class InteractiveExecutorGUI extends JFrame {
 
 			ChartPanel chartPanel = new ChartPanel(chart, false);
 			ndsPanel.add(chartPanel);
-
-			// limit jframe size according to windows' high dpi scaling
-			double w = getPreferredSize().getWidth() * OSTools.getScreenScale();
-			double h = getPreferredSize().getHeight() * OSTools.getScreenScale();
-			setMinimumSize(new Dimension((int) w, (int) h));
 		}
+//		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+//		int width = gd.getDisplayMode().getWidth();
+//		int height = gd.getDisplayMode().getHeight();   
+//		this.setSize(proportionOfInt(width, 0.333), proportionOfInt(height, 0.333));
+//		this.pack();
+
+		// limit jframe size according to windows' high dpi scaling
+//		int w = (int) (getPreferredSize().getWidth() * OSTools.getScreenScale());
+//		int h = (int) (getPreferredSize().getHeight() * OSTools.getScreenScale());
+//		setMinimumSize(new Dimension(w, h));
+//		this.setLocationRelativeTo(null); // center jframe
+
+		setMinimumSize(new Dimension(1931, 525));
+		setLocation(-6, 0);
+		this.pack();
+
 	}
 
-	public void updateStatus(NondominatedPopulation nds, int generation) {
+	public void updateStatus(NondominatedPopulation nds, int generation, int run) {
 		this.generation = generation;
+		this.run = run;
 		this.nonDominatedSet = nds;
 
 		updateWindow();
 	}
 
 	private void updateWindow() {
-		epochLabel.setText(Integer.toString(generation));
+		epochStatus.setText(Integer.toString(generation));
+		runStatus.setText(Integer.toString(run));
 
 		if (nonDominatedSet == null)
 			return;
 
 		// update the non-dominated sets
-		ndsSizeLabel.setText(Integer.toString(nonDominatedSet.size()));
+		ndsSizeStatus.setText(Integer.toString(nonDominatedSet.size()));
 
 		int objectiveIndex = 0;
 		// iterate the scatter plots (each can hold two objectives)
@@ -477,6 +505,21 @@ public class InteractiveExecutorGUI extends JFrame {
 			if (pi.hasNext()) {
 				System.out.println();
 			}
+		}
+	}
+
+	/**
+	 * from https://stackoverflow.com/a/30335948
+	 */
+	public void saveScreenShot(String filename) {
+		JComponent yourComponent = contentPane;
+		BufferedImage img = new BufferedImage(yourComponent.getWidth(), yourComponent.getHeight(), BufferedImage.TYPE_INT_RGB);
+		yourComponent.paint(img.getGraphics());
+		File outputfile = new File(filename);
+		try {
+			ImageIO.write(img, "png", outputfile);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 }

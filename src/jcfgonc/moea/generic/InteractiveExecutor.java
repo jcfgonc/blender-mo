@@ -1,5 +1,6 @@
 package jcfgonc.moea.generic;
 
+import java.awt.event.ActionListener;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -17,6 +18,7 @@ import org.moeaframework.core.spi.AlgorithmFactory;
 
 import graph.StringGraph;
 import jcfgonc.moea.specific.CustomChromosome;
+import structures.Ticker;
 import utils.VariousUtils;
 
 public class InteractiveExecutor {
@@ -26,6 +28,7 @@ public class InteractiveExecutor {
 	private NondominatedPopulation lastResult;
 	private boolean canceled;
 	private Problem problem;
+	private InteractiveExecutorGUI gui;
 //	private BlenderVisualizer blenderVisualizer;
 
 	public InteractiveExecutor(Problem problem, String algorithmName, Properties algorithmProperties, int maxGenerations, int populationSize) {
@@ -34,16 +37,18 @@ public class InteractiveExecutor {
 		this.algorithmProperties = algorithmProperties;
 		this.maxGenerations = maxGenerations;
 //		this.blenderVisualizer = new BlenderVisualizer(populationSize);
+		this.gui = new InteractiveExecutorGUI(this);
+		this.gui.initializeTheRest();
+		this.gui.setVisible(true);
 	}
 
-	public NondominatedPopulation execute() throws InterruptedException {
+	public NondominatedPopulation execute(int moea_run) throws InterruptedException {
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception e) {
 			// couldn't set system look and feel, continue with default
 		}
 
-		InteractiveExecutorGUI gui = new InteractiveExecutorGUI(this);
 //		new Thread() {
 //			public void run() {
 //				try {
@@ -54,35 +59,43 @@ public class InteractiveExecutor {
 //			};
 //		}.start();
 
-		int generation = 0;
+		int epoch = 0;
 		Algorithm algorithm = null;
 		lastResult = null;
 
-//		algorithm = AlgorithmFactory.getInstance().getAlgorithm(algorithmName, algorithmProperties, distributedProblem);
 		algorithm = AlgorithmFactory.getInstance().getAlgorithm(algorithmName, algorithmProperties, problem);
-		gui.initializeTheRest();
-		gui.setVisible(true);
 		this.canceled = false;
+		// Thread.sleep(3 * 60 * 1000);
+//		Ticker t = new Ticker();
 
 		do {
 			// update graphs
-			gui.updateStatus(lastResult, generation);
+			gui.updateStatus(lastResult, epoch, moea_run);
 
+//			t.getTimeDeltaLastCall();
 			algorithm.step();
-			generation++;
+//			double dt = t.getTimeDeltaLastCall();
+//			System.out.format("epoch %d took %f seconds\n", epoch, dt);
+			epoch++;
 			lastResult = algorithm.getResult();
+
+			// printscreen
+			// gui.saveScreenShot("screenshots/" + VariousUtils.generateCurrentDateAndTimeStamp() + ".png");
 
 			// update blender visualizer
 //			blenderVisualizer.update(lastResult);
-			if (algorithm.isTerminated() || generation >= maxGenerations || this.canceled) {
+			if (algorithm.isTerminated() || epoch >= maxGenerations || this.canceled) {
 				break; // break while loop
 			}
 		} while (true);
 
 		algorithm.terminate();
-		gui.dispose();
 		showAndSaveLastResult();
 		return lastResult;
+	}
+
+	public void closeGUI() {
+		gui.dispose();
 	}
 
 	public Problem getProblem() {
@@ -151,7 +164,7 @@ public class InteractiveExecutor {
 				bw.write(Double.toString(solution.getObjective(i)));
 				bw.write('\t');
 			}
-			
+
 			// graph data
 			CustomChromosome cc = (CustomChromosome) solution.getVariable(0); // unless the solution domain X has more than one dimension
 			StringGraph blendSpace = cc.getBlend().getBlendSpace();
@@ -180,5 +193,9 @@ public class InteractiveExecutor {
 	public void stopOptimization() {
 		// stop MOEA's loop
 		this.canceled = true;
+	}
+
+	public void debug(ActionListener actionListener) {
+		System.out.println(gui.toString());
 	}
 }

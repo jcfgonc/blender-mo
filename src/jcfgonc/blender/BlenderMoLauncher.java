@@ -92,20 +92,28 @@ public class BlenderMoLauncher {
 		registerCustomMutation();
 		Properties properties = new Properties();
 		properties.setProperty("operator", "CustomMutation");
-		properties.setProperty("CustomMutation.Rate", Double.toString(1.0));
+		properties.setProperty("CustomMutation.Rate", "1.0");
 		properties.setProperty("populationSize", Integer.toString(BlenderMoConfig.POPULATION_SIZE));
-		properties.setProperty("instances", Integer.toString(100));		
+		properties.setProperty("instances", "100");
+		properties.setProperty("epsilon", "0.25");
 
 		BlendMutation.setInputSpace(inputSpace);
 		BlendMutation.setRandom(random);
 		// TODO: personalize your constructor here
 		CustomProblem problem = new CustomProblem(inputSpace, mappings, frames, frameQueries, vitalRelations, wps, random);
-//		problem.setWordPairsSemanticSimilarity(wps);
 
-		InteractiveExecutor ie = new InteractiveExecutor(problem, BlenderMoConfig.ALGORITHM, properties, Integer.MAX_VALUE, BlenderMoConfig.POPULATION_SIZE);
+		InteractiveExecutor ie = new InteractiveExecutor(problem, BlenderMoConfig.ALGORITHM, properties, BlenderMoConfig.MAX_EPOCHS,
+				BlenderMoConfig.POPULATION_SIZE);
+		for (int moea_run = 0; moea_run < BlenderMoConfig.MOEA_RUNS; moea_run++) {
+			if (ie.isCanceled())
+				break;
+			System.gc();
+			if (moea_run > 1)
+				Thread.sleep(10000); // give GC time to do its job
+			NondominatedPopulation np = ie.execute(moea_run);
+		}
+		ie.closeGUI();
 
-		System.gc();
-		NondominatedPopulation np = ie.execute();
 		// terminate daemon threads
 		System.exit(0);
 	}
