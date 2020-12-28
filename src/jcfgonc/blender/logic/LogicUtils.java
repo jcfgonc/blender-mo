@@ -31,22 +31,21 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import structures.CSVReader;
 import structures.ListOfSet;
 import structures.Mapping;
+import utils.VariousUtils;
 
 public class LogicUtils {
 
 	/**
-	 * the stringraph's vertices must be of the form text"separator"text
+	 * the stringraph's vertices must be of the form text0|text1
 	 * 
 	 * @param sg
 	 * @param mapping
 	 */
-	public static void addStringGraphVerticesToMapping(StringGraph sg, Mapping<String> mapping, String separator) {
+	public static void addStringGraphVerticesToMapping(StringGraph sg, Mapping<String> mapping) {
 		for (String vertice : sg.getVertexSet()) {
-			String[] tokens = vertice.split(separator);
+			String[] tokens = VariousUtils.fastSplit(vertice, '|');
 			if (tokens.length == 2) {
 				mapping.add(tokens[0], tokens[1]);
-			} else {
-				System.out.format("vertice %s can't be tokenized using separator %s\n", vertice, separator);
 			}
 		}
 	}
@@ -338,5 +337,26 @@ public class LogicUtils {
 		}
 		double mean = sum / (double) blendSpace.numberOfEdges();
 		return mean;
+	}
+
+	/**
+	 * returns the blended concept (if existing) containing the given text. The concept will be a blend of the form *|text OR text|*
+	 * 
+	 * @param blendSpace
+	 * @param text
+	 * @return
+	 */
+	public static String getBlendContainingConcept(StringGraph blendSpace, String text) {
+		for (String vertex : blendSpace.getVertexSet()) {
+			if (vertex.indexOf('|') < 0)
+				continue;
+			String[] vertexTokens = VariousUtils.fastSplit(vertex, '|');
+			for (String token : vertexTokens) {
+				if (token.equals(text)) {
+					return vertex;
+				}
+			}
+		}
+		return null;
 	}
 }

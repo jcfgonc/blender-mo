@@ -18,7 +18,6 @@ import org.moeaframework.core.spi.AlgorithmFactory;
 
 import graph.StringGraph;
 import jcfgonc.moea.specific.CustomChromosome;
-import structures.Ticker;
 import utils.VariousUtils;
 
 public class InteractiveExecutor {

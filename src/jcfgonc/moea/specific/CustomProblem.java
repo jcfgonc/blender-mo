@@ -121,7 +121,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 //		}
 
 		// blend edge semantic similarity
-		double blendSemanticSimilarity = 0;
+		double blendSemanticSimilarity = 1; // set to 1 (the max) by default because we want to minimize this
 		if (blendSpace.numberOfEdges() >= 2) { // measuring similarity requires at least two edges
 			double[] sim = WordEmbeddingUtils.calculateEdgeSemanticSimilarity(blendSpace, wps);
 			DescriptiveStatistics ds = new DescriptiveStatistics(sim);
