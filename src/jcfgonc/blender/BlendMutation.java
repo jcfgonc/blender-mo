@@ -119,7 +119,9 @@ public class BlendMutation {
 				// these two lines are to maintain the existence of the blended concept which does not exist in the input space
 				edgeToAdd = edgeToAdd.replaceSourceOrTarget(c0, referenceConcept); // replace 'a' with 'a|b'
 				edgeToAdd = edgeToAdd.replaceSourceOrTarget(c1, referenceConcept); // replace 'b' with 'a|b'
-				return blendSpace.addEdge(edgeToAdd);
+				if (blendSpace.addEdge(edgeToAdd)) {
+					return true;
+				}
 			}
 
 		} else { // not a blended concept
@@ -133,7 +135,9 @@ public class BlendMutation {
 			// try adding one of the touching edges
 			ArrayList<StringEdge> shuffledEdges = VariousUtils.asShuffledArray(newEdges, random);
 			for (StringEdge edgeToAdd : shuffledEdges) {
-				return blendSpace.addEdge(edgeToAdd);
+				if (blendSpace.addEdge(edgeToAdd)) {
+					return true;
+				}
 			}
 		}
 		return false;
