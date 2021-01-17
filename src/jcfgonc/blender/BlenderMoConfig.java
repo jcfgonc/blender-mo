@@ -9,7 +9,7 @@ public class BlenderMoConfig {
 	public static final int MOEA_RUNS = 128; // maximum number of MOEA runs (each run iterates max_epochs)
 
 	public static final double EDGE_MUTATION_PROBABILITY_POWER = 4;
-	public static final double EDGE_MUTATION_NUMBER_STEPS = 2; // it goes from 1 to this number
+	public static final double EDGE_MUTATION_NUMBER_STEPS = 1; // it goes from 1 to this number
 
 	public static final int BLOCK_SIZE = 256; // querykb tool specific
 	public static final int PARALLEL_LIMIT = 1; // number of threads for the querykb tool
