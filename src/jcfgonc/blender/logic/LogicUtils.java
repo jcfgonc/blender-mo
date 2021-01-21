@@ -359,4 +359,8 @@ public class LogicUtils {
 		}
 		return null;
 	}
+
+	public static double calculateUnpacking(StringGraph blendSpace, Mapping<String> mapping) {
+		return 0;
+	}
 }

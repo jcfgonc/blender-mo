@@ -12,7 +12,6 @@ import graph.StringEdge;
 import graph.StringGraph;
 import jcfgonc.blender.structures.Blend;
 import structures.ConceptPair;
-import structures.ListOfSet;
 import structures.Mapping;
 import utils.VariousUtils;
 
@@ -46,18 +45,6 @@ public class BlendMutation {
 			}
 		} else {
 			mutateBlendSpace(blend);
-		}
-
-		// TODO!!! test if any concept of a mapping pair is present separately in the blend, if so correct the issue
-//		for (StringEdge edge : blend.getBlendSpace().edgeSet()) {
-//			bugDetector(blend.getBlendSpace(), edge);
-//		}
-
-		// TODO remove smaller components if more than one
-		ListOfSet<String> components = GraphAlgorithms.extractGraphComponents(blend.getBlendSpace());
-		if (components.size() != 1) {
-			System.err.println("graph components: " + components);
-			// System.exit(0);
 		}
 	}
 
@@ -321,34 +308,7 @@ public class BlendMutation {
 		Set<StringEdge> edgesOfLowest = blendSpace.edgesOf(lowestDegreeVertex);
 		StringEdge edgeToDelete = VariousUtils.getRandomElementFromCollection(edgesOfLowest, random);
 		blendSpace.removeEdge(edgeToDelete);
+		// remove smaller components if more than one
+		GraphAlgorithms.removeSmallerComponents(blendSpace);
 	}
-
-	private static void bugDetector(StringGraph graph, StringEdge edge) {
-		// if source OR target is a blend concept of the form a|b both concepts a and b can not exist elsewhere in the graph
-		if (edge.sourceIsBlend()) {
-			String[] concepts = VariousUtils.fastSplit(edge.getSource(), '|');
-			String a = concepts[0];
-			String b = concepts[1];
-			if (!graph.edgesOf(a).isEmpty()) {
-				System.lineSeparator();
-			}
-			if (!graph.edgesOf(b).isEmpty()) {
-				System.lineSeparator();
-			}
-		}
-		if (edge.targetIsBlend()) {
-			String[] concepts = VariousUtils.fastSplit(edge.getTarget(), '|');
-			String a = concepts[0];
-			String b = concepts[1];
-			if (!graph.edgesOf(a).isEmpty()) {
-				System.lineSeparator();
-			}
-			if (!graph.edgesOf(b).isEmpty()) {
-				System.lineSeparator();
-			}
-		}
-
-		// if source OR target is a normal concept then it not exist in a blend concept elsewhere in the graph
-	}
-
 }

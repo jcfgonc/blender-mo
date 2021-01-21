@@ -146,6 +146,8 @@ public class CustomProblem implements Problem, ProblemDescription {
 //		}
 		double relationSimilarity = ds.getMean(); // 0...1
 
+		double unpackingScore = LogicUtils.calculateUnpacking(blendSpace, blend.getMapping());
+
 		// set solution's objectives here
 		int obj_i = 0;
 		solution.setObjective(obj_i++, relationSimilarity);
