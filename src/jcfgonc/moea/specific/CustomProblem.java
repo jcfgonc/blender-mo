@@ -76,7 +76,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 		CustomChromosome pc = (CustomChromosome) solution.getVariable(0); // unless the solution domain X has more than one dimension
 		Blend blend = pc.getBlend();
 		StringGraph blendSpace = blend.getBlendSpace();
-		blend = null;
+		Mapping<String> mapping = blend.getMapping();
 
 		// transform the blend space into a KB
 		KnowledgeBase blendKB = LogicUtils.buildKnowledgeBase(blendSpace);
@@ -146,7 +146,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 //		}
 		double relationSimilarity = ds.getMean(); // 0...1
 
-		double unpackingScore = LogicUtils.calculateUnpacking(blendSpace, blend.getMapping());
+		double unpackingScore = LogicUtils.calculateUnpacking(blendSpace, mapping);
 
 		// set solution's objectives here
 		int obj_i = 0;
@@ -157,6 +157,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 		solution.setObjective(obj_i++, numberMatchedFrames);// 20 is the expected max of number of matched frames and 1 the lowest
 		solution.setObjective(obj_i++, blendSemanticSimilarity);
 		solution.setObjective(obj_i++, -vrScore);
+		solution.setObjective(obj_i++, -unpackingScore);
 
 		if (blendSpace.numberOfVertices() == 0) {
 			System.err.println("blendSpace.numberOfVertices() == 0");
@@ -206,7 +207,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 	 * The number of objectives defined by this problem.
 	 */
 	public int getNumberOfObjectives() {
-		return 6;
+		return 7;
 	}
 
 	@Override
@@ -218,7 +219,8 @@ public class CustomProblem implements Problem, ProblemDescription {
 				// "d:number of cycles", //
 				"d:number of matched frames", //
 				"f:mean of within-blend semantic similarity", //
-				"f:mean importance of vital relations" };
+				"f:mean importance of vital relations", //
+				"f:unpacking" };
 		return objectives[varid];
 	}
 

@@ -87,6 +87,8 @@ public class BlenderMoLauncher {
 
 		// // test the mutation using a custom GUI
 		// TestMutation.testMutation(inputSpace, mappings);
+		
+		System.gc();
 
 		// setup the mutation and the MOEA
 		registerCustomMutation();

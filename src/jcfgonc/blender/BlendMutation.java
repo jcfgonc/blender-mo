@@ -184,9 +184,10 @@ public class BlendMutation {
 					if (edges_b_filtered.isEmpty())
 						continue;
 				}
-				StringEdge edgeToAdd = edge_a.replaceSourceOrTarget(a, a + "|" + b);
-				edgeToAdd = edgeToAdd.replaceSourceOrTarget(c, c + "|" + d);
+				StringEdge edgeToAdd = edge_a.replaceSourceOrTarget(a, referenceConcept);
+				edgeToAdd = edgeToAdd.replaceSourceOrTarget(c, conceptPair.toString());
 				if (blendSpace.addEdge(edgeToAdd)) {
+			//		LogicUtils.calculateUnpacking(blendSpace, mapping);
 					return true; // done, one edge added
 				}
 				return false;
@@ -206,10 +207,10 @@ public class BlendMutation {
 				if (mapping.containsConcept(a)) { // other concept is involved in the mapping
 					// get the involved concept pair
 					ConceptPair<String> conceptPair = mapping.getConceptPair(a);
-					String b = conceptPair.getOpposingConcept(a);
 					// recreate the edge renaming the other concept to a concept pair blend
-					StringEdge edgeToAdd = edge.replaceSourceOrTarget(a, a + "|" + b);
+					StringEdge edgeToAdd = edge.replaceSourceOrTarget(a, conceptPair.toString());
 					if (blendSpace.addEdge(edgeToAdd)) {
+				//		LogicUtils.calculateUnpacking(blendSpace, mapping);
 						return true; // done, one edge added
 					}
 				}

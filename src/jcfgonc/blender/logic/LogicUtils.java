@@ -361,6 +361,38 @@ public class LogicUtils {
 	}
 
 	public static double calculateUnpacking(StringGraph blendSpace, Mapping<String> mapping) {
-		return 0;
+		Set<String> leftConcepts = mapping.getLeftConcepts();
+		Set<String> rightConcepts = mapping.getRightConcepts();
+		int leftCount = 0;
+		int rightCount = 0;
+		for (String concept : blendSpace.getVertexSet()) {
+			if (concept.indexOf('|') >= 0) { // blended concept
+				String[] concepts = VariousUtils.fastSplit(concept, '|');
+				String left = concepts[0];
+				String right = concepts[1];
+				// debug: this could happen if the blended concept is of the sort right|left instead of left|right
+				if (!leftConcepts.contains(left)) {
+					System.err.println("leftConcepts does not contain the left part of the blended concept");
+				}
+				if (!rightConcepts.contains(right)) {
+					System.err.println("rightConcepts does not contain the right part of the blended concept");
+				}
+				leftCount += blendSpace.degreeOf(concept);
+				rightCount += blendSpace.degreeOf(concept);
+			} else {
+				if (leftConcepts.contains(concept)) { // used in the mapping as a left concept
+					leftCount += blendSpace.degreeOf(concept);
+				} else if (leftConcepts.contains(concept)) {// used in the mapping as a right concept
+					rightCount += blendSpace.degreeOf(concept);
+				} else { // not referenced in the mapping
+
+				}
+			}
+		}
+		if (leftCount == 0 || rightCount == 0) {
+			return 0;
+		}
+		double u = (double) Math.min(leftCount, rightCount) / Math.max(leftCount, rightCount);
+		return u;
 	}
 }

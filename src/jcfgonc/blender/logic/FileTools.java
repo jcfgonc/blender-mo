@@ -40,7 +40,7 @@ public class FileTools {
 
 	public static StringGraph readInputSpace(String inputSpacePath) throws IOException, NoSuchFileException {
 		System.out.println("loading input space from " + inputSpacePath);
-		StringGraph inputSpace = new StringGraph(1 << 24, 1 << 24, 1 << 24, 1 << 24);
+		StringGraph inputSpace = new StringGraph();
 		Ticker ticker = new Ticker();
 		GraphReadWrite.readCSV(inputSpacePath, inputSpace);
 		inputSpace.showStructureSizes();
