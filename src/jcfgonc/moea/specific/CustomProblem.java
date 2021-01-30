@@ -144,20 +144,20 @@ public class CustomProblem implements Problem, ProblemDescription {
 //			System.out.printf("%d\t%f\t%f\t%f\t%f\t%s\n", ds.getN(), ds.getMin(), ds.getMean(), ds.getMax(), ds.getStandardDeviation(),
 //					relHist.toString());
 //		}
-		double relationSimilarity = ds.getMean(); // 0...1
+		double relationVariety = ds.getMean(); // 0...1
 
-		double unpackingScore = LogicUtils.calculateUnpacking(blendSpace, mapping);
+		double is_balance = LogicUtils.calculateUnpacking(blendSpace, mapping);
 
 		// set solution's objectives here
 		int obj_i = 0;
-		solution.setObjective(obj_i++, relationSimilarity);
+		solution.setObjective(obj_i++, relationVariety);
 		solution.setObjective(obj_i++, -numberMappings);// 20 is the expected max of number of mappings
 		solution.setObjective(obj_i++, -edgesLargestFrame);// 7 is the expected max edges of largest frame
 		// solution.setObjective(obj_i++, -cycles);
 		solution.setObjective(obj_i++, numberMatchedFrames);// 20 is the expected max of number of matched frames and 1 the lowest
 		solution.setObjective(obj_i++, blendSemanticSimilarity);
 		solution.setObjective(obj_i++, -vrScore);
-		solution.setObjective(obj_i++, -unpackingScore);
+		solution.setObjective(obj_i++, -is_balance);
 
 		if (blendSpace.numberOfVertices() == 0) {
 			System.err.println("blendSpace.numberOfVertices() == 0");
@@ -220,7 +220,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 				"d:number of matched frames", //
 				"f:mean of within-blend semantic similarity", //
 				"f:mean importance of vital relations", //
-				"f:unpacking" };
+				"f:input spaces balance" };
 		return objectives[varid];
 	}
 
