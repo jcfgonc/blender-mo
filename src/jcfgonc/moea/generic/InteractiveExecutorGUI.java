@@ -16,6 +16,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Properties;
 
@@ -50,6 +51,8 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
+
+import utils.VariousUtils;
 
 public class InteractiveExecutorGUI extends JFrame {
 
@@ -91,14 +94,12 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JSpinner spinner;
 	private JLabel lblNewLabel;
 	private JButton printNDS_button;
-	private int generation;
 	private NondominatedPopulation nonDominatedSet;
 	private JLabel algorithmLabel;
 	private JLabel algorithmStatus;
 	private JButton debugButton;
 	private JLabel runStatus;
 	private JLabel runLabel;
-	private int run;
 
 	/**
 	 * Create the frame.
@@ -437,22 +438,39 @@ public class InteractiveExecutorGUI extends JFrame {
 	}
 
 	public void updateStatus(NondominatedPopulation nds, int generation, int run) {
-		this.generation = generation;
-		this.run = run;
 		this.nonDominatedSet = nds;
 
-		updateWindow();
-	}
-
-	private void updateWindow() {
 		epochStatus.setText(Integer.toString(generation));
 		runStatus.setText(Integer.toString(run));
 
-		if (nonDominatedSet == null)
-			return;
+		if (nonDominatedSet != null) {
+			ndsSizeStatus.setText(Integer.toString(nonDominatedSet.size()));
+		//	calculateMinimumOfObjectives(nds);
+			updateNDSGraphs();
+		}
+	}
 
-		// update the non-dominated sets
-		ndsSizeStatus.setText(Integer.toString(nonDominatedSet.size()));
+	@SuppressWarnings("unused")
+	private void calculateMinimumOfObjectives(NondominatedPopulation nds) {
+		double[] minimums = new double[numberOfObjectives];
+		Arrays.fill(minimums, Double.MAX_VALUE);
+
+		// for each objective
+		for (int objective_i = 0; objective_i < numberOfObjectives; objective_i++) {
+			// get the minimum in the current solution set
+			for (int solution_i = 0; solution_i < nds.size(); solution_i++) {
+				Solution solution = nds.get(solution_i);
+				double val = solution.getObjective(objective_i);
+				if (val < minimums[objective_i]) {
+					minimums[objective_i] = val;
+				}
+			}
+		}
+		VariousUtils.printArray(minimums);
+	}
+
+	private void updateNDSGraphs() {
+		// update the non-dominated sets' graphs
 
 		int objectiveIndex = 0;
 		// iterate the scatter plots (each can hold two objectives)

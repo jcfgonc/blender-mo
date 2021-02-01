@@ -12,7 +12,6 @@ import com.githhub.aaronbembenek.querykb.KnowledgeBase;
 import com.githhub.aaronbembenek.querykb.Query;
 
 import frames.SemanticFrame;
-import graph.GraphAlgorithms;
 import graph.StringGraph;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -138,19 +137,14 @@ public class CustomProblem implements Problem, ProblemDescription {
 		double vrScore = LogicUtils.evaluateVitalRelations(blendSpace, vitalRelations);
 
 		// relation statistics
-		Object2IntOpenHashMap<String> relHist = GraphAlgorithms.countRelations(blendSpace);
-		DescriptiveStatistics ds = GraphAlgorithms.getRelationStatisticsNormalized(relHist, blendSpace.numberOfEdges());
-//		{
-//			System.out.printf("%d\t%f\t%f\t%f\t%f\t%s\n", ds.getN(), ds.getMin(), ds.getMean(), ds.getMax(), ds.getStandardDeviation(),
-//					relHist.toString());
-//		}
-		double relationVariety = ds.getMean(); // 0...1
+		double[] rs = LogicUtils.calculateRelationStatistics(blendSpace);
+		double relationStdDev = rs[1]; // 0...1
 
-		double is_balance = LogicUtils.calculateUnpacking(blendSpace, mapping);
+		double is_balance = LogicUtils.calculateInputSpacesBalance(blendSpace, mapping);
 
 		// set solution's objectives here
 		int obj_i = 0;
-		solution.setObjective(obj_i++, relationVariety);
+		solution.setObjective(obj_i++, relationStdDev);
 		solution.setObjective(obj_i++, -numberMappings);// 20 is the expected max of number of mappings
 		solution.setObjective(obj_i++, -edgesLargestFrame);// 7 is the expected max edges of largest frame
 		// solution.setObjective(obj_i++, -cycles);
@@ -213,7 +207,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 	@Override
 	public String getObjectiveDescription(int varid) {
 		String[] objectives = { //
-				"f:normalized relation similarity", //
+				"f:relation stddev", //
 				"d:number of concept pairs", //
 				"d:number of edges of largest frame", //
 				// "d:number of cycles", //

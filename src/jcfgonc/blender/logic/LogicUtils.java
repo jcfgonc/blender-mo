@@ -360,7 +360,7 @@ public class LogicUtils {
 		return null;
 	}
 
-	public static double calculateUnpacking(StringGraph blendSpace, Mapping<String> mapping) {
+	public static double calculateInputSpacesBalance(StringGraph blendSpace, Mapping<String> mapping) {
 		Set<String> leftConcepts = mapping.getLeftConcepts();
 		Set<String> rightConcepts = mapping.getRightConcepts();
 		int leftCount = 0;
@@ -394,5 +394,27 @@ public class LogicUtils {
 		}
 		double u = (double) Math.min(leftCount, rightCount) / Math.max(leftCount, rightCount);
 		return u;
+	}
+
+	public static double[] calculateRelationStatistics(StringGraph blendSpace) {
+		double[] stats = new double[3];
+		Object2IntOpenHashMap<String> relHist = GraphAlgorithms.countRelations(blendSpace);
+		int numRelations = relHist.size();
+		double mean = 0;
+		double stddev = 1.1; // higher value means there is a relation with a higher frequency than the other relations
+		if (numRelations == 0) {
+			throw new RuntimeException("empty relation histogram, unable to compute statistics");
+		} else if (numRelations == 1) {
+		} else {
+			DescriptiveStatistics ds = GraphAlgorithms.getRelationStatisticsNormalized(relHist, blendSpace.numberOfEdges());
+//			System.out.printf("%d\t%f\t%f\t%f\t%f\t%s\n", ds.getN(), ds.getMin(), ds.getMean(), ds.getMax(), ds.getStandardDeviation(),
+//					relHist.toString());
+			mean = ds.getMean(); // 0...1
+			stddev = ds.getStandardDeviation();
+		}
+		stats[0] = mean;
+		stats[1] = stddev;
+		stats[2] = numRelations;
+		return stats;
 	}
 }
