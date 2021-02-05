@@ -1,6 +1,7 @@
 package jcfgonc.moea.specific;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.math3.random.RandomAdaptor;
@@ -75,6 +76,13 @@ public class CustomProblem implements Problem, ProblemDescription {
 		CustomChromosome pc = (CustomChromosome) solution.getVariable(0); // unless the solution domain X has more than one dimension
 		Blend blend = pc.getBlend();
 		StringGraph blendSpace = blend.getBlendSpace();
+//		try {
+//			blendSpace = GraphReadWrite.readCSVFromString(
+//					"apartment|end_of_movie,atlocation,build;pancake,madeof,egg;milk,capableof,fill_glass;wine,capableof,fill_glass;milk,atlocation,build;pancake,madeof,milk;egg,capableof,low_risk_of_heart_disease;");
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		Mapping<String> mapping = blend.getMapping();
 
 		// transform the blend space into a KB
@@ -84,6 +92,10 @@ public class CustomProblem implements Problem, ProblemDescription {
 		int edgesLargestFrame = 0;
 		for (int i = 0; i < frames.size(); i++) {
 			SemanticFrame frame = frames.get(i);
+//			if (frame.getFrameString().equals(
+//					"X5,atlocation,X3;X0,capableof,X4;X0,capableof,X2;X0,capableof,X1;X0,capableof,X7;X0,atlocation,X3;X8,atlocation,X3;X6,atlocation,X3;")) {
+//				System.lineSeparator();
+//			}
 			Query frameQuery = frameQueries.get(i);
 			int count = LogicUtils.countFrameMatchesInt(blendKB, frameQuery, BlenderMoConfig.BLOCK_SIZE, BlenderMoConfig.PARALLEL_LIMIT,
 					BlenderMoConfig.SOLUTION_LIMIT, true, Long.valueOf(BlenderMoConfig.QUERY_TIMEOUT_SECONDS));
@@ -94,6 +106,10 @@ public class CustomProblem implements Problem, ProblemDescription {
 				if (numberOfEdges > edgesLargestFrame) {
 					edgesLargestFrame = numberOfEdges;
 				}
+//				if (numberOfEdges > blendSpace.numberOfEdges()) {
+//					System.err.println("TUMBA:\t" + blendSpace + "\t" + frameQuery);
+//					System.lineSeparator();
+//				}
 			}
 		}
 		int numberMatchedFrames = matchedFrames.size();
@@ -122,13 +138,20 @@ public class CustomProblem implements Problem, ProblemDescription {
 		// blend edge semantic similarity
 		double blendSemanticSimilarity = 1; // set to 1 (the max) by default because we want to minimize this
 		if (blendSpace.numberOfEdges() >= 2) { // measuring similarity requires at least two edges
-			double[] sim = WordEmbeddingUtils.calculateEdgeSemanticSimilarity(blendSpace, wps);
-			DescriptiveStatistics ds = new DescriptiveStatistics(sim);
+			// this array contains pairwise similarities of nearby edges
+			double[] edgePairsSimilarities = WordEmbeddingUtils.calculateEdgeSemanticSimilarity(blendSpace, wps);
+			DescriptiveStatistics ds = new DescriptiveStatistics(edgePairsSimilarities);
 			blendSemanticSimilarity = ds.getMean();
+			if (blendSemanticSimilarity > 1.1) {
+				System.err.println("questionable semantic similarity for graph " + blendSpace + " = " + Arrays.toString(edgePairsSimilarities));
+			}
 		}
 
 		// count mappings
-		int numberMappings = LogicUtils.countMappings(blendSpace);
+//		int numberMappings = LogicUtils.countMappings(blendSpace);
+
+		// mapping usage
+		int mappingMix = LogicUtils.calculateMappingMix(blendSpace, mapping);
 
 		// cycles
 //		int cycles = GraphAlgorithms.countCycles(blendSpace);
@@ -145,21 +168,13 @@ public class CustomProblem implements Problem, ProblemDescription {
 		// set solution's objectives here
 		int obj_i = 0;
 		solution.setObjective(obj_i++, relationStdDev);
-		solution.setObjective(obj_i++, -numberMappings);// 20 is the expected max of number of mappings
+		solution.setObjective(obj_i++, -mappingMix);// 20 is the expected max of number of mappings
 		solution.setObjective(obj_i++, -edgesLargestFrame);// 7 is the expected max edges of largest frame
 		// solution.setObjective(obj_i++, -cycles);
 		solution.setObjective(obj_i++, numberMatchedFrames);// 20 is the expected max of number of matched frames and 1 the lowest
 		solution.setObjective(obj_i++, blendSemanticSimilarity);
 		solution.setObjective(obj_i++, -vrScore);
 		solution.setObjective(obj_i++, -is_balance);
-
-		if (blendSpace.numberOfVertices() == 0) {
-			System.err.println("blendSpace.numberOfVertices() == 0");
-		}
-
-		if (numberMappings > blendSpace.numberOfVertices()) {
-			System.err.println("numberMappings > blendSpace.numberOfVertices()");
-		}
 
 //		if (frameSemanticSimilarity < 1000 && matchedFrames.size() == 0) {
 //			System.err.println("semanticSimilarityMaxSum < 1000 && matchedFrames.size() == 0");
@@ -208,7 +223,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 	public String getObjectiveDescription(int varid) {
 		String[] objectives = { //
 				"f:relation stddev", //
-				"d:number of concept pairs", //
+				"d:mapping mix", //
 				"d:number of edges of largest frame", //
 				// "d:number of cycles", //
 				"d:number of matched frames", //

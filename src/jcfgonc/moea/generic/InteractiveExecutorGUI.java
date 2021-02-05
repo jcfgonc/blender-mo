@@ -16,14 +16,12 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Properties;
 
 import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -51,8 +49,10 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
-
-import utils.VariousUtils;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
+import java.awt.CardLayout;
 
 public class InteractiveExecutorGUI extends JFrame {
 
@@ -83,11 +83,7 @@ public class InteractiveExecutorGUI extends JFrame {
 	private ArrayList<XYSeries> ndsSeries;
 	private JLabel ndsSizeLabel;
 	private JLabel ndsSizeStatus;
-	private boolean reverseGraphsVertically;
-	private boolean reverseGraphsHorizontally;
-	private JCheckBox checkBoxReverseH;
 	private JPanel timeoutPanel;
-	private JCheckBox checkBoxReverseV;
 	private int numberNDSGraphs;
 	private Problem problem;
 	private JPanel configPanel;
@@ -100,6 +96,7 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JButton debugButton;
 	private JLabel runStatus;
 	private JLabel runLabel;
+	private JButton nextRunButton;
 
 	/**
 	 * Create the frame.
@@ -225,15 +222,6 @@ public class InteractiveExecutorGUI extends JFrame {
 		settingsPanel.add(configPanel);
 		configPanel.setLayout(new GridLayout(0, 1, 0, 0));
 
-		checkBoxReverseH = new JCheckBox("Flip Results Horizontally");
-		checkBoxReverseH.setHorizontalAlignment(SwingConstants.CENTER);
-		checkBoxReverseH.setAlignmentX(Component.CENTER_ALIGNMENT);
-		configPanel.add(checkBoxReverseH);
-
-		checkBoxReverseV = new JCheckBox("Flip Results Vertically");
-		checkBoxReverseV.setHorizontalAlignment(SwingConstants.CENTER);
-		configPanel.add(checkBoxReverseV);
-
 		timeoutPanel = new JPanel();
 		configPanel.add(timeoutPanel);
 		timeoutPanel.setBorder(null);
@@ -257,63 +245,61 @@ public class InteractiveExecutorGUI extends JFrame {
 		spinner.setPreferredSize(new Dimension(64, 20));
 		spinner.setModel(new SpinnerNumberModel(Integer.valueOf(60), Integer.valueOf(1), null, Integer.valueOf(1)));
 		timeoutPanel.add(spinner);
-		checkBoxReverseV.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				reverseGraphsVertically = !reverseGraphsVertically;
-			}
-		});
-		checkBoxReverseH.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				reverseGraphsHorizontally = !reverseGraphsHorizontally;
-			}
-		});
 
 		buttonsPanel = new JPanel();
 		buttonsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)),
 				"Optimization Control", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		settingsPanel.add(buttonsPanel);
-
-		stopButton = new JButton("Stop Optimization");
-		stopButton.setToolTipText("Waits for the current epoch to complete and returns the best results so far.");
-		stopButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				stopOptimization();
-			}
-		});
-		buttonsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-
-		buttonsPanel.add(stopButton);
-		stopButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-		stopButton.setBorder(UIManager.getBorder("Button.border"));
-
-		abortButton = new JButton("Abort Optimization");
-		abortButton.setToolTipText("Aborts the optimization by discarding the current epoch's results and returns the best results so far.");
-		abortButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				// System.out.println((double) (horizontalPane.getDividerLocation()) / (horizontalPane.getWidth() - horizontalPane.getDividerSize()));
-				abortOptimization();
-			}
-		});
-		abortButton.setBorder(UIManager.getBorder("Button.border"));
-		abortButton.setAlignmentX(0.5f);
-		buttonsPanel.add(abortButton);
-
-		printNDS_button = new JButton("Print Non Dominated Set");
-		printNDS_button.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				printNonDominatedSet();
-			}
-		});
-		buttonsPanel.add(printNDS_button);
-
-		debugButton = new JButton("debug");
-		debugButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				interactiveExecutor.debug(this);
-			}
-		});
-		debugButton.setToolTipText("does some useful debug thing only I know");
-		buttonsPanel.add(debugButton);
+		
+				stopButton = new JButton("Stop Optimization");
+				stopButton.setToolTipText("Waits for the current epoch to complete and returns the best results so far.");
+				stopButton.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						stopOptimization();
+					}
+				});
+						
+								nextRunButton = new JButton("Next Run");
+								nextRunButton.addActionListener(new ActionListener() {
+									public void actionPerformed(ActionEvent e) {
+										skipCurrentRun();
+									}
+								});
+								buttonsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+								nextRunButton.setToolTipText("stops the current moea run and starts the next.");
+								buttonsPanel.add(nextRunButton);
+						buttonsPanel.add(stopButton);
+						stopButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+						stopButton.setBorder(UIManager.getBorder("Button.border"));
+		
+				abortButton = new JButton("Abort Optimization");
+				abortButton.setToolTipText("Aborts the optimization by discarding the current epoch's results and returns the best results so far.");
+				abortButton.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						// System.out.println((double) (horizontalPane.getDividerLocation()) / (horizontalPane.getWidth() - horizontalPane.getDividerSize()));
+						abortOptimization();
+					}
+				});
+				abortButton.setBorder(UIManager.getBorder("Button.border"));
+				abortButton.setAlignmentX(0.5f);
+				buttonsPanel.add(abortButton);
+		
+				printNDS_button = new JButton("Print Non Dominated Set");
+				printNDS_button.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						printNonDominatedSet();
+					}
+				});
+				
+						debugButton = new JButton("debug");
+						debugButton.addActionListener(new ActionListener() {
+							public void actionPerformed(ActionEvent e) {
+								interactiveExecutor.debug(this);
+							}
+						});
+						debugButton.setToolTipText("does some useful debug thing only I know");
+						buttonsPanel.add(debugButton);
+				buttonsPanel.add(printNDS_button);
 
 		addComponentListener(new ComponentAdapter() { // window resize event
 			@Override
@@ -321,6 +307,10 @@ public class InteractiveExecutorGUI extends JFrame {
 				windowResized(e);
 			}
 		});
+	}
+
+	private void skipCurrentRun() {
+		interactiveExecutor.skipCurrentRun();
 	}
 
 	private void abortOptimization() {
@@ -356,12 +346,6 @@ public class InteractiveExecutorGUI extends JFrame {
 		constraintsStatus.setText(Integer.toString(numberOfConstraints));
 		populationSizeStatus.setText(algorithmProperties.getProperty("populationSize"));
 		algorithmStatus.setText(interactiveExecutor.getAlgorithmName());
-
-		reverseGraphsHorizontally = false;
-		reverseGraphsVertically = false;
-		// sync controls with boolean vars
-		checkBoxReverseH.setSelected(reverseGraphsHorizontally);
-		checkBoxReverseV.setSelected(reverseGraphsVertically);
 
 		numberNDSGraphs = (int) Math.ceil((double) numberOfObjectives / 2); // they will be plotted in pairs of objectives
 
@@ -445,28 +429,8 @@ public class InteractiveExecutorGUI extends JFrame {
 
 		if (nonDominatedSet != null) {
 			ndsSizeStatus.setText(Integer.toString(nonDominatedSet.size()));
-		//	calculateMinimumOfObjectives(nds);
 			updateNDSGraphs();
 		}
-	}
-
-	@SuppressWarnings("unused")
-	private void calculateMinimumOfObjectives(NondominatedPopulation nds) {
-		double[] minimums = new double[numberOfObjectives];
-		Arrays.fill(minimums, Double.MAX_VALUE);
-
-		// for each objective
-		for (int objective_i = 0; objective_i < numberOfObjectives; objective_i++) {
-			// get the minimum in the current solution set
-			for (int solution_i = 0; solution_i < nds.size(); solution_i++) {
-				Solution solution = nds.get(solution_i);
-				double val = solution.getObjective(objective_i);
-				if (val < minimums[objective_i]) {
-					minimums[objective_i] = val;
-				}
-			}
-		}
-		VariousUtils.printArray(minimums);
 	}
 
 	private void updateNDSGraphs() {
@@ -489,12 +453,12 @@ public class InteractiveExecutorGUI extends JFrame {
 					x = solution.getObjective(0);
 					y = solution.getObjective(objectiveIndex);
 				}
-				if (reverseGraphsHorizontally) {
-					x = -x;
-				}
-				if (reverseGraphsVertically) {
-					y = -y;
-				}
+//				if (reverseGraphsHorizontally) {
+//					x = -x;
+//				}
+//				if (reverseGraphsVertically) {
+//					y = -y;
+//				}
 				graph.add(x, y);
 			}
 

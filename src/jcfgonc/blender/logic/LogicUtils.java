@@ -31,6 +31,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import structures.CSVReader;
 import structures.ListOfSet;
 import structures.Mapping;
+import structures.UnorderedPair;
 import utils.VariousUtils;
 
 public class LogicUtils {
@@ -372,10 +373,10 @@ public class LogicUtils {
 				String right = concepts[1];
 				// debug: this could happen if the blended concept is of the sort right|left instead of left|right
 				if (!leftConcepts.contains(left)) {
-					System.err.println("leftConcepts does not contain the left part of the blended concept");
+					System.err.printf("leftConcepts does not contain the left part (%s) of the blended concept\n", left);
 				}
 				if (!rightConcepts.contains(right)) {
-					System.err.println("rightConcepts does not contain the right part of the blended concept");
+					System.err.printf("rightConcepts does not contain the right part (%s) of the blended concept\n", right);
 				}
 				leftCount += blendSpace.degreeOf(concept);
 				rightCount += blendSpace.degreeOf(concept);
@@ -393,6 +394,8 @@ public class LogicUtils {
 			return 0;
 		}
 		double u = (double) Math.min(leftCount, rightCount) / Math.max(leftCount, rightCount);
+		if (u > 0.999)
+			System.lineSeparator();
 		return u;
 	}
 
@@ -416,5 +419,55 @@ public class LogicUtils {
 		stats[1] = stddev;
 		stats[2] = numRelations;
 		return stats;
+	}
+
+	/**
+	 * calculates mixing of nearby concepts belonging to different subsets (left/right) of the mapping
+	 * 
+	 * @param blendSpace
+	 * @param mapping
+	 * @return
+	 */
+	public static int calculateMappingMix(StringGraph blendSpace, Mapping<String> mapping) {
+		int mix = 0;
+		HashSet<UnorderedPair<String>> checkedPairs = new HashSet<UnorderedPair<String>>(16, 0.333f);
+		Set<String> leftConcepts = mapping.getLeftConcepts();
+		Set<String> rightConcepts = mapping.getRightConcepts();
+		for (String concept0 : blendSpace.getVertexSet()) {
+			Set<String> neighSet = blendSpace.getNeighborVertices(concept0);
+			for (String concept1 : neighSet) {
+
+				UnorderedPair<String> neighPar = new UnorderedPair<String>(concept0, concept1);
+				if (checkedPairs.contains(neighPar))
+					continue;
+				checkedPairs.add(neighPar);
+
+				if (isBlend(concept0)) { // blended concept0
+					if (isBlend(concept1)) { // blended concept0 connected to another blended concept1
+						mix++;
+					} else { // blended concept0 connected to a normal concept1
+						if (mapping.containsConcept(concept1)) { // concept1 present in the mapping?
+							mix++;
+						}
+					}
+				} else { // normal concept0
+					if (isBlend(concept1)) { // normal concept0 connected to a blended concept1
+						if (mapping.containsConcept(concept0)) { // concept0 present in the mapping?
+							mix++;
+						}
+					} else { // normal concept0 connected to a normal concept1
+						if (leftConcepts.contains(concept0) && rightConcepts.contains(concept1) || //
+								leftConcepts.contains(concept1) && rightConcepts.contains(concept0)) {
+							mix++;
+						}
+					}
+				}
+			}
+		}
+		return mix;
+	}
+
+	public static boolean isBlend(String concept) {
+		return concept.indexOf('|') >= 0;
 	}
 }

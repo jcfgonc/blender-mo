@@ -119,8 +119,6 @@ public class BlenderMoLauncher {
 			if (ie.isCanceled())
 				break;
 			System.gc();
-			if (moea_run > 1)
-				Thread.sleep(10000); // give GC time to do its job
 			NondominatedPopulation currentResults = ie.execute(moea_run);
 			runsResults.add(currentResults);
 		}

@@ -1,6 +1,8 @@
 package jcfgonc.moea.generic;
 
 import java.awt.event.ActionListener;
+import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.Properties;
 
 import javax.swing.UIManager;
@@ -8,17 +10,24 @@ import javax.swing.UIManager;
 import org.moeaframework.core.Algorithm;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
+import org.moeaframework.core.Solution;
 import org.moeaframework.core.spi.AlgorithmFactory;
+
+import utils.VariousUtils;
 
 public class InteractiveExecutor {
 	private String algorithmName;
 	private Properties algorithmProperties;
 	private int maxGenerations;
 	private NondominatedPopulation lastResult;
+	private NondominatedPopulation accumulatedResults;
 	private boolean canceled;
+	private boolean skipCurrentRun;
 	private Problem problem;
 	private InteractiveExecutorGUI gui;
 //	private BlenderVisualizer blenderVisualizer;
+	@SuppressWarnings("unused")
+	private final DecimalFormat ss_filename_df = new DecimalFormat("000");
 
 	public InteractiveExecutor(Problem problem, String algorithmName, Properties algorithmProperties, int maxGenerations, int populationSize) {
 		this.problem = problem;
@@ -51,15 +60,17 @@ public class InteractiveExecutor {
 		int epoch = 0;
 		Algorithm algorithm = null;
 		lastResult = null;
+		accumulatedResults = new NondominatedPopulation();
 
 		algorithm = AlgorithmFactory.getInstance().getAlgorithm(algorithmName, algorithmProperties, problem);
-		this.canceled = false;
+		canceled = false;
+		skipCurrentRun = false;
 		// Thread.sleep(3 * 60 * 1000);
 //		Ticker t = new Ticker();
 
 		do {
 			// update graphs
-			gui.updateStatus(lastResult, epoch, moea_run);
+			gui.updateStatus(accumulatedResults, epoch, moea_run);
 
 //			t.getTimeDeltaLastCall();
 			algorithm.step();
@@ -67,19 +78,21 @@ public class InteractiveExecutor {
 //			System.out.format("epoch %d took %f seconds\n", epoch, dt);
 			epoch++;
 			lastResult = algorithm.getResult();
+			accumulatedResults.addAll(lastResult);
 
 			// printscreen
-			// gui.saveScreenShot("screenshots/" + VariousUtils.generateCurrentDateAndTimeStamp() + ".png");
+		//	gui.saveScreenShot("screenshots/" + ss_filename_df.format(moea_run) + "_" + ss_filename_df.format(epoch) + ".png");
+		//	calculateMinimumOfObjectives(accumulatedResults, problem.getNumberOfObjectives());
 
 			// update blender visualizer
 //			blenderVisualizer.update(lastResult);
-			if (algorithm.isTerminated() || epoch >= maxGenerations || this.canceled) {
+			if (algorithm.isTerminated() || epoch >= maxGenerations || canceled || skipCurrentRun) {
 				break; // break while loop
 			}
 		} while (true);
 
 		algorithm.terminate();
-		return lastResult;
+		return accumulatedResults;
 	}
 
 	public void closeGUI() {
@@ -122,10 +135,33 @@ public class InteractiveExecutor {
 	 */
 	public void stopOptimization() {
 		// stop MOEA's loop
-		this.canceled = true;
+		this.canceled = true; // and stops the caller
+	}
+
+	public void skipCurrentRun() {
+		this.skipCurrentRun = true;
 	}
 
 	public void debug(ActionListener actionListener) {
 		System.out.println(gui.toString());
+	}
+
+	@SuppressWarnings("unused")
+	private void calculateMinimumOfObjectives(NondominatedPopulation nds, int numberOfObjectives) {
+		double[] minimums = new double[numberOfObjectives];
+		Arrays.fill(minimums, Double.MAX_VALUE);
+
+		// for each objective
+		for (int objective_i = 0; objective_i < numberOfObjectives; objective_i++) {
+			// get the minimum in the current solution set
+			for (int solution_i = 0; solution_i < nds.size(); solution_i++) {
+				Solution solution = nds.get(solution_i);
+				double val = solution.getObjective(objective_i);
+				if (val < minimums[objective_i]) {
+					minimums[objective_i] = val;
+				}
+			}
+		}
+		VariousUtils.printArray(minimums);
 	}
 }
