@@ -20,7 +20,7 @@ public class InteractiveExecutor {
 	private Properties algorithmProperties;
 	private int maxGenerations;
 	private NondominatedPopulation lastResult;
-	private NondominatedPopulation accumulatedResults;
+//	private NondominatedPopulation accumulatedResults;
 	private boolean canceled;
 	private boolean skipCurrentRun;
 	private Problem problem;
@@ -47,6 +47,7 @@ public class InteractiveExecutor {
 			// couldn't set system look and feel, continue with default
 		}
 
+		// code for external evolution visualizer
 //		new Thread() {
 //			public void run() {
 //				try {
@@ -60,17 +61,14 @@ public class InteractiveExecutor {
 		int epoch = 0;
 		Algorithm algorithm = null;
 		lastResult = null;
-		accumulatedResults = new NondominatedPopulation();
+		// accumulatedResults = new NondominatedPopulation();
 
 		algorithm = AlgorithmFactory.getInstance().getAlgorithm(algorithmName, algorithmProperties, problem);
 		canceled = false;
 		skipCurrentRun = false;
-		// Thread.sleep(3 * 60 * 1000);
 //		Ticker t = new Ticker();
 
 		do {
-			// update graphs
-			gui.updateStatus(accumulatedResults, epoch, moea_run);
 
 //			t.getTimeDeltaLastCall();
 			algorithm.step();
@@ -78,11 +76,13 @@ public class InteractiveExecutor {
 //			System.out.format("epoch %d took %f seconds\n", epoch, dt);
 			epoch++;
 			lastResult = algorithm.getResult();
-			accumulatedResults.addAll(lastResult);
+			// accumulatedResults.addAll(lastResult);
 
-			// printscreen
-		//	gui.saveScreenShot("screenshots/" + ss_filename_df.format(moea_run) + "_" + ss_filename_df.format(epoch) + ".png");
-		//	calculateMinimumOfObjectives(accumulatedResults, problem.getNumberOfObjectives());
+			// update graphs
+			gui.updateStatus(lastResult, epoch, moea_run);
+
+			// gui.saveScreenShot("screenshots/" + ss_filename_df.format(moea_run) + "_" + ss_filename_df.format(epoch) + ".png");
+			// calculateMinimumOfObjectives(accumulatedResults, problem.getNumberOfObjectives());
 
 			// update blender visualizer
 //			blenderVisualizer.update(lastResult);
@@ -92,7 +92,7 @@ public class InteractiveExecutor {
 		} while (true);
 
 		algorithm.terminate();
-		return accumulatedResults;
+		return lastResult;
 	}
 
 	public void closeGUI() {

@@ -15,6 +15,7 @@ import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
@@ -31,6 +32,7 @@ import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
@@ -49,10 +51,6 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
-import java.awt.CardLayout;
 
 public class InteractiveExecutorGUI extends JFrame {
 
@@ -250,56 +248,56 @@ public class InteractiveExecutorGUI extends JFrame {
 		buttonsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)),
 				"Optimization Control", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		settingsPanel.add(buttonsPanel);
-		
-				stopButton = new JButton("Stop Optimization");
-				stopButton.setToolTipText("Waits for the current epoch to complete and returns the best results so far.");
-				stopButton.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						stopOptimization();
-					}
-				});
-						
-								nextRunButton = new JButton("Next Run");
-								nextRunButton.addActionListener(new ActionListener() {
-									public void actionPerformed(ActionEvent e) {
-										skipCurrentRun();
-									}
-								});
-								buttonsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-								nextRunButton.setToolTipText("stops the current moea run and starts the next.");
-								buttonsPanel.add(nextRunButton);
-						buttonsPanel.add(stopButton);
-						stopButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-						stopButton.setBorder(UIManager.getBorder("Button.border"));
-		
-				abortButton = new JButton("Abort Optimization");
-				abortButton.setToolTipText("Aborts the optimization by discarding the current epoch's results and returns the best results so far.");
-				abortButton.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						// System.out.println((double) (horizontalPane.getDividerLocation()) / (horizontalPane.getWidth() - horizontalPane.getDividerSize()));
-						abortOptimization();
-					}
-				});
-				abortButton.setBorder(UIManager.getBorder("Button.border"));
-				abortButton.setAlignmentX(0.5f);
-				buttonsPanel.add(abortButton);
-		
-				printNDS_button = new JButton("Print Non Dominated Set");
-				printNDS_button.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						printNonDominatedSet();
-					}
-				});
-				
-						debugButton = new JButton("debug");
-						debugButton.addActionListener(new ActionListener() {
-							public void actionPerformed(ActionEvent e) {
-								interactiveExecutor.debug(this);
-							}
-						});
-						debugButton.setToolTipText("does some useful debug thing only I know");
-						buttonsPanel.add(debugButton);
-				buttonsPanel.add(printNDS_button);
+
+		stopButton = new JButton("Stop Optimization");
+		stopButton.setToolTipText("Waits for the current epoch to complete and returns the best results so far.");
+		stopButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				stopOptimization();
+			}
+		});
+
+		nextRunButton = new JButton("Next Run");
+		nextRunButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				skipCurrentRun();
+			}
+		});
+		buttonsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+		nextRunButton.setToolTipText("stops the current moea run and starts the next.");
+		buttonsPanel.add(nextRunButton);
+		buttonsPanel.add(stopButton);
+		stopButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+		stopButton.setBorder(UIManager.getBorder("Button.border"));
+
+		abortButton = new JButton("Abort Optimization");
+		abortButton.setToolTipText("Aborts the optimization by discarding the current epoch's results and returns the best results so far.");
+		abortButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// System.out.println((double) (horizontalPane.getDividerLocation()) / (horizontalPane.getWidth() - horizontalPane.getDividerSize()));
+				abortOptimization();
+			}
+		});
+		abortButton.setBorder(UIManager.getBorder("Button.border"));
+		abortButton.setAlignmentX(0.5f);
+		buttonsPanel.add(abortButton);
+
+		printNDS_button = new JButton("Print Non Dominated Set");
+		printNDS_button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				printNonDominatedSet();
+			}
+		});
+
+		debugButton = new JButton("debug");
+		debugButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				interactiveExecutor.debug(this);
+			}
+		});
+		debugButton.setToolTipText("does some useful debug thing only I know");
+		buttonsPanel.add(debugButton);
+		buttonsPanel.add(printNDS_button);
 
 		addComponentListener(new ComponentAdapter() { // window resize event
 			@Override
@@ -350,7 +348,7 @@ public class InteractiveExecutorGUI extends JFrame {
 		numberNDSGraphs = (int) Math.ceil((double) numberOfObjectives / 2); // they will be plotted in pairs of objectives
 
 		// if too many objectives put the graphs side by side, otherwise stack them vertically
-		if (numberOfObjectives >= 6) {
+		if (numberOfObjectives > 4) {
 			ndsPanel.setLayout(new GridLayout(1, 0, 0, 0));
 		} else {
 			ndsPanel.setLayout(new GridLayout(0, 1, 0, 0));
@@ -429,7 +427,23 @@ public class InteractiveExecutorGUI extends JFrame {
 
 		if (nonDominatedSet != null) {
 			ndsSizeStatus.setText(Integer.toString(nonDominatedSet.size()));
-			updateNDSGraphs();
+
+			// dumb jfreechart
+			// draw its stuff in a separate thread and *WAIT* for its completition
+			// (because and can not draw new stuff while prior is still been rendered)
+			Runnable updater = new Runnable() {
+				public void run() {
+					// draw NDS/solutions charts
+					updateNDSGraphs();
+				}
+			};
+			try {
+				SwingUtilities.invokeAndWait(updater);
+			} catch (InvocationTargetException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 

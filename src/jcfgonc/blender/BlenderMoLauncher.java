@@ -104,9 +104,13 @@ public class BlenderMoLauncher {
 		properties.setProperty("operator", "CustomMutation");
 		properties.setProperty("CustomMutation.Rate", "1.0");
 		properties.setProperty("populationSize", Integer.toString(BlenderMoConfig.POPULATION_SIZE));
-		properties.setProperty("instances", "100");
-		properties.setProperty("epsilon", "0.25");
-
+	//	properties.setProperty("epsilon", "0.25"); //default is 0.01
+	//	properties.setProperty("windowSize", "33");
+	//	properties.setProperty("maxWindowSize", "40");		
+	//	properties.setProperty("divisionsOuter", "2");
+	//	properties.setProperty("divisionsInner", "1");
+		
+		
 		BlendMutation.setInputSpace(inputSpace);
 		BlendMutation.setRandom(random);
 		// TODO: personalize your constructor here
