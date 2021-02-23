@@ -9,14 +9,11 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 
-import com.githhub.aaronbembenek.querykb.KnowledgeBase;
 import com.githhub.aaronbembenek.querykb.Query;
 
 import frames.SemanticFrame;
 import graph.StringGraph;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import jcfgonc.blender.BlenderMoConfig;
 import jcfgonc.blender.logic.LogicUtils;
 import jcfgonc.blender.structures.Blend;
 import jcfgonc.moea.generic.ProblemDescription;
@@ -78,6 +75,8 @@ public class CustomProblem implements Problem, ProblemDescription {
 		StringGraph blendSpace = blend.getBlendSpace();
 		Mapping<String> mapping = blend.getMapping();
 
+		// frames DISABLED because of the unique variable instantiation BUG
+
 //		// transform the blend space into a KB
 //		KnowledgeBase blendKB = LogicUtils.buildKnowledgeBase(blendSpace);
 //		// check for frames matched in the blend
@@ -133,7 +132,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 		}
 
 		// mapping usage
-		int mappingMix = LogicUtils.calculateMappingMix(blendSpace, mapping);
+		double mappingMix = (double) LogicUtils.calculateMappingMix(blendSpace, mapping) / blendSpace.numberOfEdges();
 
 		// cycles
 //		int cycles = GraphAlgorithms.countCycles(blendSpace);
@@ -150,7 +149,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 		// set solution's objectives here
 		int obj_i = 0;
 		solution.setObjective(obj_i++, relationStdDev);
-		solution.setObjective(obj_i++, -mappingMix);// 20 is the expected max of number of mappings
+		solution.setObjective(obj_i++, -mappingMix);
 //		solution.setObjective(obj_i++, -edgesLargestFrame);// 7 is the expected max edges of largest frame
 		// solution.setObjective(obj_i++, -cycles);
 //		solution.setObjective(obj_i++, numberMatchedFrames);// 20 is the expected max of number of matched frames and 1 the lowest
@@ -158,9 +157,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 		solution.setObjective(obj_i++, -vrScore);
 		solution.setObjective(obj_i++, -is_balance);
 
-//		if (frameSemanticSimilarity < 1000 && matchedFrames.size() == 0) {
-//			System.err.println("semanticSimilarityMaxSum < 1000 && matchedFrames.size() == 0");
-//		}
+//		System.out.printf("%d\t%d\t%d\n", mappingMix, blendSpace.numberOfEdges(), blendSpace.numberOfVertices());
 
 		// if required define constraints below
 		// violated constraints are set to 1, otherwise set to 0
@@ -171,25 +168,6 @@ public class CustomProblem implements Problem, ProblemDescription {
 //		} else {
 //			solution.setConstraint(0, 0);
 //		}
-//		// maximum number of matched frames
-//		if (numberMatchedFrames > 100) {
-//			solution.setConstraint(1, 0);
-//		} else {
-//			solution.setConstraint(1, 0);
-//		}
-//		// require one or more frames
-//		if (numberMatchedFrames < 0) {
-//			solution.setConstraint(2, 1);
-//		} else {
-//			solution.setConstraint(2, 0);
-//		}
-//		// require semanticSimilarityMaxSum below threshold
-//		if (blendSemanticSimilarity > 1) {
-//			solution.setConstraint(3, 1);
-//		} else {
-//			solution.setConstraint(3, 0);
-//		}
-
 	}
 
 	@Override
@@ -203,14 +181,15 @@ public class CustomProblem implements Problem, ProblemDescription {
 	@Override
 	public String getObjectiveDescription(int varid) {
 		String[] objectives = { //
-				"f:relation stddev", //
+				"f:relation similarity", //
 				"d:mapping mix", //
-			//	"d:number of edges of largest frame", //
+				// "d:number of edges of largest frame", //
 				// "d:number of cycles", //
-			//	"d:number of matched frames", //
+				// "d:number of matched frames", //
 				"f:mean of within-blend semantic similarity", //
 				"f:mean importance of vital relations", //
-				"f:input spaces balance" };
+				"f:input spaces balance" //
+		};
 		return objectives[varid];
 	}
 

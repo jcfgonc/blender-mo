@@ -348,7 +348,7 @@ public class InteractiveExecutorGUI extends JFrame {
 		numberNDSGraphs = (int) Math.ceil((double) numberOfObjectives / 2); // they will be plotted in pairs of objectives
 
 		// if too many objectives put the graphs side by side, otherwise stack them vertically
-		if (numberOfObjectives > 4) {
+		if (numberOfObjectives > 2) {
 			ndsPanel.setLayout(new GridLayout(1, 0, 0, 0));
 		} else {
 			ndsPanel.setLayout(new GridLayout(0, 1, 0, 0));
