@@ -1,10 +1,8 @@
 package jcfgonc.blender;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,7 +41,32 @@ import utils.VariousUtils;
 import wordembedding.WordEmbeddingUtils;
 
 public class BlenderMoLauncher {
-	@SuppressWarnings("unused")
+
+	private static void registerCustomMutation() {
+		OperatorFactory.getInstance().addProvider(new OperatorProvider() {
+			public String getMutationHint(Problem problem) {
+				return null;
+			}
+
+			public String getVariationHint(Problem problem) {
+				return null;
+			}
+
+			public Variation getVariation(String name, Properties properties, Problem problem) {
+				TypedProperties typedProperties = new TypedProperties(properties);
+
+				if (name.equalsIgnoreCase("CustomMutation")) {
+					double probability = typedProperties.getDouble("CustomMutation.Rate", 1.0);
+					CustomMutation pm = new CustomMutation(probability);
+					return pm;
+				}
+
+				// No match, return null
+				return null;
+			}
+		});
+	}
+
 	public static void main(String[] args) throws NoSuchFileException, IOException, ClassNotFoundException, InstantiationException,
 			IllegalAccessException, UnsupportedLookAndFeelException, InterruptedException {
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -104,104 +127,70 @@ public class BlenderMoLauncher {
 		properties.setProperty("operator", "CustomMutation");
 		properties.setProperty("CustomMutation.Rate", "1.0");
 		properties.setProperty("populationSize", Integer.toString(BlenderMoConfig.POPULATION_SIZE));
-	//	properties.setProperty("epsilon", "0.25"); //default is 0.01
-	//	properties.setProperty("windowSize", "33");
-	//	properties.setProperty("maxWindowSize", "40");		
-	//	properties.setProperty("divisionsOuter", "2");
-	//	properties.setProperty("divisionsInner", "1");
-		
-		
+		// properties.setProperty("epsilon", "0.25"); //default is 0.01
+		// properties.setProperty("windowSize", "33");
+		// properties.setProperty("maxWindowSize", "40");
+		// properties.setProperty("divisionsOuter", "2");
+		// properties.setProperty("divisionsInner", "1");
+
 		BlendMutation.setInputSpace(inputSpace);
 		BlendMutation.setRandom(random);
-		// TODO: personalize your constructor here
+		// personalize your constructor here
 		CustomProblem problem = new CustomProblem(inputSpace, mappings, frames, frameQueries, vitalRelations, wps, random);
 
 		InteractiveExecutor ie = new InteractiveExecutor(problem, BlenderMoConfig.ALGORITHM, properties, BlenderMoConfig.MAX_EPOCHS,
 				BlenderMoConfig.POPULATION_SIZE);
-		ArrayList<NondominatedPopulation> runsResults = new ArrayList<NondominatedPopulation>();
+
+		String resultsFilename = String.format("moea_results_%s.tsv", VariousUtils.generateCurrentDateAndTimeStamp());
+		writeFileHeader(resultsFilename, problem);
+
 		for (int moea_run = 0; moea_run < BlenderMoConfig.MOEA_RUNS; moea_run++) {
 			if (ie.isCanceled())
 				break;
 			System.gc();
 			NondominatedPopulation currentResults = ie.execute(moea_run);
-			runsResults.add(currentResults);
+
+			saveResultsFile(resultsFilename, currentResults, problem);
 		}
 		ie.closeGUI();
 
-		NondominatedPopulation results = mergeResults(runsResults);
-		String filename = String.format("moea_results_%s.tsv", VariousUtils.generateCurrentDateAndTimeStamp());
-		saveResultsFile(filename, results, problem);
 		// terminate daemon threads
 		System.exit(0);
 	}
 
 	/**
-	 * this function is required to merge the results of the multiple runs to prevent dominated solutions from being present
+	 * opens the given file in append mode and writes the results header. It is hard-coded for the blender
 	 * 
-	 * @param runsResults
-	 * @return
+	 * @param filename
+	 * @param problem
+	 * @throws IOException
 	 */
-	private static NondominatedPopulation mergeResults(ArrayList<NondominatedPopulation> runsResults) {
-		NondominatedPopulation results = new NondominatedPopulation();
-		for (NondominatedPopulation run : runsResults) {
-			for (Solution solution : run) {
-				results.add(solution);
-			}
-		}
-		return results;
-	}
-
-	private static void registerCustomMutation() {
-		OperatorFactory.getInstance().addProvider(new OperatorProvider() {
-			public String getMutationHint(Problem problem) {
-				return null;
-			}
-
-			public String getVariationHint(Problem problem) {
-				return null;
-			}
-
-			public Variation getVariation(String name, Properties properties, Problem problem) {
-				TypedProperties typedProperties = new TypedProperties(properties);
-
-				if (name.equalsIgnoreCase("CustomMutation")) {
-					double probability = typedProperties.getDouble("CustomMutation.Rate", 1.0);
-					CustomMutation pm = new CustomMutation(probability);
-					return pm;
-				}
-
-				// No match, return null
-				return null;
-			}
-		});
-	}
-
-	// TODO this is hard-coded for the blender
-	// TODO support multiple variables
-	private static void saveResultsFile(String filename, NondominatedPopulation results, Problem problem) throws IOException {
-		if (results.isEmpty())
-			return;
-		int numberOfObjectives = problem.getNumberOfObjectives();
-
-		File file = new File(filename);
-		FileWriter fw = new FileWriter(file, StandardCharsets.UTF_8);
+	private static void writeFileHeader(String filename, Problem problem) throws IOException {
+		FileWriter fw = new FileWriter(filename, true);
 		BufferedWriter bw = new BufferedWriter(fw);
 
 		ProblemDescription pd = (ProblemDescription) problem;
-		// write header
-		// write header
+		int numberOfObjectives = problem.getNumberOfObjectives();
 		for (int i = 0; i < numberOfObjectives; i++) {
 			String objectiveDescription = pd.getObjectiveDescription(i);
-			bw.write(String.format("%s\t", objectiveDescription));
+			fw.write(String.format("%s\t", objectiveDescription));
 		}
 		// graph data header
 		bw.write("d:graph's vertices\t");
 		bw.write("d:graph's edges\t");
 		bw.write(pd.getVariableDescription(0));
 		bw.newLine();
+		bw.close();
+		fw.close();
+	}
 
-		// write data
-		// for each run/ndp
+	// this is hard-coded for the blender
+	private static void saveResultsFile(String filename, NondominatedPopulation results, Problem problem) throws IOException {
+		FileWriter fw = new FileWriter(filename, true);
+		BufferedWriter bw = new BufferedWriter(fw);
+
+		int numberOfObjectives = problem.getNumberOfObjectives();
+
 		for (Solution solution : results) {
 			// write objectives
 			for (int i = 0; i < numberOfObjectives; i++) {
@@ -210,6 +199,7 @@ public class BlenderMoLauncher {
 			}
 
 			// graph data
+			// hard-coded for the blender
 			CustomChromosome cc = (CustomChromosome) solution.getVariable(0); // unless the solution domain X has more than one dimension
 			StringGraph blendSpace = cc.getBlend().getBlendSpace();
 

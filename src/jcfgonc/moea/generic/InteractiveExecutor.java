@@ -13,6 +13,7 @@ import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.spi.AlgorithmFactory;
 
+import structures.Ticker;
 import utils.VariousUtils;
 
 public class InteractiveExecutor {
@@ -72,14 +73,16 @@ public class InteractiveExecutor {
 
 //			t.getTimeDeltaLastCall();
 			algorithm.step();
-//			double dt = t.getTimeDeltaLastCall();
-//			System.out.format("epoch %d took %f seconds\n", epoch, dt);
+//			System.out.format("algorithm.step() %d took %f seconds\n", epoch, t.getTimeDeltaLastCall());
+
 			epoch++;
 			lastResult = algorithm.getResult();
 			// accumulatedResults.addAll(lastResult);
 
 			// update graphs
+//			t.getTimeDeltaLastCall();
 			gui.updateStatus(lastResult, epoch, moea_run);
+//			System.out.format("gui.updateStatus() took %f seconds\n", t.getTimeDeltaLastCall());
 
 			// gui.saveScreenShot("screenshots/" + ss_filename_df.format(moea_run) + "_" + ss_filename_df.format(epoch) + ".png");
 			// calculateMinimumOfObjectives(accumulatedResults, problem.getNumberOfObjectives());

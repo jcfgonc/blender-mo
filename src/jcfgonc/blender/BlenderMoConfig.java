@@ -4,8 +4,8 @@ import java.math.BigInteger;
 
 public class BlenderMoConfig {
 	public static final String ALGORITHM = "NSGAIII";
-	public static final int POPULATION_SIZE = 256;
-	public static final int MAX_EPOCHS = 1<<16; // maximum number of epochs/generations to iterate
+	public static final int POPULATION_SIZE = 512;
+	public static final int MAX_EPOCHS = 2048; // maximum number of epochs/generations to iterate
 	public static final int MOEA_RUNS = 128; // maximum number of MOEA runs (each run iterates max_epochs)
 
 	public static final double EDGE_MUTATION_PROBABILITY_POWER = 4;
