@@ -13,7 +13,6 @@ import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.spi.AlgorithmFactory;
 
-import structures.Ticker;
 import utils.VariousUtils;
 
 public class InteractiveExecutor {
@@ -75,7 +74,6 @@ public class InteractiveExecutor {
 			algorithm.step();
 //			System.out.format("algorithm.step() %d took %f seconds\n", epoch, t.getTimeDeltaLastCall());
 
-			epoch++;
 			lastResult = algorithm.getResult();
 			// accumulatedResults.addAll(lastResult);
 
@@ -92,6 +90,7 @@ public class InteractiveExecutor {
 			if (algorithm.isTerminated() || epoch >= maxGenerations || canceled || skipCurrentRun) {
 				break; // break while loop
 			}
+			epoch++;
 		} while (true);
 
 		algorithm.terminate();

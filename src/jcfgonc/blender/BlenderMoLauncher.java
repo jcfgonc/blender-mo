@@ -29,6 +29,7 @@ import graph.StringGraph;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import jcfgonc.blender.logic.FileTools;
 import jcfgonc.blender.logic.LogicUtils;
+import jcfgonc.blender.logic.QueryKB;
 import jcfgonc.moea.generic.InteractiveExecutor;
 import jcfgonc.moea.generic.ProblemDescription;
 import jcfgonc.moea.specific.CustomChromosome;
@@ -86,7 +87,7 @@ public class BlenderMoLauncher {
 		// filter some frames
 		ArrayList<SemanticFrame> frames = new ArrayList<SemanticFrame>(64 * 1024);
 		for (SemanticFrame frame : frames0) {
-			if (frame.getGraph().numberOfEdges() > 10)
+			if (frame.getFrame().numberOfEdges() > 10)
 				continue;
 			if (frame.getMatches() < 3)
 				continue;
@@ -104,8 +105,8 @@ public class BlenderMoLauncher {
 		ArrayList<Query> frameQueries = new ArrayList<>(frames.size());
 		for (int i = 0; i < frames.size(); i++) {
 			SemanticFrame frame = frames.get(i);
-			StringGraph g = frame.getGraph();
-			Query q = LogicUtils.createQueryFromStringGraph(g);
+			StringGraph g = frame.getFrame();
+			Query q = QueryKB.createQueryFromStringGraph(g);
 			frameQueries.add(q);
 		}
 		System.out.println("took " + ticker.getTimeDeltaLastCall() + "s to create querykb's Queries");
@@ -127,9 +128,11 @@ public class BlenderMoLauncher {
 		properties.setProperty("operator", "CustomMutation");
 		properties.setProperty("CustomMutation.Rate", "1.0");
 		properties.setProperty("populationSize", Integer.toString(BlenderMoConfig.POPULATION_SIZE));
-		// properties.setProperty("epsilon", "0.25"); //default is 0.01
-		// properties.setProperty("windowSize", "33");
-		// properties.setProperty("maxWindowSize", "40");
+		properties.setProperty("epsilon", "0.005"); // default is 0.01
+		properties.setProperty("windowSize", "200");
+		properties.setProperty("maxWindowSize", "200");
+		properties.setProperty("injectionRate", "0.5"); // default is 0.25
+
 		// properties.setProperty("divisionsOuter", "2");
 		// properties.setProperty("divisionsInner", "1");
 

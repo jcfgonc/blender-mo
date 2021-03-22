@@ -7,9 +7,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
-import java.util.List;
-
-import com.githhub.aaronbembenek.querykb.Query;
 
 import graph.GraphReadWrite;
 import graph.StringGraph;
@@ -19,24 +16,6 @@ import structures.Ticker;
 import utils.VariousUtils;
 
 public class FileTools {
-	public static List<Query> readPatternFramesCSV_OLD(String framesPath) throws IOException {
-		System.out.println("loading frames from " + framesPath);
-		Ticker ticker = new Ticker();
-		List<StringGraph> framesOriginal = LogicUtils.readPatternResultsDelimitedFile(new File(framesPath), " \t", true, 7);
-
-		// create querykb queries from the frames
-		List<Query> frames = new ArrayList<Query>();
-		for (StringGraph frame : framesOriginal) {
-			if (frame.numberOfEdges() > 2 && frame.numberOfEdges() < 100) {
-				frames.add(LogicUtils.createQueryFromStringGraph(frame));
-			}
-		}
-		System.out.printf("using %d from %d frames\n", frames.size(), framesOriginal.size());
-		System.out.println("loading took " + ticker.getTimeDeltaLastCall() + " s");
-		framesOriginal = null;
-		System.out.println("-------");
-		return frames;
-	}
 
 	public static StringGraph readInputSpace(String inputSpacePath) throws IOException, NoSuchFileException {
 		System.out.println("loading input space from " + inputSpacePath);
