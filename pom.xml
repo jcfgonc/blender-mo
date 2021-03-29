@@ -58,5 +58,10 @@
 			<artifactId>moeaframework</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>za.co.wstoop</groupId>
+			<artifactId>jatalog</artifactId>
+			<version>0.9-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 </project>

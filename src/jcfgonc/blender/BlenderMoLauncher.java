@@ -95,7 +95,6 @@ public class BlenderMoLauncher {
 				continue;
 			frames.add(frame);
 		}
-		Collections.shuffle(frames, random);
 		// frames = new ArrayList<SemanticFrame>(frames.subList(0, 1024));
 		System.out.printf("using %d frames\n", frames.size());
 		frames0 = null;
