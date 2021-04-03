@@ -1,11 +1,8 @@
 package jcfgonc.blender;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Properties;
 
 import javax.swing.UIManager;
@@ -15,28 +12,22 @@ import org.apache.commons.math3.random.RandomAdaptor;
 import org.apache.commons.math3.random.Well44497b;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
-import org.moeaframework.core.Solution;
 import org.moeaframework.core.Variation;
 import org.moeaframework.core.spi.OperatorFactory;
 import org.moeaframework.core.spi.OperatorProvider;
 import org.moeaframework.util.TypedProperties;
-
-import com.githhub.aaronbembenek.querykb.Query;
 
 import frames.FrameReadWrite;
 import frames.SemanticFrame;
 import graph.StringGraph;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import jcfgonc.blender.logic.FileTools;
-import jcfgonc.blender.logic.LogicUtils;
-import jcfgonc.blender.logic.QueryKB;
 import jcfgonc.moea.generic.InteractiveExecutor;
-import jcfgonc.moea.generic.ProblemDescription;
-import jcfgonc.moea.specific.CustomChromosome;
 import jcfgonc.moea.specific.CustomMutation;
 import jcfgonc.moea.specific.CustomProblem;
+import jcfgonc.moea.specific.ResultsWriter;
+import jcfgonc.moea.specific.ResultsWriterBlenderMO;
 import structures.Mapping;
-import structures.Ticker;
 import structures.UnorderedPair;
 import utils.VariousUtils;
 import wordembedding.WordEmbeddingUtils;
@@ -72,7 +63,6 @@ public class BlenderMoLauncher {
 			IllegalAccessException, UnsupportedLookAndFeelException, InterruptedException {
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-		Ticker ticker = new Ticker();
 		RandomAdaptor random = new RandomAdaptor(new Well44497b());
 
 		// read input space
@@ -83,32 +73,24 @@ public class BlenderMoLauncher {
 
 		// read frames file
 		ArrayList<SemanticFrame> frames0 = FrameReadWrite.readPatternFrames(BlenderMoConfig.framesPath);
-		FrameReadWrite.updatePatternFrameSimilarity(frames0, BlenderMoConfig.frameSimilarityFilename);
 		// filter some frames
 		ArrayList<SemanticFrame> frames = new ArrayList<SemanticFrame>(64 * 1024);
 		for (SemanticFrame frame : frames0) {
-			if (frame.getFrame().numberOfEdges() > 10)
+			if (frame.getFrame().numberOfEdges() > 3)
 				continue;
-			if (frame.getMatches() < 3)
+			if (frame.getMatches() < 2) // less than 100 (10^2) occurrences
 				continue;
-			if (frame.getRelationTypesStd() > 0.5)
+			if (frame.getRelationTypesStd() > 0.01)
+				continue;
+			if (frame.getCycles() > 1)
+				continue;
+			if (frame.getEdgesPerRelationTypes() > 1.1)
 				continue;
 			frames.add(frame);
 		}
 		// frames = new ArrayList<SemanticFrame>(frames.subList(0, 1024));
 		System.out.printf("using %d frames\n", frames.size());
 		frames0 = null;
-
-		// create frame queries
-		ticker.getTimeDeltaLastCall();
-		ArrayList<Query> frameQueries = new ArrayList<>(frames.size());
-		for (int i = 0; i < frames.size(); i++) {
-			SemanticFrame frame = frames.get(i);
-			StringGraph g = frame.getFrame();
-			Query q = QueryKB.createQueryFromStringGraph(g);
-			frameQueries.add(q);
-		}
-		System.out.println("took " + ticker.getTimeDeltaLastCall() + "s to create querykb's Queries");
 
 		// read pre-calculated semantic scores of word/relation pairs
 		Object2DoubleOpenHashMap<UnorderedPair<String>> wps = WordEmbeddingUtils.readWordPairScores(BlenderMoConfig.wordPairScores_filename);
@@ -127,90 +109,42 @@ public class BlenderMoLauncher {
 		properties.setProperty("operator", "CustomMutation");
 		properties.setProperty("CustomMutation.Rate", "1.0");
 		properties.setProperty("populationSize", Integer.toString(BlenderMoConfig.POPULATION_SIZE));
-		properties.setProperty("epsilon", "0.005"); // default is 0.01
+		properties.setProperty("epsilon", "0.01"); // default is 0.01
 		properties.setProperty("windowSize", "200");
 		properties.setProperty("maxWindowSize", "200");
-		properties.setProperty("injectionRate", "0.5"); // default is 0.25
+		properties.setProperty("injectionRate", Double.toString(1.0 / 0.5)); // population to archive ratio, default is 4
 
-		// properties.setProperty("divisionsOuter", "2");
-		// properties.setProperty("divisionsInner", "1");
+		properties.setProperty("divisionsOuter", "10"); // 3
+		properties.setProperty("divisionsInner", "0"); // 2
 
 		BlendMutation.setInputSpace(inputSpace);
 		BlendMutation.setRandom(random);
-		// personalize your constructor here
-		CustomProblem problem = new CustomProblem(inputSpace, mappings, frames, frameQueries, vitalRelations, wps, random);
-
-		InteractiveExecutor ie = new InteractiveExecutor(problem, BlenderMoConfig.ALGORITHM, properties, BlenderMoConfig.MAX_EPOCHS,
-				BlenderMoConfig.POPULATION_SIZE);
 
 		String resultsFilename = String.format("moea_results_%s.tsv", VariousUtils.generateCurrentDateAndTimeStamp());
-		writeFileHeader(resultsFilename, problem);
+		// personalize your results writer here
+		ResultsWriter resultsWriter = new ResultsWriterBlenderMO();
 
+		// personalize your constructor here
+		CustomProblem problem = new CustomProblem(inputSpace, mappings, frames, vitalRelations, wps, random);
+
+		InteractiveExecutor ie = new InteractiveExecutor(problem, BlenderMoConfig.ALGORITHM, properties, BlenderMoConfig.MAX_EPOCHS,
+				BlenderMoConfig.POPULATION_SIZE, BlenderMoConfig.MOEA_RUNS, resultsFilename, resultsWriter);
+
+		resultsWriter.writeFileHeader(resultsFilename, problem);
+
+		// do 'k' runs of 'n' epochs
 		for (int moea_run = 0; moea_run < BlenderMoConfig.MOEA_RUNS; moea_run++) {
 			if (ie.isCanceled())
 				break;
-			System.gc();
+			// do one run of 'n' epochs
 			NondominatedPopulation currentResults = ie.execute(moea_run);
 
-			saveResultsFile(resultsFilename, currentResults, problem);
+			resultsWriter.appendResultsToFile(resultsFilename, currentResults, problem);
 		}
+		resultsWriter.close();
 		ie.closeGUI();
 
 		// terminate daemon threads
 		System.exit(0);
-	}
-
-	/**
-	 * opens the given file in append mode and writes the results header. It is hard-coded for the blender
-	 * 
-	 * @param filename
-	 * @param problem
-	 * @throws IOException
-	 */
-	private static void writeFileHeader(String filename, Problem problem) throws IOException {
-		FileWriter fw = new FileWriter(filename, true);
-		BufferedWriter bw = new BufferedWriter(fw);
-
-		ProblemDescription pd = (ProblemDescription) problem;
-		int numberOfObjectives = problem.getNumberOfObjectives();
-		for (int i = 0; i < numberOfObjectives; i++) {
-			String objectiveDescription = pd.getObjectiveDescription(i);
-			fw.write(String.format("%s\t", objectiveDescription));
-		}
-		// graph data header
-		bw.write("d:graph's vertices\t");
-		bw.write("d:graph's edges\t");
-		bw.write(pd.getVariableDescription(0));
-		bw.newLine();
-		bw.close();
-		fw.close();
-	}
-
-	// this is hard-coded for the blender
-	private static void saveResultsFile(String filename, NondominatedPopulation results, Problem problem) throws IOException {
-		FileWriter fw = new FileWriter(filename, true);
-		BufferedWriter bw = new BufferedWriter(fw);
-
-		int numberOfObjectives = problem.getNumberOfObjectives();
-
-		for (Solution solution : results) {
-			// write objectives
-			for (int i = 0; i < numberOfObjectives; i++) {
-				bw.write(Double.toString(solution.getObjective(i)));
-				bw.write('\t');
-			}
-
-			// graph data
-			// hard-coded for the blender
-			CustomChromosome cc = (CustomChromosome) solution.getVariable(0); // unless the solution domain X has more than one dimension
-			StringGraph blendSpace = cc.getBlend().getBlendSpace();
-
-			bw.write(String.format("%d\t", blendSpace.numberOfVertices()));
-			bw.write(String.format("%d\t", blendSpace.numberOfEdges()));
-			bw.write(String.format("%s", blendSpace));
-			bw.newLine();
-		}
-		bw.close();
-		fw.close();
 	}
 }

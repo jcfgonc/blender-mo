@@ -2,14 +2,14 @@ package jcfgonc.moea.specific;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 import org.apache.commons.math3.random.RandomAdaptor;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
-
-import com.githhub.aaronbembenek.querykb.Query;
 
 import frames.SemanticFrame;
 import graph.StringGraph;
@@ -18,8 +18,13 @@ import jcfgonc.blender.logic.LogicUtils;
 import jcfgonc.blender.structures.Blend;
 import jcfgonc.moea.generic.ProblemDescription;
 import structures.Mapping;
+import structures.Ticker;
 import structures.UnorderedPair;
+import utils.JatalogInterface;
+import utils.OSTools;
 import wordembedding.WordEmbeddingUtils;
+import za.co.wstoop.jatalog.DatalogException;
+import za.co.wstoop.jatalog.Expr;
 
 public class CustomProblem implements Problem, ProblemDescription {
 
@@ -27,23 +32,34 @@ public class CustomProblem implements Problem, ProblemDescription {
 	private final ArrayList<Mapping<String>> mappings;
 	private final RandomAdaptor random;
 	private final ArrayList<SemanticFrame> frames;
-	private final List<Query> frameQueries;
+	private final List<List<Expr>> frameQueries;
 	private final Object2DoubleOpenHashMap<UnorderedPair<String>> wps;
 	private final Object2DoubleOpenHashMap<String> vitalRelations;
+	private ConcurrentLinkedDeque<JatalogInterface> datalogEngines;
 
 	/**
 	 * Invoked by Custom Launcher when creating this problem. Custom code typically required here.
 	 * 
 	 */
-	public CustomProblem(StringGraph inputSpace, ArrayList<Mapping<String>> mappings, ArrayList<SemanticFrame> frames, ArrayList<Query> frameQueries,
+	public CustomProblem(StringGraph inputSpace, ArrayList<Mapping<String>> mappings, ArrayList<SemanticFrame> frames,
 			Object2DoubleOpenHashMap<String> vitalRelations, Object2DoubleOpenHashMap<UnorderedPair<String>> wps, RandomAdaptor random) {
 		this.inputSpace = inputSpace;
 		this.mappings = mappings;
 		this.frames = frames;
 		this.random = random;
-		this.frameQueries = frameQueries;
 		this.vitalRelations = vitalRelations;
 		this.wps = wps;
+
+		Ticker ticker = new Ticker();
+		// create datalog frame queries
+		ticker.resetTicker();
+		this.frameQueries = JatalogInterface.createQueriesFromFrames(frames);
+		System.out.println("took " + ticker.getElapsedTime() + "s to convert frames to datalog queries");
+
+		datalogEngines = new ConcurrentLinkedDeque<>();
+		for (int i = 0; i < OSTools.getNumberOfCores(); i++) {
+			datalogEngines.add(new JatalogInterface());
+		}
 	}
 
 	@Override
@@ -75,37 +91,45 @@ public class CustomProblem implements Problem, ProblemDescription {
 		StringGraph blendSpace = blend.getBlendSpace();
 		Mapping<String> mapping = blend.getMapping();
 
-		// frames DISABLED because of the unique variable instantiation BUG
+		// get a datalog engine
+		JatalogInterface datalog = datalogEngines.pop();
+		BitSet queriesResults = null;
+		// check for frames matched in the blend
+		try {
+			// transform the blend space into a KB
+			datalog.clearFacts(); // very important, clear previous stuff
+			datalog.addFacts(blendSpace);
+			// do the queries
+			queriesResults = datalog.isQueryTrue(frameQueries);
+		} catch (DatalogException e) {
+			e.printStackTrace();
+		} finally {
+			datalogEngines.push(datalog);
+		}
 
-//		// transform the blend space into a KB
-//		KnowledgeBase blendKB = LogicUtils.buildKnowledgeBase(blendSpace);
-//		// check for frames matched in the blend
-//		Object2IntOpenHashMap<SemanticFrame> matchedFrames = new Object2IntOpenHashMap<SemanticFrame>();
-//		int edgesLargestFrame = 0;
-//		for (int i = 0; i < frames.size(); i++) {
-//			SemanticFrame frame = frames.get(i);
-//			Query frameQuery = frameQueries.get(i);
-//			int count = LogicUtils.countFrameMatchesInt(blendKB, frameQuery, BlenderMoConfig.BLOCK_SIZE, BlenderMoConfig.PARALLEL_LIMIT,
-//					BlenderMoConfig.SOLUTION_LIMIT, true, Long.valueOf(BlenderMoConfig.QUERY_TIMEOUT_SECONDS));
-//			if (count > 0) {
-//				matchedFrames.put(frame, count);
-//				// find largest frame
-//				int numberOfEdges = frame.getGraph().numberOfEdges();
-//				if (numberOfEdges > edgesLargestFrame) {
-//					edgesLargestFrame = numberOfEdges;
-//				}
-//			}
-//		}
-//		int numberMatchedFrames = matchedFrames.size();
-//		// the MOEA will minimize numberMatchedFrames and because we want blends to have at least one frame and not many
-//		// we'll penalize zero frames
-//		final int frameLimit = 20;
-//		if (numberMatchedFrames == 0 || numberMatchedFrames > frameLimit) {
-//			numberMatchedFrames = frameLimit;
-//		}
-//		matchedFrames = null;
-//		blendKB = null;
-
+		// calculate frame qualities
+		// 20 is an acceptable limit to fit within a small graphical window
+		// (i.e. if it was +Integer.MAX it would be hard to see small values)
+		int edgesLargestFrame = 0; // maximize
+		int numberMatchedFrames = 10; // minimize
+		// process queries/frames results
+		int cardinality = queriesResults.cardinality();
+		if (queriesResults != null && cardinality > 0) {
+			if (cardinality < numberMatchedFrames) {
+				numberMatchedFrames = cardinality;
+			}
+			// iterate through the set bits in the bitset
+			for (int i = queriesResults.nextSetBit(0); i != -1; i = queriesResults.nextSetBit(i + 1)) {
+				SemanticFrame frame = frames.get(i);
+				// find largest frame
+				StringGraph frameGraph = frame.getFrame();
+				int numberOfEdges = frameGraph.numberOfEdges();
+				if (numberOfEdges > edgesLargestFrame) {
+					edgesLargestFrame = numberOfEdges;
+				}
+			}
+		}
+		System.lineSeparator();
 		// now experimenting with blend SS instead of frames SS
 //		double frameSemanticSimilarity;
 //		if (matchedFrames.isEmpty()) {
@@ -150,9 +174,9 @@ public class CustomProblem implements Problem, ProblemDescription {
 		int obj_i = 0;
 		solution.setObjective(obj_i++, relationStdDev);
 		solution.setObjective(obj_i++, -mappingMix);
-//		solution.setObjective(obj_i++, -edgesLargestFrame);// 7 is the expected max edges of largest frame
+		solution.setObjective(obj_i++, -edgesLargestFrame);// 7 is the expected max edges of largest frame
 		// solution.setObjective(obj_i++, -cycles);
-//		solution.setObjective(obj_i++, numberMatchedFrames);// 20 is the expected max of number of matched frames and 1 the lowest
+		solution.setObjective(obj_i++, numberMatchedFrames);// 20 is the expected max of number of matched frames and 1 the lowest
 		solution.setObjective(obj_i++, blendSemanticSimilarity);
 		solution.setObjective(obj_i++, -vrScore);
 		solution.setObjective(obj_i++, -is_balance);
@@ -175,7 +199,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 	 * The number of objectives defined by this problem.
 	 */
 	public int getNumberOfObjectives() {
-		return 5;
+		return 7;
 	}
 
 	@Override
@@ -183,9 +207,9 @@ public class CustomProblem implements Problem, ProblemDescription {
 		String[] objectives = { //
 				"f:relation similarity", //
 				"d:mapping mix", //
-				// "d:number of edges of largest frame", //
+				"d:number of edges of largest frame", //
 				// "d:number of cycles", //
-				// "d:number of matched frames", //
+				"d:number of matched frames", //
 				"f:mean of within-blend semantic similarity", //
 				"f:mean importance of vital relations", //
 				"f:input spaces balance" //

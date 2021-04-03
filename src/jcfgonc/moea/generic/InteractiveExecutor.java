@@ -1,6 +1,5 @@
 package jcfgonc.moea.generic;
 
-import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Properties;
@@ -13,27 +12,35 @@ import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.spi.AlgorithmFactory;
 
+import jcfgonc.moea.specific.ResultsWriter;
+import structures.Ticker;
 import utils.VariousUtils;
 
 public class InteractiveExecutor {
 	private String algorithmName;
 	private Properties algorithmProperties;
-	private int maxGenerations;
+	private int maxEpochs;
 	private NondominatedPopulation lastResult;
-//	private NondominatedPopulation accumulatedResults;
 	private boolean canceled;
 	private boolean skipCurrentRun;
 	private Problem problem;
 	private InteractiveExecutorGUI gui;
-//	private BlenderVisualizer blenderVisualizer;
 	@SuppressWarnings("unused")
 	private final DecimalFormat ss_filename_df = new DecimalFormat("000");
+	private ResultsWriter resultsWriter;
+	private String resultsFilename;
+	private int maxRuns;
+//	private BlenderVisualizer blenderVisualizer;
 
-	public InteractiveExecutor(Problem problem, String algorithmName, Properties algorithmProperties, int maxGenerations, int populationSize) {
+	public InteractiveExecutor(Problem problem, String algorithmName, Properties algorithmProperties, int maxEpochs, int populationSize, int maxRuns,
+			String resultsFilename, ResultsWriter rw) {
 		this.problem = problem;
 		this.algorithmName = algorithmName;
 		this.algorithmProperties = algorithmProperties;
-		this.maxGenerations = maxGenerations;
+		this.maxEpochs = maxEpochs;
+		this.maxRuns = maxRuns;
+		this.resultsWriter = rw;
+		this.resultsFilename = resultsFilename;
 //		this.blenderVisualizer = new BlenderVisualizer(populationSize);
 		this.gui = new InteractiveExecutorGUI(this);
 		this.gui.initializeTheRest();
@@ -61,33 +68,31 @@ public class InteractiveExecutor {
 		int epoch = 0;
 		Algorithm algorithm = null;
 		lastResult = null;
-		// accumulatedResults = new NondominatedPopulation();
 
 		algorithm = AlgorithmFactory.getInstance().getAlgorithm(algorithmName, algorithmProperties, problem);
 		canceled = false;
 		skipCurrentRun = false;
-//		Ticker t = new Ticker();
+		Ticker ticker = new Ticker();
+
+		gui.updateStatus(lastResult, epoch, moea_run);
 
 		do {
 
-//			t.getTimeDeltaLastCall();
+			ticker.resetTicker();
 			algorithm.step();
-//			System.out.format("algorithm.step() %d took %f seconds\n", epoch, t.getTimeDeltaLastCall());
+			System.out.format("algorithm.step() %d took %f seconds\n", epoch, ticker.getTimeDeltaLastCall());
 
 			lastResult = algorithm.getResult();
-			// accumulatedResults.addAll(lastResult);
 
 			// update graphs
-//			t.getTimeDeltaLastCall();
 			gui.updateStatus(lastResult, epoch, moea_run);
-//			System.out.format("gui.updateStatus() took %f seconds\n", t.getTimeDeltaLastCall());
 
 			// gui.saveScreenShot("screenshots/" + ss_filename_df.format(moea_run) + "_" + ss_filename_df.format(epoch) + ".png");
 			// calculateMinimumOfObjectives(accumulatedResults, problem.getNumberOfObjectives());
 
 			// update blender visualizer
 //			blenderVisualizer.update(lastResult);
-			if (algorithm.isTerminated() || epoch >= maxGenerations || canceled || skipCurrentRun) {
+			if (algorithm.isTerminated() || epoch >= maxEpochs || canceled || skipCurrentRun) {
 				break; // break while loop
 			}
 			epoch++;
@@ -113,8 +118,8 @@ public class InteractiveExecutor {
 		return algorithmProperties;
 	}
 
-	public int getMaxGenerations() {
-		return maxGenerations;
+	public int getMaxEpochs() {
+		return maxEpochs;
 	}
 
 	public NondominatedPopulation getLastResult() {
@@ -126,9 +131,11 @@ public class InteractiveExecutor {
 	}
 
 	/**
-	 * called when the user clicks on the abort button
+	 * Called when the user clicks on the abort button. Saves last results and exits the JVM.
 	 */
 	public void abortOptimization() {
+		resultsWriter.appendResultsToFile(resultsFilename, lastResult, problem);
+		resultsWriter.close();
 		System.exit(-1);
 	}
 
@@ -142,10 +149,6 @@ public class InteractiveExecutor {
 
 	public void skipCurrentRun() {
 		this.skipCurrentRun = true;
-	}
-
-	public void debug(ActionListener actionListener) {
-		System.out.println(gui.toString());
 	}
 
 	@SuppressWarnings("unused")
@@ -165,5 +168,9 @@ public class InteractiveExecutor {
 			}
 		}
 		VariousUtils.printArray(minimums);
+	}
+
+	public int getMaxRuns() {
+		return maxRuns;
 	}
 }

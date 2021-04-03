@@ -2,15 +2,14 @@ package jcfgonc.moea.generic;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Shape;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -22,7 +21,6 @@ import java.util.Properties;
 
 import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -31,11 +29,8 @@ import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -59,42 +54,21 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JSplitPane horizontalPane;
 	private JPanel ndsPanel;
 	private JPanel settingsPanel;
-	private JButton stopButton;
-	private JPanel buttonsPanel;
-	private JButton abortButton;
 	private InteractiveExecutor interactiveExecutor;
-	private JPanel statusPanel;
-	private JLabel epochLabel;
 	private int numberOfVariables;
 	private int numberOfObjectives;
 	private int numberOfConstraints;
-	private JLabel variablesLabel;
-	private JLabel objectivesLabel;
-	private JLabel constraintsLabel;
-	private JLabel epochStatus;
-	private JLabel variablesStatus;
-	private JLabel objectivesStatus;
-	private JLabel constraintsStatus;
-	private JLabel populationSizeLabel;
-	private JLabel populationSizeStatus;
 	private Properties algorithmProperties;
 	private ArrayList<XYSeries> ndsSeries;
-	private JLabel ndsSizeLabel;
-	private JLabel ndsSizeStatus;
 	private JPanel timeoutPanel;
 	private int numberNDSGraphs;
 	private Problem problem;
 	private JPanel configPanel;
 	private JSpinner spinner;
 	private JLabel lblNewLabel;
-	private JButton printNDS_button;
 	private NondominatedPopulation nonDominatedSet;
-	private JLabel algorithmLabel;
-	private JLabel algorithmStatus;
-	private JButton debugButton;
-	private JLabel runStatus;
-	private JLabel runLabel;
-	private JButton nextRunButton;
+	private StatusPanel statusPanel;
+	private OptimisationControlPanel optimisationControlPanel;
 
 	/**
 	 * Create the frame.
@@ -107,6 +81,12 @@ public class InteractiveExecutorGUI extends JFrame {
 	 * @param i
 	 */
 	public InteractiveExecutorGUI(InteractiveExecutor interactiveExecutor) {
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				abortOptimization();
+			}
+		});
 		this.interactiveExecutor = interactiveExecutor;
 		this.problem = interactiveExecutor.getProblem();
 		this.algorithmProperties = interactiveExecutor.getAlgorithmProperties();
@@ -146,74 +126,8 @@ public class InteractiveExecutorGUI extends JFrame {
 		horizontalPane.setRightComponent(settingsPanel);
 		settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
 
-		statusPanel = new JPanel();
-		statusPanel.setBorder(new TitledBorder(null, "Status", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		statusPanel = new StatusPanel();
 		settingsPanel.add(statusPanel);
-		statusPanel.setLayout(new GridLayout(0, 2, 0, 0));
-
-		algorithmLabel = new JLabel("Algorithm: ");
-		algorithmLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		statusPanel.add(algorithmLabel);
-
-		algorithmStatus = new JLabel("");
-		algorithmStatus.setHorizontalAlignment(SwingConstants.LEFT);
-		statusPanel.add(algorithmStatus);
-
-		variablesLabel = new JLabel("Variables: ");
-		variablesLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		statusPanel.add(variablesLabel);
-
-		variablesStatus = new JLabel("");
-		variablesStatus.setHorizontalAlignment(SwingConstants.LEFT);
-		statusPanel.add(variablesStatus);
-
-		objectivesLabel = new JLabel("Objectives: ");
-		objectivesLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		statusPanel.add(objectivesLabel);
-
-		objectivesStatus = new JLabel("");
-		objectivesStatus.setHorizontalAlignment(SwingConstants.LEFT);
-		statusPanel.add(objectivesStatus);
-
-		constraintsLabel = new JLabel("Constraints: ");
-		constraintsLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		statusPanel.add(constraintsLabel);
-
-		constraintsStatus = new JLabel("");
-		constraintsStatus.setHorizontalAlignment(SwingConstants.LEFT);
-		statusPanel.add(constraintsStatus);
-
-		populationSizeLabel = new JLabel("Population Size: ");
-		populationSizeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		statusPanel.add(populationSizeLabel);
-
-		populationSizeStatus = new JLabel("");
-		populationSizeStatus.setHorizontalAlignment(SwingConstants.LEFT);
-		statusPanel.add(populationSizeStatus);
-
-		epochLabel = new JLabel("Epoch: ");
-		epochLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		statusPanel.add(epochLabel);
-
-		epochStatus = new JLabel("");
-		epochStatus.setHorizontalAlignment(SwingConstants.LEFT);
-		statusPanel.add(epochStatus);
-
-		runLabel = new JLabel("Run: ");
-		runLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		statusPanel.add(runLabel);
-
-		runStatus = new JLabel("");
-		runStatus.setHorizontalAlignment(SwingConstants.LEFT);
-		statusPanel.add(runStatus);
-
-		ndsSizeLabel = new JLabel("Non-Dominated Set Size: ");
-		ndsSizeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		statusPanel.add(ndsSizeLabel);
-
-		ndsSizeStatus = new JLabel("");
-		ndsSizeStatus.setHorizontalAlignment(SwingConstants.LEFT);
-		statusPanel.add(ndsSizeStatus);
 
 		configPanel = new JPanel();
 		configPanel.setBorder(new TitledBorder(null, "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -244,60 +158,8 @@ public class InteractiveExecutorGUI extends JFrame {
 		spinner.setModel(new SpinnerNumberModel(Integer.valueOf(60), Integer.valueOf(1), null, Integer.valueOf(1)));
 		timeoutPanel.add(spinner);
 
-		buttonsPanel = new JPanel();
-		buttonsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)),
-				"Optimization Control", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		settingsPanel.add(buttonsPanel);
-
-		stopButton = new JButton("Stop Optimization");
-		stopButton.setToolTipText("Waits for the current epoch to complete and returns the best results so far.");
-		stopButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				stopOptimization();
-			}
-		});
-
-		nextRunButton = new JButton("Next Run");
-		nextRunButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				skipCurrentRun();
-			}
-		});
-		buttonsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-		nextRunButton.setToolTipText("stops the current moea run and starts the next.");
-		buttonsPanel.add(nextRunButton);
-		buttonsPanel.add(stopButton);
-		stopButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-		stopButton.setBorder(UIManager.getBorder("Button.border"));
-
-		abortButton = new JButton("Abort Optimization");
-		abortButton.setToolTipText("Aborts the optimization by discarding the current epoch's results and returns the best results so far.");
-		abortButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				// System.out.println((double) (horizontalPane.getDividerLocation()) / (horizontalPane.getWidth() - horizontalPane.getDividerSize()));
-				abortOptimization();
-			}
-		});
-		abortButton.setBorder(UIManager.getBorder("Button.border"));
-		abortButton.setAlignmentX(0.5f);
-		buttonsPanel.add(abortButton);
-
-		printNDS_button = new JButton("Print Non Dominated Set");
-		printNDS_button.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				printNonDominatedSet();
-			}
-		});
-
-		debugButton = new JButton("debug");
-		debugButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				interactiveExecutor.debug(this);
-			}
-		});
-		debugButton.setToolTipText("does some useful debug thing only I know");
-		buttonsPanel.add(debugButton);
-		buttonsPanel.add(printNDS_button);
+		optimisationControlPanel = new OptimisationControlPanel();
+		settingsPanel.add(optimisationControlPanel);
 
 		addComponentListener(new ComponentAdapter() { // window resize event
 			@Override
@@ -307,21 +169,14 @@ public class InteractiveExecutorGUI extends JFrame {
 		});
 	}
 
-	private void skipCurrentRun() {
-		interactiveExecutor.skipCurrentRun();
-	}
-
-	private void abortOptimization() {
+	public void abortOptimization() {
 		// default icon, custom title
 		int n = JOptionPane.showConfirmDialog(null, "Aborting optimization will discard the results of the current epoch.\nAre you sure?",
 				"Abort Optimization", JOptionPane.YES_NO_OPTION);
 		if (n != 0)
 			return;
+		setVisible(false);
 		interactiveExecutor.abortOptimization();
-	}
-
-	private void stopOptimization() {
-		interactiveExecutor.stopOptimization();
 	}
 
 	@Override
@@ -339,11 +194,15 @@ public class InteractiveExecutorGUI extends JFrame {
 	 * contains the rest of the stuff which cannot be initialized in the initialize function (because of the windowbuilder IDE)
 	 */
 	public void initializeTheRest() {
-		variablesStatus.setText(Integer.toString(numberOfVariables));
-		objectivesStatus.setText(Integer.toString(numberOfObjectives));
-		constraintsStatus.setText(Integer.toString(numberOfConstraints));
-		populationSizeStatus.setText(algorithmProperties.getProperty("populationSize"));
-		algorithmStatus.setText(interactiveExecutor.getAlgorithmName());
+		statusPanel.getVariablesStatus().setText(Integer.toString(numberOfVariables));
+		statusPanel.getObjectivesStatus().setText(Integer.toString(numberOfObjectives));
+		statusPanel.getConstraintsStatus().setText(Integer.toString(numberOfConstraints));
+		statusPanel.getPopulationSizeStatus().setText(algorithmProperties.getProperty("populationSize"));
+		statusPanel.getAlgorithmStatus().setText(interactiveExecutor.getAlgorithmName());
+		statusPanel.getMaxEpochsStatus().setText(Integer.toString(interactiveExecutor.getMaxEpochs()));
+		statusPanel.getMaxRunsStatus().setText(Integer.toString(interactiveExecutor.getMaxRuns()));
+
+		optimisationControlPanel.setInteractiveExecutorGUI(this);
 
 		numberNDSGraphs = (int) Math.ceil((double) numberOfObjectives / 2); // they will be plotted in pairs of objectives
 
@@ -419,14 +278,21 @@ public class InteractiveExecutorGUI extends JFrame {
 
 	}
 
-	public void updateStatus(NondominatedPopulation nds, int generation, int run) {
+	/**
+	 * Update the GUI. If the given NondominatedPopulation is null or empty this function just updates the epoch and run JLabels.
+	 * 
+	 * @param nds
+	 * @param epoch
+	 * @param run
+	 */
+	public void updateStatus(NondominatedPopulation nds, int epoch, int run) {
 		this.nonDominatedSet = nds;
 
-		epochStatus.setText(Integer.toString(generation));
-		runStatus.setText(Integer.toString(run));
+		statusPanel.getEpochStatus().setText(Integer.toString(epoch));
+		statusPanel.getRunStatus().setText(Integer.toString(run));
 
-		if (nonDominatedSet != null) {
-			ndsSizeStatus.setText(Integer.toString(nonDominatedSet.size()));
+		if (nds != null && !nds.isEmpty()) {
+			statusPanel.getNdsSizeStatus().setText(Integer.toString(nds.size()));
 
 			// dumb jfreechart
 			// draw its stuff in a separate thread and *WAIT* for its completition
@@ -486,7 +352,26 @@ public class InteractiveExecutorGUI extends JFrame {
 		horizontalPane.setDividerLocation(horizontalPane.getWidth() - settingsPanel.getMinimumSize().width);
 	}
 
-	private void printNonDominatedSet() {
+	/**
+	 * from https://stackoverflow.com/a/30335948
+	 */
+	public void saveScreenShot(String filename) {
+		JComponent yourComponent = contentPane;
+		BufferedImage img = new BufferedImage(yourComponent.getWidth(), yourComponent.getHeight(), BufferedImage.TYPE_INT_RGB);
+		yourComponent.paint(img.getGraphics());
+		File outputfile = new File(filename);
+		try {
+			ImageIO.write(img, "png", outputfile);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void stopOptimization() {
+		interactiveExecutor.stopOptimization();
+	}
+
+	public void printNonDominatedSet() {
 		if (nonDominatedSet == null || nonDominatedSet.isEmpty())
 			return;
 		Iterator<Solution> pi = nonDominatedSet.iterator();
@@ -504,18 +389,10 @@ public class InteractiveExecutorGUI extends JFrame {
 		}
 	}
 
-	/**
-	 * from https://stackoverflow.com/a/30335948
-	 */
-	public void saveScreenShot(String filename) {
-		JComponent yourComponent = contentPane;
-		BufferedImage img = new BufferedImage(yourComponent.getWidth(), yourComponent.getHeight(), BufferedImage.TYPE_INT_RGB);
-		yourComponent.paint(img.getGraphics());
-		File outputfile = new File(filename);
-		try {
-			ImageIO.write(img, "png", outputfile);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	public void skipCurrentRun() {
+		interactiveExecutor.skipCurrentRun();
+	}
+
+	public void debug() {
 	}
 }
