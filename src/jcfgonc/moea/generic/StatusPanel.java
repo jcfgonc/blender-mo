@@ -26,7 +26,6 @@ public class StatusPanel extends JPanel {
 	private JLabel maxEpochsStatus;
 
 	public StatusPanel() {
-
 		setLayout(new GridLayout(0, 2, 0, 0));
 		setBorder(new TitledBorder(null, "Status", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 

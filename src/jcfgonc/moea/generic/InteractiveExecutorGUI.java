@@ -3,7 +3,6 @@ package jcfgonc.moea.generic;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Shape;
 import java.awt.event.ComponentAdapter;
@@ -23,17 +22,12 @@ import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
-import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -60,15 +54,13 @@ public class InteractiveExecutorGUI extends JFrame {
 	private int numberOfConstraints;
 	private Properties algorithmProperties;
 	private ArrayList<XYSeries> ndsSeries;
-	private JPanel timeoutPanel;
 	private int numberNDSGraphs;
 	private Problem problem;
 	private JPanel configPanel;
-	private JSpinner spinner;
-	private JLabel lblNewLabel;
 	private NondominatedPopulation nonDominatedSet;
 	private StatusPanel statusPanel;
 	private OptimisationControlPanel optimisationControlPanel;
+	private JPanel fillPanel;
 
 	/**
 	 * Create the frame.
@@ -97,7 +89,6 @@ public class InteractiveExecutorGUI extends JFrame {
 	}
 
 	private void initialize() {
-		setPreferredSize(new Dimension(624, 416));
 		setTitle("Blender 2.0 - Multiple Objective Optimization");
 		setName("MOEA");
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -109,19 +100,15 @@ public class InteractiveExecutorGUI extends JFrame {
 		horizontalPane = new JSplitPane();
 		horizontalPane.setEnabled(false);
 		horizontalPane.setContinuousLayout(true);
-		horizontalPane.setMinimumSize(new Dimension(608, 432));
-		horizontalPane.setPreferredSize(new Dimension(608, 432));
 		horizontalPane.setBorder(null);
 		contentPane.add(horizontalPane);
 
 		ndsPanel = new JPanel();
-		ndsPanel.setMinimumSize(new Dimension(64, 10));
 		ndsPanel.setBorder(null);
 		horizontalPane.setLeftComponent(ndsPanel);
 		ndsPanel.setLayout(new GridLayout(0, 1, 0, 0));
 
 		settingsPanel = new JPanel();
-		settingsPanel.setMinimumSize(new Dimension(288, 10));
 		settingsPanel.setBorder(null);
 		horizontalPane.setRightComponent(settingsPanel);
 		settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
@@ -134,32 +121,12 @@ public class InteractiveExecutorGUI extends JFrame {
 		settingsPanel.add(configPanel);
 		configPanel.setLayout(new GridLayout(0, 1, 0, 0));
 
-		timeoutPanel = new JPanel();
-		configPanel.add(timeoutPanel);
-		timeoutPanel.setBorder(null);
-		FlowLayout fl_timeoutPanel = new FlowLayout(FlowLayout.CENTER, 5, 5);
-		timeoutPanel.setLayout(fl_timeoutPanel);
-
-		lblNewLabel = new JLabel("querykb timeout (s)");
-		timeoutPanel.add(lblNewLabel);
-
-		spinner = new JSpinner();
-		spinner.setEnabled(false);
-		spinner.addChangeListener(new ChangeListener() {
-			@SuppressWarnings("unused")
-			public void stateChanged(ChangeEvent e) {
-				JSpinner mySpinner = (JSpinner) (e.getSource());
-				SpinnerNumberModel snm = (SpinnerNumberModel) mySpinner.getModel();
-				// MOConfig.QUERY_TIMEOUT_SECONDS = snm.getNumber().intValue();
-				// System.out.println(MOConfig.QUERY_TIMEOUT_SECONDS);
-			}
-		});
-		spinner.setPreferredSize(new Dimension(64, 20));
-		spinner.setModel(new SpinnerNumberModel(Integer.valueOf(60), Integer.valueOf(1), null, Integer.valueOf(1)));
-		timeoutPanel.add(spinner);
-
 		optimisationControlPanel = new OptimisationControlPanel();
 		settingsPanel.add(optimisationControlPanel);
+		
+		fillPanel = new JPanel();
+		settingsPanel.add(fillPanel);
+		fillPanel.setLayout(new BorderLayout(0, 0));
 
 		addComponentListener(new ComponentAdapter() { // window resize event
 			@Override
@@ -272,7 +239,7 @@ public class InteractiveExecutorGUI extends JFrame {
 //		setMinimumSize(new Dimension(w, h));
 //		this.setLocationRelativeTo(null); // center jframe
 
-		setMinimumSize(new Dimension(1931, 525));
+		setPreferredSize(new Dimension(1931, 525));
 		setLocation(-6, 0);
 		this.pack();
 
@@ -394,5 +361,7 @@ public class InteractiveExecutorGUI extends JFrame {
 	}
 
 	public void debug() {
+		System.out.println(this.getLocation());
+		System.out.println(this.getSize());
 	}
 }

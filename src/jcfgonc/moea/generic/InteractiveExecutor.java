@@ -77,7 +77,7 @@ public class InteractiveExecutor {
 		gui.updateStatus(lastResult, epoch, moea_run);
 
 		do {
-
+Thread.sleep(10000);
 			ticker.resetTicker();
 			algorithm.step();
 			System.out.format("algorithm.step() %d took %f seconds\n", epoch, ticker.getTimeDeltaLastCall());
