@@ -127,8 +127,7 @@ public class BlenderMoLauncher {
 		// personalize your constructor here
 		CustomProblem problem = new CustomProblem(inputSpace, mappings, frames, vitalRelations, wps, random);
 
-		InteractiveExecutor ie = new InteractiveExecutor(problem, BlenderMoConfig.ALGORITHM, properties, BlenderMoConfig.MAX_EPOCHS,
-				BlenderMoConfig.POPULATION_SIZE, BlenderMoConfig.MOEA_RUNS, resultsFilename, resultsWriter);
+		InteractiveExecutor ie = new InteractiveExecutor(problem, properties, resultsFilename, resultsWriter);
 
 		resultsWriter.writeFileHeader(resultsFilename, problem);
 

@@ -12,14 +12,13 @@ import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.spi.AlgorithmFactory;
 
+import jcfgonc.blender.BlenderMoConfig;
 import jcfgonc.moea.specific.ResultsWriter;
 import structures.Ticker;
 import utils.VariousUtils;
 
 public class InteractiveExecutor {
-	private String algorithmName;
 	private Properties algorithmProperties;
-	private int maxEpochs;
 	private NondominatedPopulation lastResult;
 	private boolean canceled;
 	private boolean skipCurrentRun;
@@ -29,16 +28,11 @@ public class InteractiveExecutor {
 	private final DecimalFormat ss_filename_df = new DecimalFormat("000");
 	private ResultsWriter resultsWriter;
 	private String resultsFilename;
-	private int maxRuns;
 //	private BlenderVisualizer blenderVisualizer;
 
-	public InteractiveExecutor(Problem problem, String algorithmName, Properties algorithmProperties, int maxEpochs, int populationSize, int maxRuns,
-			String resultsFilename, ResultsWriter rw) {
+	public InteractiveExecutor(Problem problem, Properties algorithmProperties, String resultsFilename, ResultsWriter rw) {
 		this.problem = problem;
-		this.algorithmName = algorithmName;
 		this.algorithmProperties = algorithmProperties;
-		this.maxEpochs = maxEpochs;
-		this.maxRuns = maxRuns;
 		this.resultsWriter = rw;
 		this.resultsFilename = resultsFilename;
 //		this.blenderVisualizer = new BlenderVisualizer(populationSize);
@@ -69,7 +63,7 @@ public class InteractiveExecutor {
 		Algorithm algorithm = null;
 		lastResult = null;
 
-		algorithm = AlgorithmFactory.getInstance().getAlgorithm(algorithmName, algorithmProperties, problem);
+		algorithm = AlgorithmFactory.getInstance().getAlgorithm(BlenderMoConfig.ALGORITHM, algorithmProperties, problem);
 		canceled = false;
 		skipCurrentRun = false;
 		Ticker ticker = new Ticker();
@@ -77,7 +71,7 @@ public class InteractiveExecutor {
 		gui.updateStatus(lastResult, epoch, moea_run);
 
 		do {
-Thread.sleep(10000);
+
 			ticker.resetTicker();
 			algorithm.step();
 			System.out.format("algorithm.step() %d took %f seconds\n", epoch, ticker.getTimeDeltaLastCall());
@@ -92,7 +86,7 @@ Thread.sleep(10000);
 
 			// update blender visualizer
 //			blenderVisualizer.update(lastResult);
-			if (algorithm.isTerminated() || epoch >= maxEpochs || canceled || skipCurrentRun) {
+			if (algorithm.isTerminated() || epoch >= BlenderMoConfig.MAX_EPOCHS || canceled || skipCurrentRun) {
 				break; // break while loop
 			}
 			epoch++;
@@ -111,7 +105,7 @@ Thread.sleep(10000);
 	}
 
 	public String getAlgorithmName() {
-		return algorithmName;
+		return BlenderMoConfig.ALGORITHM;
 	}
 
 	public Properties getAlgorithmProperties() {
@@ -119,7 +113,7 @@ Thread.sleep(10000);
 	}
 
 	public int getMaxEpochs() {
-		return maxEpochs;
+		return BlenderMoConfig.MAX_EPOCHS;
 	}
 
 	public NondominatedPopulation getLastResult() {
@@ -171,6 +165,6 @@ Thread.sleep(10000);
 	}
 
 	public int getMaxRuns() {
-		return maxRuns;
+		return BlenderMoConfig.MOEA_RUNS;
 	}
 }

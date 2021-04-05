@@ -27,7 +27,6 @@ import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -47,7 +46,7 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JPanel contentPane;
 	private JSplitPane horizontalPane;
 	private JPanel ndsPanel;
-	private JPanel settingsPanel;
+	private JPanel rightPanel;
 	private InteractiveExecutor interactiveExecutor;
 	private int numberOfVariables;
 	private int numberOfObjectives;
@@ -56,7 +55,6 @@ public class InteractiveExecutorGUI extends JFrame {
 	private ArrayList<XYSeries> ndsSeries;
 	private int numberNDSGraphs;
 	private Problem problem;
-	private JPanel configPanel;
 	private NondominatedPopulation nonDominatedSet;
 	private StatusPanel statusPanel;
 	private OptimisationControlPanel optimisationControlPanel;
@@ -108,24 +106,20 @@ public class InteractiveExecutorGUI extends JFrame {
 		horizontalPane.setLeftComponent(ndsPanel);
 		ndsPanel.setLayout(new GridLayout(0, 1, 0, 0));
 
-		settingsPanel = new JPanel();
-		settingsPanel.setBorder(null);
-		horizontalPane.setRightComponent(settingsPanel);
-		settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
+		rightPanel = new JPanel();
+		rightPanel.setBorder(null);
+		horizontalPane.setRightComponent(rightPanel);
+		rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
 
 		statusPanel = new StatusPanel();
-		settingsPanel.add(statusPanel);
-
-		configPanel = new JPanel();
-		configPanel.setBorder(new TitledBorder(null, "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		settingsPanel.add(configPanel);
-		configPanel.setLayout(new GridLayout(0, 1, 0, 0));
+		rightPanel.add(statusPanel);
 
 		optimisationControlPanel = new OptimisationControlPanel();
-		settingsPanel.add(optimisationControlPanel);
-		
+		rightPanel.add(optimisationControlPanel);
+
 		fillPanel = new JPanel();
-		settingsPanel.add(fillPanel);
+		fillPanel.setBorder(null);
+		rightPanel.add(fillPanel);
 		fillPanel.setLayout(new BorderLayout(0, 0));
 
 		addComponentListener(new ComponentAdapter() { // window resize event
@@ -211,8 +205,7 @@ public class InteractiveExecutorGUI extends JFrame {
 			}
 			objectiveIndex += 2;
 
-			String title = null;// String.format("Non-Dominated Set %d", i);
-			JFreeChart chart = ChartFactory.createScatterPlot(title, xAxisLabel, yAxisLabel, dataset, PlotOrientation.VERTICAL, false, false, false);
+			JFreeChart chart = ChartFactory.createScatterPlot(null, xAxisLabel, yAxisLabel, dataset, PlotOrientation.VERTICAL, false, false, false);
 
 //			// color
 			XYPlot plot = chart.getXYPlot();
@@ -227,16 +220,7 @@ public class InteractiveExecutorGUI extends JFrame {
 			ChartPanel chartPanel = new ChartPanel(chart, false);
 			ndsPanel.add(chartPanel);
 		}
-//		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-//		int width = gd.getDisplayMode().getWidth();
-//		int height = gd.getDisplayMode().getHeight();   
-//		this.setSize(proportionOfInt(width, 0.333), proportionOfInt(height, 0.333));
-//		this.pack();
 
-		// limit jframe size according to windows' high dpi scaling
-//		int w = (int) (getPreferredSize().getWidth() * OSTools.getScreenScale());
-//		int h = (int) (getPreferredSize().getHeight() * OSTools.getScreenScale());
-//		setMinimumSize(new Dimension(w, h));
 //		this.setLocationRelativeTo(null); // center jframe
 
 		setPreferredSize(new Dimension(1931, 525));
@@ -316,7 +300,7 @@ public class InteractiveExecutorGUI extends JFrame {
 
 	protected void windowResized(ComponentEvent e) {
 		// position horizontal divider to give space to the right pane
-		horizontalPane.setDividerLocation(horizontalPane.getWidth() - settingsPanel.getMinimumSize().width);
+		horizontalPane.setDividerLocation(horizontalPane.getWidth() - rightPanel.getMinimumSize().width);
 	}
 
 	/**
