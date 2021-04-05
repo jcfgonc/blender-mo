@@ -13,6 +13,7 @@ import org.moeaframework.core.Solution;
 import org.moeaframework.core.spi.AlgorithmFactory;
 
 import jcfgonc.blender.BlenderMoConfig;
+import jcfgonc.blender.gui.InteractiveExecutorGUI;
 import jcfgonc.moea.specific.ResultsWriter;
 import structures.Ticker;
 import utils.VariousUtils;

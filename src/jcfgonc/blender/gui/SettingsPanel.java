@@ -1,4 +1,4 @@
-package jcfgonc.moea.generic;
+package jcfgonc.blender.gui;
 
 import java.awt.GridLayout;
 

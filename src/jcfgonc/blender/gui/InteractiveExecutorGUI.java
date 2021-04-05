@@ -1,4 +1,4 @@
-package jcfgonc.moea.generic;
+package jcfgonc.blender.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -24,9 +24,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
-import javax.swing.border.EmptyBorder;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -40,11 +38,13 @@ import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 
+import jcfgonc.moea.generic.InteractiveExecutor;
+import jcfgonc.moea.generic.ProblemDescription;
+
 public class InteractiveExecutorGUI extends JFrame {
 
 	private static final long serialVersionUID = 5577378439253898247L;
 	private JPanel contentPane;
-	private JSplitPane horizontalPane;
 	private JPanel ndsPanel;
 	private JPanel rightPanel;
 	private InteractiveExecutor interactiveExecutor;
@@ -59,6 +59,7 @@ public class InteractiveExecutorGUI extends JFrame {
 	private StatusPanel statusPanel;
 	private OptimisationControlPanel optimisationControlPanel;
 	private JPanel fillPanel;
+	private JPanel upperPanel;
 
 	/**
 	 * Create the frame.
@@ -91,24 +92,21 @@ public class InteractiveExecutorGUI extends JFrame {
 		setName("MOEA");
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		contentPane = new JPanel();
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
-		contentPane.setLayout(new BorderLayout(0, 0));
+		contentPane.setLayout(new GridLayout(1, 0, 0, 0));
 
-		horizontalPane = new JSplitPane();
-		horizontalPane.setEnabled(false);
-		horizontalPane.setContinuousLayout(true);
-		horizontalPane.setBorder(null);
-		contentPane.add(horizontalPane);
+		upperPanel = new JPanel();
+		contentPane.add(upperPanel);
+		upperPanel.setLayout(new BoxLayout(upperPanel, BoxLayout.X_AXIS));
 
 		ndsPanel = new JPanel();
 		ndsPanel.setBorder(null);
-		horizontalPane.setLeftComponent(ndsPanel);
-		ndsPanel.setLayout(new GridLayout(0, 1, 0, 0));
+		upperPanel.add(ndsPanel);
+		ndsPanel.setLayout(new GridLayout(1, 0, 0, 0));
 
 		rightPanel = new JPanel();
 		rightPanel.setBorder(null);
-		horizontalPane.setRightComponent(rightPanel);
+		upperPanel.add(rightPanel);
 		rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
 
 		statusPanel = new StatusPanel();
@@ -225,8 +223,8 @@ public class InteractiveExecutorGUI extends JFrame {
 
 		setPreferredSize(new Dimension(1931, 525));
 		setLocation(-6, 0);
+		windowResized(null);
 		this.pack();
-
 	}
 
 	/**
@@ -284,23 +282,19 @@ public class InteractiveExecutorGUI extends JFrame {
 					x = solution.getObjective(0);
 					y = solution.getObjective(objectiveIndex);
 				}
-//				if (reverseGraphsHorizontally) {
-//					x = -x;
-//				}
-//				if (reverseGraphsVertically) {
-//					y = -y;
-//				}
 				graph.add(x, y);
 			}
 
 			objectiveIndex += 2;
 		}
-//		ndsPanel.repaint();
 	}
 
 	protected void windowResized(ComponentEvent e) {
 		// position horizontal divider to give space to the right pane
-		horizontalPane.setDividerLocation(horizontalPane.getWidth() - rightPanel.getMinimumSize().width);
+		// horizontalPane.setDividerLocation(horizontalPane.getWidth() - rightPanel.getMinimumSize().width);
+//		int uw = upperPanel.getWidth();
+//		int rw = rightPanel.getWidth();
+//		ndsPanel.setMaximumSize(new Dimension(uw - rw, Integer.MAX_VALUE));
 	}
 
 	/**
