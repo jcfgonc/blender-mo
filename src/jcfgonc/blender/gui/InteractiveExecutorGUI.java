@@ -1,21 +1,15 @@
 package jcfgonc.blender.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.awt.Shape;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Properties;
 
 import javax.imageio.ImageIO;
@@ -24,38 +18,24 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
-import org.moeaframework.core.Solution;
 
 import jcfgonc.moea.generic.InteractiveExecutor;
-import jcfgonc.moea.generic.ProblemDescription;
 
 public class InteractiveExecutorGUI extends JFrame {
 
 	private static final long serialVersionUID = 5577378439253898247L;
 	private JPanel contentPane;
-	private JPanel ndsPanel;
+	private NonDominatedSetsPanel ndsPanel;
 	private JPanel rightPanel;
 	private InteractiveExecutor interactiveExecutor;
 	private int numberOfVariables;
 	private int numberOfObjectives;
 	private int numberOfConstraints;
 	private Properties algorithmProperties;
-	private ArrayList<XYSeries> ndsSeries;
-	private int numberNDSGraphs;
 	private Problem problem;
-	private NondominatedPopulation nonDominatedSet;
 	private StatusPanel statusPanel;
 	private OptimisationControlPanel optimisationControlPanel;
 	private JPanel fillPanel;
@@ -99,10 +79,8 @@ public class InteractiveExecutorGUI extends JFrame {
 		contentPane.add(upperPanel);
 		upperPanel.setLayout(new BoxLayout(upperPanel, BoxLayout.X_AXIS));
 
-		ndsPanel = new JPanel();
-		ndsPanel.setBorder(null);
+		ndsPanel = new NonDominatedSetsPanel();
 		upperPanel.add(ndsPanel);
-		ndsPanel.setLayout(new GridLayout(1, 0, 0, 0));
 
 		rightPanel = new JPanel();
 		rightPanel.setBorder(null);
@@ -162,69 +140,14 @@ public class InteractiveExecutorGUI extends JFrame {
 		statusPanel.getMaxRunsStatus().setText(Integer.toString(interactiveExecutor.getMaxRuns()));
 
 		optimisationControlPanel.setInteractiveExecutorGUI(this);
-
-		numberNDSGraphs = (int) Math.ceil((double) numberOfObjectives / 2); // they will be plotted in pairs of objectives
-
-		// if too many objectives put the graphs side by side, otherwise stack them vertically
-		if (numberOfObjectives > 2) {
-			ndsPanel.setLayout(new GridLayout(1, 0, 0, 0));
-		} else {
-			ndsPanel.setLayout(new GridLayout(0, 1, 0, 0));
-		}
-
-		// ndsGraphs = new ArrayList<>();
-		ndsSeries = new ArrayList<>();
-		int objectiveIndex = 0; // for laying out axis' labels
-		for (int i = 0; i < numberNDSGraphs; i++) {
-			XYSeries xySeries = new XYSeries("untitled");
-			XYSeriesCollection dataset = new XYSeriesCollection();
-			dataset.addSeries(xySeries);
-			ndsSeries.add(xySeries);
-
-			String xAxisLabel;
-			String yAxisLabel;
-			if (problem instanceof ProblemDescription) {
-				ProblemDescription pd = (ProblemDescription) problem;
-				if (objectiveIndex < numberOfObjectives - 1) { // only one objective
-					xAxisLabel = pd.getObjectiveDescription(objectiveIndex);
-					yAxisLabel = pd.getObjectiveDescription(objectiveIndex + 1);
-				} else { // more than two objectives to follow
-					xAxisLabel = pd.getObjectiveDescription(0);
-					yAxisLabel = pd.getObjectiveDescription(objectiveIndex);
-				}
-			} else {
-				if (objectiveIndex < numberOfObjectives - 1) { // only one objective
-					xAxisLabel = String.format("Objective %d", objectiveIndex);
-					yAxisLabel = String.format("Objective %d", objectiveIndex + 1);
-				} else { // more than two objectives to follow
-					xAxisLabel = String.format("Objective %d", 0);
-					yAxisLabel = String.format("Objective %d", objectiveIndex);
-				}
-			}
-			objectiveIndex += 2;
-
-			JFreeChart chart = ChartFactory.createScatterPlot(null, xAxisLabel, yAxisLabel, dataset, PlotOrientation.VERTICAL, false, false, false);
-
-//			// color
-			XYPlot plot = chart.getXYPlot();
-			XYItemRenderer renderer = plot.getRenderer();
-			renderer.setSeriesPaint(0, Color.RED);
-			Shape shape = new Ellipse2D.Double(-2.5, -2.5, 5, 5);
-			renderer.setSeriesShape(0, shape);
-			// fill shapes
-//			XYStepRenderer rend = (XYStepRenderer) renderer;
-//			rend.setShapesFilled(true);
-
-			ChartPanel chartPanel = new ChartPanel(chart, false);
-			ndsPanel.add(chartPanel);
-		}
+		ndsPanel.initialize(problem);
 
 //		this.setLocationRelativeTo(null); // center jframe
 
 		setPreferredSize(new Dimension(1931, 525));
 		setLocation(-6, 0);
 		windowResized(null);
-		this.pack();
+		pack();
 	}
 
 	/**
@@ -235,57 +158,11 @@ public class InteractiveExecutorGUI extends JFrame {
 	 * @param run
 	 */
 	public void updateStatus(NondominatedPopulation nds, int epoch, int run) {
-		this.nonDominatedSet = nds;
-
 		statusPanel.getEpochStatus().setText(Integer.toString(epoch));
 		statusPanel.getRunStatus().setText(Integer.toString(run));
-
 		if (nds != null && !nds.isEmpty()) {
 			statusPanel.getNdsSizeStatus().setText(Integer.toString(nds.size()));
-
-			// dumb jfreechart
-			// draw its stuff in a separate thread and *WAIT* for its completition
-			// (because and can not draw new stuff while prior is still been rendered)
-			Runnable updater = new Runnable() {
-				public void run() {
-					// draw NDS/solutions charts
-					updateNDSGraphs();
-				}
-			};
-			try {
-				SwingUtilities.invokeAndWait(updater);
-			} catch (InvocationTargetException e) {
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	private void updateNDSGraphs() {
-		// update the non-dominated sets' graphs
-
-		int objectiveIndex = 0;
-		// iterate the scatter plots (each can hold two objectives)
-		for (XYSeries graph : ndsSeries) {
-			// empty data series
-			graph.clear();
-			// iterate the solutions
-			for (Solution solution : nonDominatedSet) {
-				// pairs of objectives
-				double x;
-				double y;
-				if (objectiveIndex < numberOfObjectives - 1) {
-					x = solution.getObjective(objectiveIndex);
-					y = solution.getObjective(objectiveIndex + 1);
-				} else {
-					x = solution.getObjective(0);
-					y = solution.getObjective(objectiveIndex);
-				}
-				graph.add(x, y);
-			}
-
-			objectiveIndex += 2;
+			ndsPanel.updateGraphs(nds);
 		}
 	}
 
@@ -317,21 +194,7 @@ public class InteractiveExecutorGUI extends JFrame {
 	}
 
 	public void printNonDominatedSet() {
-		if (nonDominatedSet == null || nonDominatedSet.isEmpty())
-			return;
-		Iterator<Solution> pi = nonDominatedSet.iterator();
-		while (pi.hasNext()) {
-			Solution solution = pi.next();
-			for (int objectiveIndex = 0; objectiveIndex < numberOfObjectives; objectiveIndex++) {
-				double x = solution.getObjective(objectiveIndex);
-				System.out.print(x);
-				if (objectiveIndex < numberOfObjectives - 1)
-					System.out.print("\t");
-			}
-			if (pi.hasNext()) {
-				System.out.println();
-			}
-		}
+		ndsPanel.printNonDominatedSet();
 	}
 
 	public void skipCurrentRun() {
