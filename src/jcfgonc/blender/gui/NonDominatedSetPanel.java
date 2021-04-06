@@ -25,14 +25,14 @@ import org.moeaframework.core.Solution;
 
 import jcfgonc.moea.generic.ProblemDescription;
 
-public class NonDominatedSetsPanel extends JPanel {
+public class NonDominatedSetPanel extends JPanel {
 
 	private static final long serialVersionUID = -3640671737661415056L;
 	private int numberOfObjectives;
 	private ArrayList<XYSeries> ndsSeries;
 	private NondominatedPopulation nonDominatedSet;
 
-	public NonDominatedSetsPanel() {
+	public NonDominatedSetPanel() {
 		setBorder(null);
 		setLayout(new GridLayout(1, 0, 0, 0));
 	}
@@ -83,6 +83,7 @@ public class NonDominatedSetsPanel extends JPanel {
 
 //			// color
 			XYPlot plot = chart.getXYPlot();
+			plot.setBackgroundAlpha(1);
 			XYItemRenderer renderer = plot.getRenderer();
 			renderer.setSeriesPaint(0, Color.RED);
 			Shape shape = new Ellipse2D.Double(-2.5, -2.5, 5, 5);

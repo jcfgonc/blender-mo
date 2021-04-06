@@ -1,7 +1,5 @@
 package jcfgonc.blender.gui;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -19,6 +17,8 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.StandardChartTheme;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
 
@@ -28,8 +28,8 @@ public class InteractiveExecutorGUI extends JFrame {
 
 	private static final long serialVersionUID = 5577378439253898247L;
 	private JPanel contentPane;
-	private NonDominatedSetsPanel ndsPanel;
-	private JPanel rightPanel;
+	private NonDominatedSetPanel nonDominatedSetPanel;
+	private JPanel technicalPanel;
 	private InteractiveExecutor interactiveExecutor;
 	private int numberOfVariables;
 	private int numberOfObjectives;
@@ -38,8 +38,10 @@ public class InteractiveExecutorGUI extends JFrame {
 	private Problem problem;
 	private StatusPanel statusPanel;
 	private OptimisationControlPanel optimisationControlPanel;
-	private JPanel fillPanel;
+	private TimeSeriesBarChartPanel timeEpochPanel;
 	private JPanel upperPanel;
+	private JPanel upperLeftPanel;
+	private TimeSeriesBarChartPanel ndsSizePanel;
 
 	/**
 	 * Create the frame.
@@ -73,30 +75,34 @@ public class InteractiveExecutorGUI extends JFrame {
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		contentPane = new JPanel();
 		setContentPane(contentPane);
-		contentPane.setLayout(new GridLayout(1, 0, 0, 0));
+		contentPane.setLayout(new GridLayout(2, 0, 0, 0));
 
 		upperPanel = new JPanel();
 		contentPane.add(upperPanel);
 		upperPanel.setLayout(new BoxLayout(upperPanel, BoxLayout.X_AXIS));
 
-		ndsPanel = new NonDominatedSetsPanel();
-		upperPanel.add(ndsPanel);
+		upperLeftPanel = new JPanel();
+		upperPanel.add(upperLeftPanel);
+		upperLeftPanel.setLayout(new GridLayout(1, 0, 0, 0));
 
-		rightPanel = new JPanel();
-		rightPanel.setBorder(null);
-		upperPanel.add(rightPanel);
-		rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
+		timeEpochPanel = new TimeSeriesBarChartPanel("Time vs Epoch", "Epoch", "Time (s)");
+		upperLeftPanel.add(timeEpochPanel);
+
+		ndsSizePanel = new TimeSeriesBarChartPanel("Size of the Non Dominated Set vs Epoch", "Epoch", "Size of the Non Dominated Set");
+		upperLeftPanel.add(ndsSizePanel);
+
+		technicalPanel = new JPanel();
+		upperPanel.add(technicalPanel);
+		technicalPanel.setLayout(new BoxLayout(technicalPanel, BoxLayout.Y_AXIS));
 
 		statusPanel = new StatusPanel();
-		rightPanel.add(statusPanel);
+		technicalPanel.add(statusPanel);
 
 		optimisationControlPanel = new OptimisationControlPanel();
-		rightPanel.add(optimisationControlPanel);
+		technicalPanel.add(optimisationControlPanel);
 
-		fillPanel = new JPanel();
-		fillPanel.setBorder(null);
-		rightPanel.add(fillPanel);
-		fillPanel.setLayout(new BorderLayout(0, 0));
+		nonDominatedSetPanel = new NonDominatedSetPanel();
+		contentPane.add(nonDominatedSetPanel);
 
 		addComponentListener(new ComponentAdapter() { // window resize event
 			@Override
@@ -131,6 +137,9 @@ public class InteractiveExecutorGUI extends JFrame {
 	 * contains the rest of the stuff which cannot be initialized in the initialize function (because of the windowbuilder IDE)
 	 */
 	public void initializeTheRest() {
+		ChartFactory.setChartTheme(StandardChartTheme.createLegacyTheme());
+		// ChartFactory.setChartTheme(StandardChartTheme.createDarknessTheme());
+
 		statusPanel.getVariablesStatus().setText(Integer.toString(numberOfVariables));
 		statusPanel.getObjectivesStatus().setText(Integer.toString(numberOfObjectives));
 		statusPanel.getConstraintsStatus().setText(Integer.toString(numberOfConstraints));
@@ -140,14 +149,18 @@ public class InteractiveExecutorGUI extends JFrame {
 		statusPanel.getMaxRunsStatus().setText(Integer.toString(interactiveExecutor.getMaxRuns()));
 
 		optimisationControlPanel.setInteractiveExecutorGUI(this);
-		ndsPanel.initialize(problem);
+		nonDominatedSetPanel.initialize(problem);
+		timeEpochPanel.initialize();
+		ndsSizePanel.initialize();
 
 //		this.setLocationRelativeTo(null); // center jframe
 
-		setPreferredSize(new Dimension(1931, 525));
-		setLocation(-6, 0);
+//		setLocation(-6, 0);
 		windowResized(null);
 		pack();
+//		setPreferredSize(new Dimension(1920, 512));
+//		setMinimumSize(new Dimension(800, 640));
+		setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
 	}
 
 	/**
@@ -156,13 +169,18 @@ public class InteractiveExecutorGUI extends JFrame {
 	 * @param nds
 	 * @param epoch
 	 * @param run
+	 * @param epochDuration
 	 */
-	public void updateStatus(NondominatedPopulation nds, int epoch, int run) {
+	public void updateStatus(NondominatedPopulation nds, int epoch, int run, double epochDuration) {
 		statusPanel.getEpochStatus().setText(Integer.toString(epoch));
 		statusPanel.getRunStatus().setText(Integer.toString(run));
 		if (nds != null && !nds.isEmpty()) {
 			statusPanel.getNdsSizeStatus().setText(Integer.toString(nds.size()));
-			ndsPanel.updateGraphs(nds);
+			nonDominatedSetPanel.updateGraphs(nds);
+			ndsSizePanel.addBar(nds.size(), epoch);
+		}
+		if (epoch > 0) {
+			timeEpochPanel.addBar(epochDuration, epoch);
 		}
 	}
 
@@ -194,7 +212,7 @@ public class InteractiveExecutorGUI extends JFrame {
 	}
 
 	public void printNonDominatedSet() {
-		ndsPanel.printNonDominatedSet();
+		nonDominatedSetPanel.printNonDominatedSet();
 	}
 
 	public void skipCurrentRun() {

@@ -1,6 +1,5 @@
 package jcfgonc.blender.gui;
 
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -8,7 +7,6 @@ import javax.swing.AbstractButton;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 public class OptimisationControlPanel extends JPanel {
@@ -19,25 +17,28 @@ public class OptimisationControlPanel extends JPanel {
 	private AbstractButton abortButton;
 	private JButton debugButton;
 	private JButton printNDS_button;
-	private JPanel panel0;
-	private JPanel panel1;
-	private JPanel panel2;
+	private JPanel panelTop;
+	private JPanel panelMiddle;
+	private JPanel panelBottom;
+	private JPanel panel;
 
 	public OptimisationControlPanel() {
 
-		setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)),
-
-				"Optimization Control", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		setBorder(new TitledBorder(null, "Optimization Control", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-		panel0 = new JPanel();
-		add(panel0);
+		panel = new JPanel();
+		add(panel);
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-		panel1 = new JPanel();
-		add(panel1);
+		panelTop = new JPanel();
+		add(panelTop);
 
-		panel2 = new JPanel();
-		add(panel2);
+		panelMiddle = new JPanel();
+		add(panelMiddle);
+
+		panelBottom = new JPanel();
+		add(panelBottom);
 
 		printNDS_button = new JButton("Print Non Dominated Set");
 		printNDS_button.addActionListener(new ActionListener() {
@@ -45,7 +46,7 @@ public class OptimisationControlPanel extends JPanel {
 				gui.printNonDominatedSet();
 			}
 		});
-		panel0.add(printNDS_button);
+		panelTop.add(printNDS_button);
 
 		nextRunButton = new JButton("Next Run");
 		nextRunButton.addActionListener(new ActionListener() {
@@ -54,7 +55,7 @@ public class OptimisationControlPanel extends JPanel {
 			}
 		});
 		nextRunButton.setToolTipText("stops the current moea run and starts the next.");
-		panel0.add(nextRunButton);
+		panelTop.add(nextRunButton);
 
 		stopButton = new JButton("Stop Optimization");
 		stopButton.addActionListener(new ActionListener() {
@@ -63,7 +64,7 @@ public class OptimisationControlPanel extends JPanel {
 			}
 		});
 		stopButton.setToolTipText("Waits for the current epoch to complete and returns the best results so far.");
-		panel1.add(stopButton);
+		panelMiddle.add(stopButton);
 
 		abortButton = new JButton("Abort Optimization");
 		abortButton.addActionListener(new ActionListener() {
@@ -73,7 +74,7 @@ public class OptimisationControlPanel extends JPanel {
 			}
 		});
 		abortButton.setToolTipText("Aborts the optimization by discarding the current epoch's results and returns the best results so far.");
-		panel1.add(abortButton);
+		panelMiddle.add(abortButton);
 
 		debugButton = new JButton("debug");
 		debugButton.addActionListener(new ActionListener() {
@@ -82,7 +83,8 @@ public class OptimisationControlPanel extends JPanel {
 			}
 		});
 		debugButton.setToolTipText("does some useful debug thing only I know");
-		panel2.add(debugButton);
+		panelBottom.add(debugButton);
+
 	}
 
 	public void setInteractiveExecutorGUI(InteractiveExecutorGUI gui) {
@@ -90,8 +92,7 @@ public class OptimisationControlPanel extends JPanel {
 	}
 
 	public void debug() {
-		System.out.println(this.getSize());
-//		gui.debug();
+		gui.debug();
 	}
 
 }

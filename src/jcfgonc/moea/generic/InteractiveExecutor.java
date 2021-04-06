@@ -69,18 +69,19 @@ public class InteractiveExecutor {
 		skipCurrentRun = false;
 		Ticker ticker = new Ticker();
 
-		gui.updateStatus(lastResult, epoch, moea_run);
+		gui.updateStatus(lastResult, epoch, moea_run, 0);
 
 		do {
 
 			ticker.resetTicker();
 			algorithm.step();
-			System.out.format("algorithm.step() %d took %f seconds\n", epoch, ticker.getTimeDeltaLastCall());
+			double epochDuration = ticker.getTimeDeltaLastCall();
+		//	System.out.format("algorithm.step() %d took %f seconds\n", epoch, epochDuration);
 
 			lastResult = algorithm.getResult();
 
 			// update graphs
-			gui.updateStatus(lastResult, epoch, moea_run);
+			gui.updateStatus(lastResult, epoch, moea_run, epochDuration);
 
 			// gui.saveScreenShot("screenshots/" + ss_filename_df.format(moea_run) + "_" + ss_filename_df.format(epoch) + ".png");
 			// calculateMinimumOfObjectives(accumulatedResults, problem.getNumberOfObjectives());
