@@ -1,15 +1,13 @@
 package jcfgonc.blender.gui;
 
-import java.awt.Color;
 import java.awt.GridLayout;
+import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -31,15 +29,16 @@ public class NonDominatedSetPanel extends JPanel {
 	private int numberOfObjectives;
 	private ArrayList<XYSeries> ndsSeries;
 	private NondominatedPopulation nonDominatedSet;
+	private XYPlot plot;
 
 	public NonDominatedSetPanel() {
 		setBorder(null);
 		setLayout(new GridLayout(1, 0, 0, 0));
 	}
 
-	public void initialize(Problem problem) {
+	public void initialize(Problem problem,Paint paint) {
 		numberOfObjectives = problem.getNumberOfObjectives();
-		
+
 		// if too many objectives put the graphs side by side, otherwise stack them vertically
 		if (numberOfObjectives > 2) {
 			setLayout(new GridLayout(1, 0, 0, 0));
@@ -82,11 +81,11 @@ public class NonDominatedSetPanel extends JPanel {
 			JFreeChart chart = ChartFactory.createScatterPlot(null, xAxisLabel, yAxisLabel, dataset, PlotOrientation.VERTICAL, false, false, false);
 
 //			// color
-			XYPlot plot = chart.getXYPlot();
+			plot = chart.getXYPlot();
 			plot.setBackgroundAlpha(1);
 			XYItemRenderer renderer = plot.getRenderer();
-			renderer.setSeriesPaint(0, Color.RED);
-			Shape shape = new Ellipse2D.Double(-2.5, -2.5, 5, 5);
+			renderer.setSeriesPaint(0, paint);
+			Shape shape = new Ellipse2D.Double(-1.0, -1.0, 2, 2);
 			renderer.setSeriesShape(0, shape);
 			// fill shapes
 //			XYStepRenderer rend = (XYStepRenderer) renderer;
@@ -122,22 +121,8 @@ public class NonDominatedSetPanel extends JPanel {
 	 */
 	public void updateGraphs(NondominatedPopulation nds) {
 		this.nonDominatedSet = nds;
-		// dumb jfreechart
-		// draw its stuff in a separate thread and *WAIT* for its completion
-		// (because and can not draw new stuff while prior is still been rendered)
-		Runnable updater = new Runnable() {
-			public void run() {
-				// draw NDS/solutions charts
-				refillXYSeries();
-			}
-		};
-		try {
-			SwingUtilities.invokeAndWait(updater);
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		// draw NDS/solutions charts
+		refillXYSeries();
 	}
 
 	/**

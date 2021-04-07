@@ -30,7 +30,7 @@ public class CustomChromosome implements Variable {
 	public CustomChromosome copy() {
 		StringGraph blendSpace = blend.getBlendSpace();
 		Mapping<String> mapping = blend.getMapping();
-		int myid = blend.getSelfId();
+		int myid = blend.getId();
 		Blend childBlend = new Blend(new StringGraph(blendSpace), mapping, myid);
 
 		CustomChromosome childc = new CustomChromosome(childBlend);

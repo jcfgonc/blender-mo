@@ -1,5 +1,6 @@
 package jcfgonc.blender.gui;
 
+import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -38,10 +39,10 @@ public class InteractiveExecutorGUI extends JFrame {
 	private Problem problem;
 	private StatusPanel statusPanel;
 	private OptimisationControlPanel optimisationControlPanel;
-	private TimeSeriesBarChartPanel timeEpochPanel;
+	private BarChartPanel timeEpochPanel;
 	private JPanel upperPanel;
 	private JPanel upperLeftPanel;
-	private TimeSeriesBarChartPanel ndsSizePanel;
+	private StepChartPanel ndsSizePanel;
 
 	/**
 	 * Create the frame.
@@ -85,10 +86,10 @@ public class InteractiveExecutorGUI extends JFrame {
 		upperPanel.add(upperLeftPanel);
 		upperLeftPanel.setLayout(new GridLayout(1, 0, 0, 0));
 
-		timeEpochPanel = new TimeSeriesBarChartPanel("Time vs Epoch", "Epoch", "Time (s)");
+		timeEpochPanel = new BarChartPanel("Time vs Epoch", "Epoch", "Time (s)", new Color(200, 0, 100));
 		upperLeftPanel.add(timeEpochPanel);
 
-		ndsSizePanel = new TimeSeriesBarChartPanel("Size of the Non Dominated Set vs Epoch", "Epoch", "Size of the Non Dominated Set");
+		ndsSizePanel = new StepChartPanel("Size of the Non Dominated Set vs Epoch", "Epoch", "Size of the Non Dominated Set", new Color(0, 200, 100));
 		upperLeftPanel.add(ndsSizePanel);
 
 		technicalPanel = new JPanel();
@@ -149,7 +150,9 @@ public class InteractiveExecutorGUI extends JFrame {
 		statusPanel.getMaxRunsStatus().setText(Integer.toString(interactiveExecutor.getMaxRuns()));
 
 		optimisationControlPanel.setInteractiveExecutorGUI(this);
-		nonDominatedSetPanel.initialize(problem);
+		nonDominatedSetPanel.initialize(problem, Color.BLACK);
+//		timeEpochPanel.initialize(new Color(255, 106, 181));
+//		ndsSizePanel.initialize(new Color(83, 255, 169));
 		timeEpochPanel.initialize();
 		ndsSizePanel.initialize();
 
@@ -177,10 +180,10 @@ public class InteractiveExecutorGUI extends JFrame {
 		if (nds != null && !nds.isEmpty()) {
 			statusPanel.getNdsSizeStatus().setText(Integer.toString(nds.size()));
 			nonDominatedSetPanel.updateGraphs(nds);
-			ndsSizePanel.addBar(nds.size(), epoch);
+			ndsSizePanel.addSample(epoch, nds.size());
 		}
 		if (epoch > 0) {
-			timeEpochPanel.addBar(epochDuration, epoch);
+			timeEpochPanel.addSample(epoch, epochDuration);
 		}
 	}
 

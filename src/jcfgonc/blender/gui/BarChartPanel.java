@@ -1,6 +1,7 @@
 package jcfgonc.blender.gui;
 
 import java.awt.GridLayout;
+import java.awt.Paint;
 
 import javax.swing.JPanel;
 
@@ -12,20 +13,21 @@ import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
-import javax.swing.border.BevelBorder;
 
-public class TimeSeriesBarChartPanel extends JPanel {
+public class BarChartPanel extends JPanel {
 
 	private static final long serialVersionUID = 6897997626552672853L;
 	private DefaultCategoryDataset dataset;
 	private String valueAxisLabel;
 	private String categoryAxisLabel;
 	private String title;
+	private Paint paint;
 
-	public TimeSeriesBarChartPanel(String title, String categoryAxisLabel, String valueAxisLabel) {
+	public BarChartPanel(String title, String categoryAxisLabel, String valueAxisLabel, Paint paint) {
 		this.title = title;
 		this.categoryAxisLabel = categoryAxisLabel;
 		this.valueAxisLabel = valueAxisLabel;
+		this.paint = paint;
 		// this is important, otherwise the panel will overflow its bounds
 		setBorder(null);
 		setLayout(new GridLayout(1, 0, 0, 0));
@@ -43,6 +45,7 @@ public class TimeSeriesBarChartPanel extends JPanel {
 //		renderer.setBarPainter(painter);
 		// disable bar shadows
 		renderer.setShadowVisible(false);
+		renderer.setSeriesPaint(0, paint);
 		plot.setBackgroundAlpha(1);
 		CategoryAxis domainAxis = plot.getDomainAxis();
 		// hide domain axis/labels
@@ -52,9 +55,14 @@ public class TimeSeriesBarChartPanel extends JPanel {
 		add(chartPanel);
 	}
 
-	public void addBar(double duration, int epoch) {
+	public void addSample(double x, double y) {
 		// second and third arguments must be constant
-		dataset.addValue(duration, "s", Integer.toString(epoch));
+		dataset.addValue(y, "s", Double.toString(x));
+	}
+
+	public void addSample(int x, double y) {
+		// second and third arguments must be constant
+		dataset.addValue(y, "s", Integer.toString(x));
 	}
 
 }

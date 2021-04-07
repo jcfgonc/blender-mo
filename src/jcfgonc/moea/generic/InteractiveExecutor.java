@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Properties;
 
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import org.moeaframework.core.Algorithm;
@@ -76,12 +77,18 @@ public class InteractiveExecutor {
 			ticker.resetTicker();
 			algorithm.step();
 			double epochDuration = ticker.getTimeDeltaLastCall();
-		//	System.out.format("algorithm.step() %d took %f seconds\n", epoch, epochDuration);
+			// System.out.format("algorithm.step() %d took %f seconds\n", epoch, epochDuration);
 
 			lastResult = algorithm.getResult();
 
-			// update graphs
-			gui.updateStatus(lastResult, epoch, moea_run, epochDuration);
+			// update GUI stuff
+			final int localEpocH = epoch;
+			Runnable updater = new Runnable() {
+				public void run() {
+					gui.updateStatus(lastResult, localEpocH, moea_run, epochDuration);
+				}
+			};
+			SwingUtilities.invokeLater(updater);
 
 			// gui.saveScreenShot("screenshots/" + ss_filename_df.format(moea_run) + "_" + ss_filename_df.format(epoch) + ".png");
 			// calculateMinimumOfObjectives(accumulatedResults, problem.getNumberOfObjectives());
@@ -148,7 +155,8 @@ public class InteractiveExecutor {
 	}
 
 	@SuppressWarnings("unused")
-	private void calculateMinimumOfObjectives(NondominatedPopulation nds, int numberOfObjectives) {
+	private void calculateMinimumOfObjectives(NondominatedPopulation nds) {
+		int numberOfObjectives = problem.getNumberOfObjectives();
 		double[] minimums = new double[numberOfObjectives];
 		Arrays.fill(minimums, Double.MAX_VALUE);
 

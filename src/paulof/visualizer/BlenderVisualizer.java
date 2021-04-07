@@ -61,7 +61,7 @@ public class BlenderVisualizer {
 			Blend blend = variable.getBlend();
 			
 			// interesting blend stuff
-			int blendId = blend.getSelfId(); // my id
+			int blendId = blend.getId(); // my id
 			int parentId = blend.getParentId(); // my father's id
 			StringGraph blendSpace = blend.getBlendSpace(); // the blend space's graph
 			Mapping<String> mapping = blend.getMapping(); // the mapping

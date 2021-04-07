@@ -29,7 +29,6 @@ public class BlendMutation {
 		BlendMutation.random = random_;
 	}
 
-	@SuppressWarnings("unused")
 	public static void mutateBlend(Blend blend) {
 
 		// mutateMappings(random, blend); // mappings are currently static

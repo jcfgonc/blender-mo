@@ -1,5 +1,6 @@
 package jcfgonc.blender.gui;
 
+import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -20,16 +21,12 @@ public class OptimisationControlPanel extends JPanel {
 	private JPanel panelTop;
 	private JPanel panelMiddle;
 	private JPanel panelBottom;
-	private JPanel panel;
+	private JPanel fillPanel;
 
 	public OptimisationControlPanel() {
 
 		setBorder(new TitledBorder(null, "Optimization Control", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
-		panel = new JPanel();
-		add(panel);
-		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
 		panelTop = new JPanel();
 		add(panelTop);
@@ -39,6 +36,10 @@ public class OptimisationControlPanel extends JPanel {
 
 		panelBottom = new JPanel();
 		add(panelBottom);
+
+		fillPanel = new JPanel();
+		add(fillPanel);
+		fillPanel.setLayout(new BorderLayout(0, 0));
 
 		printNDS_button = new JButton("Print Non Dominated Set");
 		printNDS_button.addActionListener(new ActionListener() {
