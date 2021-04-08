@@ -43,6 +43,7 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JPanel upperPanel;
 	private JPanel upperLeftPanel;
 	private StepChartPanel ndsSizePanel;
+	private ObjectivesLineChartPanel objectivesLineChartPanel;
 
 	/**
 	 * Create the frame.
@@ -92,6 +93,9 @@ public class InteractiveExecutorGUI extends JFrame {
 		ndsSizePanel = new StepChartPanel("Size of the Non Dominated Set vs Epoch", "Epoch", "Size of the Non Dominated Set", new Color(0, 200, 100));
 		upperLeftPanel.add(ndsSizePanel);
 
+		objectivesLineChartPanel = new ObjectivesLineChartPanel("Minimum of objective vs Epoch", "irrelevant", "Value", problem);
+		upperLeftPanel.add(objectivesLineChartPanel);
+
 		technicalPanel = new JPanel();
 		upperPanel.add(technicalPanel);
 		technicalPanel.setLayout(new BoxLayout(technicalPanel, BoxLayout.Y_AXIS));
@@ -99,10 +103,10 @@ public class InteractiveExecutorGUI extends JFrame {
 		statusPanel = new StatusPanel();
 		technicalPanel.add(statusPanel);
 
-		optimisationControlPanel = new OptimisationControlPanel();
+		optimisationControlPanel = new OptimisationControlPanel(this);
 		technicalPanel.add(optimisationControlPanel);
 
-		nonDominatedSetPanel = new NonDominatedSetPanel();
+		nonDominatedSetPanel = new NonDominatedSetPanel(problem, Color.BLACK);
 		contentPane.add(nonDominatedSetPanel);
 
 		addComponentListener(new ComponentAdapter() { // window resize event
@@ -149,12 +153,12 @@ public class InteractiveExecutorGUI extends JFrame {
 		statusPanel.getMaxEpochsStatus().setText(Integer.toString(interactiveExecutor.getMaxEpochs()));
 		statusPanel.getMaxRunsStatus().setText(Integer.toString(interactiveExecutor.getMaxRuns()));
 
-		optimisationControlPanel.setInteractiveExecutorGUI(this);
-		nonDominatedSetPanel.initialize(problem, Color.BLACK);
+		nonDominatedSetPanel.initialize();
 //		timeEpochPanel.initialize(new Color(255, 106, 181));
 //		ndsSizePanel.initialize(new Color(83, 255, 169));
 		timeEpochPanel.initialize();
 		ndsSizePanel.initialize();
+		objectivesLineChartPanel.initialize();
 
 //		this.setLocationRelativeTo(null); // center jframe
 
@@ -173,17 +177,22 @@ public class InteractiveExecutorGUI extends JFrame {
 	 * @param epoch
 	 * @param run
 	 * @param epochDuration
+	 * @param objectiveMinimuns
 	 */
-	public void updateStatus(NondominatedPopulation nds, int epoch, int run, double epochDuration) {
+	public void updateStatus(NondominatedPopulation nds, int epoch, int run, double epochDuration, double[] objectiveMinimuns) {
 		statusPanel.getEpochStatus().setText(Integer.toString(epoch));
 		statusPanel.getRunStatus().setText(Integer.toString(run));
+		statusPanel.getLastEpochDuration().setText(String.format("%.3f", epochDuration));
 		if (nds != null && !nds.isEmpty()) {
 			statusPanel.getNdsSizeStatus().setText(Integer.toString(nds.size()));
 			nonDominatedSetPanel.updateGraphs(nds);
 			ndsSizePanel.addSample(epoch, nds.size());
 		}
 		if (epoch > 0) {
-			timeEpochPanel.addSample(epoch, epochDuration);
+			timeEpochPanel.addSample(epoch, epochDuration, "duration");
+		}
+		if (objectiveMinimuns != null && objectiveMinimuns.length > 0) {
+			objectivesLineChartPanel.addValue(objectiveMinimuns, epoch);
 		}
 	}
 
@@ -225,5 +234,12 @@ public class InteractiveExecutorGUI extends JFrame {
 	public void debug() {
 		System.out.println(this.getLocation());
 		System.out.println(this.getSize());
+	}
+
+	public void clearGraphs() {
+		nonDominatedSetPanel.clearData();
+		ndsSizePanel.clearData();
+		timeEpochPanel.clearData();
+		objectivesLineChartPanel.clearData();
 	}
 }

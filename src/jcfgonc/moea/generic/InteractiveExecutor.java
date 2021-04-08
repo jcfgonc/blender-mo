@@ -17,7 +17,6 @@ import jcfgonc.blender.BlenderMoConfig;
 import jcfgonc.blender.gui.InteractiveExecutorGUI;
 import jcfgonc.moea.specific.ResultsWriter;
 import structures.Ticker;
-import utils.VariousUtils;
 
 public class InteractiveExecutor {
 	private Properties algorithmProperties;
@@ -70,7 +69,8 @@ public class InteractiveExecutor {
 		skipCurrentRun = false;
 		Ticker ticker = new Ticker();
 
-		gui.updateStatus(lastResult, epoch, moea_run, 0);
+		gui.clearGraphs(); 
+		gui.updateStatus(lastResult, epoch, moea_run, 0, null);
 
 		do {
 
@@ -85,7 +85,8 @@ public class InteractiveExecutor {
 			final int localEpocH = epoch;
 			Runnable updater = new Runnable() {
 				public void run() {
-					gui.updateStatus(lastResult, localEpocH, moea_run, epochDuration);
+					double[] minimuns = calculateMinimumOfObjectives(lastResult);
+					gui.updateStatus(lastResult, localEpocH, moea_run, epochDuration, minimuns);
 				}
 			};
 			SwingUtilities.invokeLater(updater);
@@ -154,24 +155,24 @@ public class InteractiveExecutor {
 		this.skipCurrentRun = true;
 	}
 
-	@SuppressWarnings("unused")
-	private void calculateMinimumOfObjectives(NondominatedPopulation nds) {
+	private double[] calculateMinimumOfObjectives(NondominatedPopulation nds) {
 		int numberOfObjectives = problem.getNumberOfObjectives();
 		double[] minimums = new double[numberOfObjectives];
 		Arrays.fill(minimums, Double.MAX_VALUE);
 
-		// for each objective
-		for (int objective_i = 0; objective_i < numberOfObjectives; objective_i++) {
-			// get the minimum in the current solution set
-			for (int solution_i = 0; solution_i < nds.size(); solution_i++) {
-				Solution solution = nds.get(solution_i);
+		// get the minimum in the current solution set
+		for (int solution_i = 0; solution_i < nds.size(); solution_i++) {
+			Solution solution = nds.get(solution_i);
+			// for each objective
+			for (int objective_i = 0; objective_i < numberOfObjectives; objective_i++) {
 				double val = solution.getObjective(objective_i);
 				if (val < minimums[objective_i]) {
 					minimums[objective_i] = val;
 				}
 			}
 		}
-		VariousUtils.printArray(minimums);
+//		VariousUtils.printArray(minimums);
+		return minimums;
 	}
 
 	public int getMaxRuns() {

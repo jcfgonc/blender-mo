@@ -14,16 +14,20 @@ public class StatusPanel extends JPanel {
 	private JLabel objectivesStatus;
 	private JLabel constraintsStatus;
 	private JLabel populationSizeStatus;
+	private JLabel maxEpochsStatus;
 	private JLabel epochStatus;
 	private JLabel maxRunsStatus;
 	private JLabel runStatus;
+	private JLabel ndsSizeStatus;
+	private JLabel lastEpochDuration;
+
+	public JLabel getLastEpochDuration() {
+		return lastEpochDuration;
+	}
 
 	public JLabel getMaxEpochsStatus() {
 		return maxEpochsStatus;
 	}
-
-	private JLabel ndsSizeStatus;
-	private JLabel maxEpochsStatus;
 
 	public StatusPanel() {
 		setLayout(new GridLayout(0, 2, 0, 0));
@@ -108,6 +112,15 @@ public class StatusPanel extends JPanel {
 		ndsSizeStatus = new JLabel("");
 		ndsSizeStatus.setHorizontalAlignment(SwingConstants.LEFT);
 		add(ndsSizeStatus);
+		
+		JLabel lastEpochDurationLabel = new JLabel("Last Epoch Duration (s): ");
+		lastEpochDurationLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		add(lastEpochDurationLabel);
+
+		lastEpochDuration = new JLabel("");
+		lastEpochDuration.setHorizontalAlignment(SwingConstants.LEFT);
+		add(lastEpochDuration);
+		
 	}
 
 	public JLabel getAlgorithmStatus() {
@@ -145,5 +158,4 @@ public class StatusPanel extends JPanel {
 	public JLabel getVariablesStatus() {
 		return variablesStatus;
 	}
-
 }

@@ -4,7 +4,7 @@ import java.math.BigInteger;
 
 public class BlenderMoConfig {
 	public static final String ALGORITHM = "eNSGAII";
-	public static final int POPULATION_SIZE = 512;
+	public static final int POPULATION_SIZE = 256;
 	public static final int MAX_EPOCHS = 512; // maximum number of epochs/generations to iterate
 	public static final int MOEA_RUNS = 128; // maximum number of MOEA runs (each run iterates max_epochs)
 

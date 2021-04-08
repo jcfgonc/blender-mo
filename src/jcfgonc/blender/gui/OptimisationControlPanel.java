@@ -23,7 +23,8 @@ public class OptimisationControlPanel extends JPanel {
 	private JPanel panelBottom;
 	private JPanel fillPanel;
 
-	public OptimisationControlPanel() {
+	public OptimisationControlPanel(InteractiveExecutorGUI interactiveExecutorGUI) {
+		this.gui = interactiveExecutorGUI;
 
 		setBorder(new TitledBorder(null, "Optimization Control", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -86,10 +87,6 @@ public class OptimisationControlPanel extends JPanel {
 		debugButton.setToolTipText("does some useful debug thing only I know");
 		panelBottom.add(debugButton);
 
-	}
-
-	public void setInteractiveExecutorGUI(InteractiveExecutorGUI gui) {
-		this.gui = gui;
 	}
 
 	public void debug() {

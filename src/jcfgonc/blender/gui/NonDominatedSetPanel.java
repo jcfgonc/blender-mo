@@ -1,7 +1,7 @@
 package jcfgonc.blender.gui;
 
+import java.awt.Color;
 import java.awt.GridLayout;
-import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 import java.util.ArrayList;
@@ -30,13 +30,17 @@ public class NonDominatedSetPanel extends JPanel {
 	private ArrayList<XYSeries> ndsSeries;
 	private NondominatedPopulation nonDominatedSet;
 	private XYPlot plot;
+	private Problem problem;
+	private Color paint;
 
-	public NonDominatedSetPanel() {
+	public NonDominatedSetPanel(Problem problem, Color paint) {
+		this.problem = problem;
+		this.paint = paint;
 		setBorder(null);
 		setLayout(new GridLayout(1, 0, 0, 0));
 	}
 
-	public void initialize(Problem problem,Paint paint) {
+	public void initialize() {
 		numberOfObjectives = problem.getNumberOfObjectives();
 
 		// if too many objectives put the graphs side by side, otherwise stack them vertically
@@ -129,13 +133,11 @@ public class NonDominatedSetPanel extends JPanel {
 	 * Used by the async thread to run JFreeChart's rendering code.
 	 */
 	private void refillXYSeries() {
+		clearData();
 		// update the non-dominated sets' graphs
-
 		int objectiveIndex = 0;
 		// iterate the scatter plots (each can hold two objectives)
 		for (XYSeries graph : ndsSeries) {
-			// empty data series
-			graph.clear();
 			// iterate the solutions
 			for (Solution solution : nonDominatedSet) {
 				// pairs of objectives
@@ -152,6 +154,13 @@ public class NonDominatedSetPanel extends JPanel {
 			}
 
 			objectiveIndex += 2;
+		}
+	}
+
+	public void clearData() {
+		for (XYSeries graph : ndsSeries) {
+			// empty data series
+			graph.clear();
 		}
 	}
 }

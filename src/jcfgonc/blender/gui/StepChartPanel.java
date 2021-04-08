@@ -9,6 +9,7 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.xy.XYSeries;
@@ -40,7 +41,7 @@ public class StepChartPanel extends JPanel {
 		series = new XYSeries(xAxisLabel);
 		dataset.addSeries(series);
 
-		JFreeChart chart = ChartFactory.createXYStepChart(title, xAxisLabel, yAxisLabel, dataset);
+		JFreeChart chart = ChartFactory.createXYStepChart(title, xAxisLabel, yAxisLabel, dataset, PlotOrientation.VERTICAL, false, false, false);
 
 		ChartPanel chartPanel = new ChartPanel(chart);
 		plot = chart.getXYPlot();
@@ -66,6 +67,10 @@ public class StepChartPanel extends JPanel {
 
 	public void addSample(double x, double y) {
 		series.add(x, y);
+	}
+
+	public void clearData() {
+		series.clear();
 	}
 
 }

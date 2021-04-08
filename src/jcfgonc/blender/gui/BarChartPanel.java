@@ -46,23 +46,31 @@ public class BarChartPanel extends JPanel {
 		// disable bar shadows
 		renderer.setShadowVisible(false);
 		renderer.setSeriesPaint(0, paint);
+		renderer.setItemMargin(0.0); 
 		plot.setBackgroundAlpha(1);
 		CategoryAxis domainAxis = plot.getDomainAxis();
 		// hide domain axis/labels
 		domainAxis.setAxisLineVisible(false);
 		domainAxis.setVisible(false);
-		// ValueAxis rangeAxis = plot.getRangeAxis();
+		domainAxis.setLowerMargin(0.0);
+		domainAxis.setUpperMargin(0.0);
+		domainAxis.setCategoryMargin(0.0);
+		 // ValueAxis rangeAxis = plot.getRangeAxis();
 		add(chartPanel);
 	}
 
-	public void addSample(double x, double y) {
+	public void addSample(double x, double y, String category) {
 		// second and third arguments must be constant
-		dataset.addValue(y, "s", Double.toString(x));
+		dataset.addValue(y, category, Double.toString(x));
 	}
 
-	public void addSample(int x, double y) {
+	public void addSample(int x, double y, String category) {
 		// second and third arguments must be constant
-		dataset.addValue(y, "s", Integer.toString(x));
+		dataset.addValue(y, category, Integer.toString(x));
+	}
+
+	public void clearData() {
+		dataset.clear();
 	}
 
 }
