@@ -66,13 +66,13 @@ public class BlenderMoLauncher {
 		RandomAdaptor random = new RandomAdaptor(new Well44497b());
 
 		// read input space
-		StringGraph inputSpace = FileTools.readInputSpace(BlenderMoConfig.inputSpacePath);
+		StringGraph inputSpace = FileTools.readInputSpace(MOEA_Config.inputSpacePath);
 
 		// read mappings file (contains multiple mappings)
-		ArrayList<Mapping<String>> mappings = FileTools.readMappings(BlenderMoConfig.mappingPath);
+		ArrayList<Mapping<String>> mappings = FileTools.readMappings(MOEA_Config.mappingPath);
 
 		// read frames file
-		ArrayList<SemanticFrame> frames0 = FrameReadWrite.readPatternFrames(BlenderMoConfig.framesPath);
+		ArrayList<SemanticFrame> frames0 = FrameReadWrite.readPatternFrames(MOEA_Config.framesPath);
 		// filter some frames
 		ArrayList<SemanticFrame> frames = new ArrayList<SemanticFrame>(64 * 1024);
 		for (SemanticFrame frame : frames0) {
@@ -93,10 +93,10 @@ public class BlenderMoLauncher {
 		frames0 = null;
 
 		// read pre-calculated semantic scores of word/relation pairs
-		Object2DoubleOpenHashMap<UnorderedPair<String>> wps = WordEmbeddingUtils.readWordPairScores(BlenderMoConfig.wordPairScores_filename);
+		Object2DoubleOpenHashMap<UnorderedPair<String>> wps = WordEmbeddingUtils.readWordPairScores(MOEA_Config.wordPairScores_filename);
 
 		// read vital relations importance
-		Object2DoubleOpenHashMap<String> vitalRelations = FileTools.readVitalRelations(BlenderMoConfig.vitalRelationsPath);
+		Object2DoubleOpenHashMap<String> vitalRelations = FileTools.readVitalRelations(MOEA_Config.vitalRelationsPath);
 
 		// // test the mutation using a custom GUI
 		// TestMutation.testMutation(inputSpace, mappings);
@@ -108,11 +108,10 @@ public class BlenderMoLauncher {
 		Properties properties = new Properties();
 		properties.setProperty("operator", "CustomMutation");
 		properties.setProperty("CustomMutation.Rate", "1.0");
-		properties.setProperty("populationSize", Integer.toString(BlenderMoConfig.POPULATION_SIZE));
 		properties.setProperty("epsilon", "0.01"); // default is 0.01
-		properties.setProperty("windowSize", "200");
-		properties.setProperty("maxWindowSize", "200");
-		properties.setProperty("injectionRate", Double.toString(1.0 / 0.5)); // population to archive ratio, default is 4
+		properties.setProperty("windowSize", "1024");
+		properties.setProperty("maxWindowSize", "1024");
+		properties.setProperty("injectionRate", Double.toString(1.0 / 0.25)); // population to archive ratio, default is 0.25
 
 		properties.setProperty("divisionsOuter", "10"); // 3
 		properties.setProperty("divisionsInner", "0"); // 2
@@ -132,9 +131,10 @@ public class BlenderMoLauncher {
 		resultsWriter.writeFileHeader(resultsFilename, problem);
 
 		// do 'k' runs of 'n' epochs
-		for (int moea_run = 0; moea_run < BlenderMoConfig.MOEA_RUNS; moea_run++) {
+		for (int moea_run = 0; moea_run < MOEA_Config.MOEA_RUNS; moea_run++) {
 			if (ie.isCanceled())
 				break;
+			properties.setProperty("populationSize", Integer.toString(MOEA_Config.POPULATION_SIZE));
 			// do one run of 'n' epochs
 			NondominatedPopulation currentResults = ie.execute(moea_run);
 

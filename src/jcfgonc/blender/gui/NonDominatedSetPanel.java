@@ -83,6 +83,7 @@ public class NonDominatedSetPanel extends JPanel {
 			objectiveIndex += 2;
 
 			JFreeChart chart = ChartFactory.createScatterPlot(null, xAxisLabel, yAxisLabel, dataset, PlotOrientation.VERTICAL, false, false, false);
+			chart.setRenderingHints(GUI_Utils.createDefaultRenderingHints());
 
 //			// color
 			plot = chart.getXYPlot();

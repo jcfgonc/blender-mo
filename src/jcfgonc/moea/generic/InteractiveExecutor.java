@@ -1,7 +1,6 @@
 package jcfgonc.moea.generic;
 
-import java.text.DecimalFormat;
-import java.util.Arrays;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
 
 import javax.swing.SwingUtilities;
@@ -10,10 +9,9 @@ import javax.swing.UIManager;
 import org.moeaframework.core.Algorithm;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
-import org.moeaframework.core.Solution;
 import org.moeaframework.core.spi.AlgorithmFactory;
 
-import jcfgonc.blender.BlenderMoConfig;
+import jcfgonc.blender.MOEA_Config;
 import jcfgonc.blender.gui.InteractiveExecutorGUI;
 import jcfgonc.moea.specific.ResultsWriter;
 import structures.Ticker;
@@ -25,8 +23,6 @@ public class InteractiveExecutor {
 	private boolean skipCurrentRun;
 	private Problem problem;
 	private InteractiveExecutorGUI gui;
-	@SuppressWarnings("unused")
-	private final DecimalFormat ss_filename_df = new DecimalFormat("000");
 	private ResultsWriter resultsWriter;
 	private String resultsFilename;
 //	private BlenderVisualizer blenderVisualizer;
@@ -62,41 +58,30 @@ public class InteractiveExecutor {
 
 		int epoch = 0;
 		Algorithm algorithm = null;
-		lastResult = null;
 
-		algorithm = AlgorithmFactory.getInstance().getAlgorithm(BlenderMoConfig.ALGORITHM, algorithmProperties, problem);
+		algorithm = AlgorithmFactory.getInstance().getAlgorithm(MOEA_Config.ALGORITHM, algorithmProperties, problem);
 		canceled = false;
 		skipCurrentRun = false;
 		Ticker ticker = new Ticker();
 
-		gui.clearGraphs(); 
-		gui.updateStatus(lastResult, epoch, moea_run, 0, null);
+		clearGraphs();
+		gui.resetCurrentRunTime();
+		gui.updateStatus(null, epoch, moea_run, 0);
 
 		do {
-
+			// count algorithm time
 			ticker.resetTicker();
 			algorithm.step();
 			double epochDuration = ticker.getTimeDeltaLastCall();
-			// System.out.format("algorithm.step() %d took %f seconds\n", epoch, epochDuration);
 
 			lastResult = algorithm.getResult();
 
 			// update GUI stuff
-			final int localEpocH = epoch;
-			Runnable updater = new Runnable() {
-				public void run() {
-					double[] minimuns = calculateMinimumOfObjectives(lastResult);
-					gui.updateStatus(lastResult, localEpocH, moea_run, epochDuration, minimuns);
-				}
-			};
-			SwingUtilities.invokeLater(updater);
-
-			// gui.saveScreenShot("screenshots/" + ss_filename_df.format(moea_run) + "_" + ss_filename_df.format(epoch) + ".png");
-			// calculateMinimumOfObjectives(accumulatedResults, problem.getNumberOfObjectives());
+			updateStatus(moea_run, epoch, epochDuration);
 
 			// update blender visualizer
 //			blenderVisualizer.update(lastResult);
-			if (algorithm.isTerminated() || epoch >= BlenderMoConfig.MAX_EPOCHS || canceled || skipCurrentRun) {
+			if (algorithm.isTerminated() || epoch >= MOEA_Config.MAX_EPOCHS || canceled || skipCurrentRun) {
 				break; // break while loop
 			}
 			epoch++;
@@ -104,6 +89,39 @@ public class InteractiveExecutor {
 
 		algorithm.terminate();
 		return lastResult;
+	}
+
+	private void updateStatus(int moea_run, int epoch, double epochDuration) {
+		Runnable updater = new Runnable() {
+			public void run() {
+				try {
+					gui.updateStatus(lastResult, epoch, moea_run, epochDuration);
+				} catch (Exception e) {
+					e.printStackTrace();
+				} finally {
+				}
+			}
+		};
+		try {
+			SwingUtilities.invokeAndWait(updater);
+		} catch (InvocationTargetException | InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private void clearGraphs() {
+		Runnable updater = new Runnable() {
+			public void run() {
+				try {
+					gui.clearGraphs();
+				} catch (Exception e) {
+					e.printStackTrace();
+				} finally {
+				}
+			}
+		};
+		SwingUtilities.invokeLater(updater);
 	}
 
 	public void closeGUI() {
@@ -114,16 +132,8 @@ public class InteractiveExecutor {
 		return problem;
 	}
 
-	public String getAlgorithmName() {
-		return BlenderMoConfig.ALGORITHM;
-	}
-
 	public Properties getAlgorithmProperties() {
 		return algorithmProperties;
-	}
-
-	public int getMaxEpochs() {
-		return BlenderMoConfig.MAX_EPOCHS;
 	}
 
 	public NondominatedPopulation getLastResult() {
@@ -153,29 +163,5 @@ public class InteractiveExecutor {
 
 	public void skipCurrentRun() {
 		this.skipCurrentRun = true;
-	}
-
-	private double[] calculateMinimumOfObjectives(NondominatedPopulation nds) {
-		int numberOfObjectives = problem.getNumberOfObjectives();
-		double[] minimums = new double[numberOfObjectives];
-		Arrays.fill(minimums, Double.MAX_VALUE);
-
-		// get the minimum in the current solution set
-		for (int solution_i = 0; solution_i < nds.size(); solution_i++) {
-			Solution solution = nds.get(solution_i);
-			// for each objective
-			for (int objective_i = 0; objective_i < numberOfObjectives; objective_i++) {
-				double val = solution.getObjective(objective_i);
-				if (val < minimums[objective_i]) {
-					minimums[objective_i] = val;
-				}
-			}
-		}
-//		VariousUtils.printArray(minimums);
-		return minimums;
-	}
-
-	public int getMaxRuns() {
-		return BlenderMoConfig.MOEA_RUNS;
 	}
 }

@@ -51,10 +51,11 @@ public class ObjectivesLineChartPanel extends JPanel {
 	}
 
 	public void initialize() {
-		JFreeChart barChart = ChartFactory.createLineChart(title, categoryAxisLabel, valueAxisLabel, dataset, PlotOrientation.VERTICAL, true, false,
+		JFreeChart chart = ChartFactory.createLineChart(title, categoryAxisLabel, valueAxisLabel, dataset, PlotOrientation.VERTICAL, true, false,
 				false);
-		ChartPanel chartPanel = new ChartPanel(barChart);
-		CategoryPlot plot = barChart.getCategoryPlot();
+		chart.setRenderingHints(GUI_Utils.createDefaultRenderingHints());
+		ChartPanel chartPanel = new ChartPanel(chart);
+		CategoryPlot plot = chart.getCategoryPlot();
 //		CategoryItemRenderer renderer = plot.getRenderer();
 		// this is to change the type of bar
 //		StandardBarPainter painter = new StandardBarPainter();

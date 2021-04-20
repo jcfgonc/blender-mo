@@ -12,9 +12,9 @@ import wordembedding.WordEmbeddingUtils;
 public class CreateSemanticSimilarityPairScores {
 
 	public static void main(String[] args) throws IOException {
-		String wordembeddingFilename = BlenderMoConfig.wordembedding_filename;
-		String synonymsFilename = BlenderMoConfig.synonyms_filename;
-		String wordpairscoresFilename = BlenderMoConfig.wordPairScores_filename;
+		String wordembeddingFilename = MOEA_Config.wordembedding_filename;
+		String synonymsFilename = MOEA_Config.synonyms_filename;
+		String wordpairscoresFilename = MOEA_Config.wordPairScores_filename;
 
 		// this code may be moved to the blender's launcher - but it has the problem of additional startup delay
 		ListWordEmbedding we = WordEmbeddingReadWrite.readCSV(wordembeddingFilename, true);

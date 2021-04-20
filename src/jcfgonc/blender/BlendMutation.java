@@ -33,9 +33,9 @@ public class BlendMutation {
 
 		// mutateMappings(random, blend); // mappings are currently static
 
-		if (BlenderMoConfig.EDGE_MUTATION_NUMBER_STEPS >= 2) {
-			double r = Math.pow(random.nextDouble(), BlenderMoConfig.EDGE_MUTATION_PROBABILITY_POWER);
-			int numberMutations = (int) Math.ceil(r * BlenderMoConfig.EDGE_MUTATION_NUMBER_STEPS);
+		if (MOEA_Config.EDGE_MUTATION_NUMBER_STEPS >= 2) {
+			double r = Math.pow(random.nextDouble(), MOEA_Config.EDGE_MUTATION_PROBABILITY_POWER);
+			int numberMutations = (int) Math.ceil(r * MOEA_Config.EDGE_MUTATION_NUMBER_STEPS);
 			// ceil of 0 could happen
 			if (numberMutations <= 1)
 				numberMutations = 1;

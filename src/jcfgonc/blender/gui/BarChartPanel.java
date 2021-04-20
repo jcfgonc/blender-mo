@@ -1,7 +1,9 @@
 package jcfgonc.blender.gui;
 
+import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.Paint;
+import java.awt.RenderingHints;
 
 import javax.swing.JPanel;
 
@@ -35,27 +37,42 @@ public class BarChartPanel extends JPanel {
 
 	public void initialize() {
 		dataset = new DefaultCategoryDataset();
-		JFreeChart barChart = ChartFactory.createBarChart(title, categoryAxisLabel, valueAxisLabel, dataset, PlotOrientation.VERTICAL, false, false,
+
+		JFreeChart chart = ChartFactory.createBarChart(title, categoryAxisLabel, valueAxisLabel, dataset, PlotOrientation.VERTICAL, false, false,
 				false);
-		ChartPanel chartPanel = new ChartPanel(barChart);
-		CategoryPlot plot = barChart.getCategoryPlot();
-		BarRenderer renderer = (BarRenderer) plot.getRenderer();
+		RenderingHints renderingHints = GUI_Utils.createDefaultRenderingHints();
+		// disable anti-aliasing in the bar graph, if on it creates moire between the bars
+		renderingHints.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+		chart.setRenderingHints(renderingHints);
+
+		ChartPanel chartPanel = new ChartPanel(chart);
+		CategoryPlot catPlot = chart.getCategoryPlot();
+		BarRenderer renderer = (BarRenderer) catPlot.getRenderer();
+
 		// this is to change the type of bar
+		// set using the theme
 //		StandardBarPainter painter = new StandardBarPainter();
 //		renderer.setBarPainter(painter);
+
 		// disable bar shadows
 		renderer.setShadowVisible(false);
+		// bar colors
 		renderer.setSeriesPaint(0, paint);
-		renderer.setItemMargin(0.0); 
-		plot.setBackgroundAlpha(1);
-		CategoryAxis domainAxis = plot.getDomainAxis();
+		// renderer.setDrawBarOutline(false);
+		// background and bars alpha
+		catPlot.setBackgroundAlpha(1.0f);
+		catPlot.setForegroundAlpha(0.8f);
+		// horizontal grid color
+		catPlot.setRangeGridlinePaint(new Color(0, 0, 0, 255));
+		CategoryAxis domainAxis = catPlot.getDomainAxis();
 		// hide domain axis/labels
 		domainAxis.setAxisLineVisible(false);
 		domainAxis.setVisible(false);
+		// left and right graph margins (to the window's limit) - OK: fully fills the available space
 		domainAxis.setLowerMargin(0.0);
 		domainAxis.setUpperMargin(0.0);
+		// distance between the bars
 		domainAxis.setCategoryMargin(0.0);
-		 // ValueAxis rangeAxis = plot.getRangeAxis();
 		add(chartPanel);
 	}
 
@@ -67,6 +84,10 @@ public class BarChartPanel extends JPanel {
 	public void addSample(int x, double y, String category) {
 		// second and third arguments must be constant
 		dataset.addValue(y, category, Integer.toString(x));
+	}
+
+	public void addSample(int x, double y) {
+		addSample(x, y, "default");
 	}
 
 	public void clearData() {

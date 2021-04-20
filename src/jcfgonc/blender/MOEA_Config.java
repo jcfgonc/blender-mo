@@ -1,20 +1,13 @@
 package jcfgonc.blender;
 
-import java.math.BigInteger;
-
-public class BlenderMoConfig {
+public class MOEA_Config {
 	public static final String ALGORITHM = "eNSGAII";
-	public static final int POPULATION_SIZE = 256;
-	public static final int MAX_EPOCHS = 512; // maximum number of epochs/generations to iterate
-	public static final int MOEA_RUNS = 128; // maximum number of MOEA runs (each run iterates max_epochs)
+	public static int POPULATION_SIZE = 256;
+	public static int MAX_EPOCHS = 4096; // maximum number of epochs/generations to iterate
+	public static int MOEA_RUNS = 128; // maximum number of MOEA runs (each run iterates max_epochs)
 
-	public static final double EDGE_MUTATION_PROBABILITY_POWER = 4;
-	public static final double EDGE_MUTATION_NUMBER_STEPS = 1; // it goes from 1 to this number
-
-	public static final int BLOCK_SIZE = 256; // querykb tool specific
-	public static final int PARALLEL_LIMIT = 1; // number of threads for the querykb tool
-	public static final BigInteger SOLUTION_LIMIT = BigInteger.valueOf(Long.MAX_VALUE);
-	public static final long QUERY_TIMEOUT_SECONDS = Long.MAX_VALUE;
+	public static double EDGE_MUTATION_PROBABILITY_POWER = 4;
+	public static double EDGE_MUTATION_NUMBER_STEPS = 1; // it goes from 1 to this number
 
 	public static final String inputSpacePath = "data/conceptnet5v5.csv";
 	public static final String mappingPath = "data/2020-04-29_21-23-37_mappings.csv";
@@ -27,4 +20,7 @@ public class BlenderMoConfig {
 	public static final String wordPairScores_filename = "data/relation_pair_scores.tsv";
 
 	public static final String vitalRelationsPath = "data/vital_relations.tsv";
+	public static final String screenshotsFolder = "screenshots";
+	public static final boolean PERFORMANCE_GRAPHS_ENABLED = true;
+	public static final boolean SCREENSHOTS_ENABLED = false;
 }

@@ -5,7 +5,12 @@ import java.awt.GridLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
+
+import org.apache.commons.lang3.time.DurationFormatUtils;
+
+import structures.Ticker;
 
 public class StatusPanel extends JPanel {
 	private static final long serialVersionUID = -3946006228924064009L;
@@ -14,20 +19,18 @@ public class StatusPanel extends JPanel {
 	private JLabel objectivesStatus;
 	private JLabel constraintsStatus;
 	private JLabel populationSizeStatus;
-	private JLabel maxEpochsStatus;
+	private JLabel numEpochsStatus;
 	private JLabel epochStatus;
-	private JLabel maxRunsStatus;
-	private JLabel runStatus;
+	private JLabel numRunsStatus;
+	private JLabel currentRunStatus;
 	private JLabel ndsSizeStatus;
 	private JLabel lastEpochDuration;
-
-	public JLabel getLastEpochDuration() {
-		return lastEpochDuration;
-	}
-
-	public JLabel getMaxEpochsStatus() {
-		return maxEpochsStatus;
-	}
+	private JLabel runTimeStatus;
+	private JLabel totalRunTimeStatus;
+	private Ticker currentRunTimeCounter;
+	private Ticker totalRunTimeCounter;
+	private boolean countersInitialized = false;
+	private TimerThread timeCountingThread;
 
 	public StatusPanel() {
 		setLayout(new GridLayout(0, 2, 0, 0));
@@ -73,13 +76,13 @@ public class StatusPanel extends JPanel {
 		populationSizeStatus.setHorizontalAlignment(SwingConstants.LEFT);
 		add(populationSizeStatus);
 
-		JLabel maxEpochsLabel = new JLabel("Maximum Epochs: ");
-		maxEpochsLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		add(maxEpochsLabel);
+		JLabel numEpochsLabel = new JLabel("Number of Epochs: ");
+		numEpochsLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		add(numEpochsLabel);
 
-		maxEpochsStatus = new JLabel("");
-		maxEpochsStatus.setHorizontalAlignment(SwingConstants.LEFT);
-		add(maxEpochsStatus);
+		numEpochsStatus = new JLabel("");
+		numEpochsStatus.setHorizontalAlignment(SwingConstants.LEFT);
+		add(numEpochsStatus);
 
 		JLabel epochLabel = new JLabel("Epoch: ");
 		epochLabel.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -89,21 +92,45 @@ public class StatusPanel extends JPanel {
 		epochStatus.setHorizontalAlignment(SwingConstants.LEFT);
 		add(epochStatus);
 
-		JLabel maxRunsLabel = new JLabel("Maximum Runs: ");
-		maxRunsLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		add(maxRunsLabel);
+		JLabel numRunsLabel = new JLabel("Number of Runs: ");
+		numRunsLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		add(numRunsLabel);
 
-		maxRunsStatus = new JLabel("");
-		maxRunsStatus.setHorizontalAlignment(SwingConstants.LEFT);
-		add(maxRunsStatus);
+		numRunsStatus = new JLabel("");
+		numRunsStatus.setHorizontalAlignment(SwingConstants.LEFT);
+		add(numRunsStatus);
 
 		JLabel runLabel = new JLabel("Run: ");
 		runLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 		add(runLabel);
 
-		runStatus = new JLabel("");
-		runStatus.setHorizontalAlignment(SwingConstants.LEFT);
-		add(runStatus);
+		currentRunStatus = new JLabel("");
+		currentRunStatus.setHorizontalAlignment(SwingConstants.LEFT);
+		add(currentRunStatus);
+
+		JLabel runTimeLabel = new JLabel("Current Run Time: ");
+		runTimeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		add(runTimeLabel);
+
+		runTimeStatus = new JLabel("");
+		runTimeStatus.setHorizontalAlignment(SwingConstants.LEFT);
+		add(runTimeStatus);
+
+		JLabel totalRunTimeLabel = new JLabel("Total Run Time: ");
+		totalRunTimeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		add(totalRunTimeLabel);
+
+		totalRunTimeStatus = new JLabel("");
+		totalRunTimeStatus.setHorizontalAlignment(SwingConstants.LEFT);
+		add(totalRunTimeStatus);
+
+		JLabel lastEpochDurationLabel = new JLabel("Last Epoch Duration: ");
+		lastEpochDurationLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		add(lastEpochDurationLabel);
+
+		lastEpochDuration = new JLabel("");
+		lastEpochDuration.setHorizontalAlignment(SwingConstants.LEFT);
+		add(lastEpochDuration);
 
 		JLabel ndsSizeLabel = new JLabel("Non-Dominated Set Size: ");
 		ndsSizeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -112,50 +139,114 @@ public class StatusPanel extends JPanel {
 		ndsSizeStatus = new JLabel("");
 		ndsSizeStatus.setHorizontalAlignment(SwingConstants.LEFT);
 		add(ndsSizeStatus);
-		
-		JLabel lastEpochDurationLabel = new JLabel("Last Epoch Duration (s): ");
-		lastEpochDurationLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		add(lastEpochDurationLabel);
 
-		lastEpochDuration = new JLabel("");
-		lastEpochDuration.setHorizontalAlignment(SwingConstants.LEFT);
-		add(lastEpochDuration);
-		
 	}
 
-	public JLabel getAlgorithmStatus() {
-		return algorithmStatus;
+	public void setConstraints(String text) {
+		constraintsStatus.setText(text);
 	}
 
-	public JLabel getConstraintsStatus() {
-		return constraintsStatus;
+	public void setEpoch(String text) {
+		epochStatus.setText(text);
 	}
 
-	public JLabel getEpochStatus() {
-		return epochStatus;
+	public void setNumberEpochs(String text) {
+		numEpochsStatus.setText(text);
 	}
 
-	public JLabel getMaxRunsStatus() {
-		return maxRunsStatus;
+	public void setNumberRuns(String text) {
+		numRunsStatus.setText(text);
 	}
 
-	public JLabel getNdsSizeStatus() {
-		return ndsSizeStatus;
+	public void setNDS_Size(String text) {
+		ndsSizeStatus.setText(text);
 	}
 
-	public JLabel getObjectivesStatus() {
-		return objectivesStatus;
+	public void setObjectives(String text) {
+		objectivesStatus.setText(text);
 	}
 
-	public JLabel getPopulationSizeStatus() {
-		return populationSizeStatus;
+	public void setPopulationSize(String text) {
+		populationSizeStatus.setText(text);
 	}
 
-	public JLabel getRunStatus() {
-		return runStatus;
+	public void setCurrentRun(String text) {
+		currentRunStatus.setText(text);
 	}
 
-	public JLabel getVariablesStatus() {
-		return variablesStatus;
+	public void setVariables(String text) {
+		variablesStatus.setText(text);
+	}
+
+	public void setAlgorithm(String text) {
+		algorithmStatus.setText(text);
+	}
+
+	public void setRunTimeStatus(double seconds) {
+		double millis = seconds * 1000.0;
+		String text = DurationFormatUtils.formatDuration((long) millis, "HH:mm:ss", true);
+		// String text = String.format("%s s", timeFormat.format(seconds));
+		runTimeStatus.setText(text);
+	}
+
+	public void setTotalRunTimeStatus(double seconds) {
+		double millis = seconds * 1000.0;
+		String text = DurationFormatUtils.formatDuration((long) millis, "HH:mm:ss", true);
+		// String text = String.format("%s s", timeFormat.format(seconds));
+		totalRunTimeStatus.setText(text);
+	}
+
+	public void setLastEpochDuration(double seconds) {
+		lastEpochDuration.setText(String.format("%.3f s", seconds));
+	}
+
+	public void resetCurrentRunTime() {
+		this.currentRunTimeCounter.resetTicker();
+	}
+
+	public void initializedTimeCounters() {
+		this.currentRunTimeCounter = new Ticker();
+		this.totalRunTimeCounter = new Ticker();
+		countersInitialized = true;
+		timeCountingThread = new TimerThread();
+		timeCountingThread.start();
+	}
+
+	public boolean areCountersInitialized() {
+		return countersInitialized;
+	}
+
+	public class TimerThread extends Thread {
+
+		private boolean isRunning;
+
+		public TimerThread() {
+			this.isRunning = true;
+		}
+
+		@Override
+		public void run() {
+			while (isRunning) {
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						if (areCountersInitialized()) {
+							setRunTimeStatus(currentRunTimeCounter.getElapsedTime());
+							setTotalRunTimeStatus(totalRunTimeCounter.getElapsedTime());
+						}
+					}
+				});
+
+				try {
+					Thread.sleep(500L);
+				} catch (InterruptedException e) {
+				}
+			}
+		}
+
+		public void setRunning(boolean isRunning) {
+			this.isRunning = isRunning;
+		}
+
 	}
 }

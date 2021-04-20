@@ -42,6 +42,7 @@ public class StepChartPanel extends JPanel {
 		dataset.addSeries(series);
 
 		JFreeChart chart = ChartFactory.createXYStepChart(title, xAxisLabel, yAxisLabel, dataset, PlotOrientation.VERTICAL, false, false, false);
+		chart.setRenderingHints(GUI_Utils.createDefaultRenderingHints());
 
 		ChartPanel chartPanel = new ChartPanel(chart);
 		plot = chart.getXYPlot();
