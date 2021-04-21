@@ -4,7 +4,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Solution;
-import org.moeaframework.core.Variable;
 
 import graph.StringGraph;
 import jcfgonc.blender.structures.Blend;

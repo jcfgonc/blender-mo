@@ -49,6 +49,8 @@ public class InteractiveExecutorGUI extends JFrame {
 	private SettingsPanel settingsPanel;
 	private JPanel fillPanel;
 	private final DecimalFormat screenshotFilenameDecimalFormat = new DecimalFormat("0000");
+	private int epoch;
+	private int run;
 
 	/**
 	 * Create the frame.
@@ -208,6 +210,8 @@ public class InteractiveExecutorGUI extends JFrame {
 	 * @param epochDuration
 	 */
 	public void updateStatus(NondominatedPopulation nds, int epoch, int run, double epochDuration) {
+		this.epoch = epoch;
+		this.run = run;
 
 		statusPanel.setNumberRuns(Integer.toString(MOEA_Config.MOEA_RUNS));
 		statusPanel.setNumberEpochs(Integer.toString(MOEA_Config.MAX_EPOCHS));
@@ -224,13 +228,13 @@ public class InteractiveExecutorGUI extends JFrame {
 		// the first epoch has two calls, the first to initialize status (nds=null)
 		// the second with the results (nds) from the 0'th epoch
 		if (nds != null) {
-			nonDominatedSetPanel.updateGraphs(nds);
 			statusPanel.setNDS_Size(Integer.toString(nds.size()));
 			statusPanel.setLastEpochDuration(epochDuration);
 		}
 
-		if (settingsPanel.isPerformanceGraphsEnabled()) {
+		if (settingsPanel.isGraphsEnabled()) {
 			if (nds != null) {
+				nonDominatedSetPanel.updateGraphs(nds);
 				timeEpochPanel.addSample(epoch, epochDuration);
 				ndsSizePanel.addSample(epoch, nds.size());
 				double[] objectiveMinimuns = calculateMinimumOfObjectives(nds);
@@ -242,6 +246,14 @@ public class InteractiveExecutorGUI extends JFrame {
 			new File(MOEA_Config.screenshotsFolder).mkdir();
 			String filename = String.format("run_%s_epoch_%s", screenshotFilenameDecimalFormat.format(run),
 					screenshotFilenameDecimalFormat.format(epoch));
+			saveScreenShotPNG(MOEA_Config.screenshotsFolder + File.separator + filename + ".png");
+		}
+	}
+
+	public void takeLastEpochScreenshot() {
+		if (settingsPanel.isLastEpochScreenshotEnabled()) {
+			new File(MOEA_Config.screenshotsFolder).mkdir();
+			String filename = String.format("run_%s_last_epoch", screenshotFilenameDecimalFormat.format(run));
 			saveScreenShotPNG(MOEA_Config.screenshotsFolder + File.separator + filename + ".png");
 		}
 	}
@@ -284,16 +296,19 @@ public class InteractiveExecutorGUI extends JFrame {
 		interactiveExecutor.skipCurrentRun();
 	}
 
-	public void debug() {
-		System.out.println(this.getLocation());
-		System.out.println(this.getSize());
-	}
-
 	public Properties getAlgorithmProperties() {
 		return interactiveExecutor.getAlgorithmProperties();
 	}
 
 	public void resetCurrentRunTime() {
 		statusPanel.resetCurrentRunTime();
+	}
+
+	public int getEpoch() {
+		return epoch;
+	}
+
+	public int getRun() {
+		return run;
 	}
 }

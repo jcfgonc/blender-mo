@@ -10,6 +10,8 @@ import java.util.Iterator;
 import javax.swing.JPanel;
 
 import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartMouseEvent;
+import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
@@ -32,6 +34,7 @@ public class NonDominatedSetPanel extends JPanel {
 	private XYPlot plot;
 	private Problem problem;
 	private Color paint;
+	private JFreeChart chart;
 
 	public NonDominatedSetPanel(Problem problem, Color paint) {
 		this.problem = problem;
@@ -82,7 +85,7 @@ public class NonDominatedSetPanel extends JPanel {
 			}
 			objectiveIndex += 2;
 
-			JFreeChart chart = ChartFactory.createScatterPlot(null, xAxisLabel, yAxisLabel, dataset, PlotOrientation.VERTICAL, false, false, false);
+			chart = ChartFactory.createScatterPlot(null, xAxisLabel, yAxisLabel, dataset, PlotOrientation.VERTICAL, false, false, false);
 			chart.setRenderingHints(GUI_Utils.createDefaultRenderingHints());
 
 //			// color
@@ -97,7 +100,22 @@ public class NonDominatedSetPanel extends JPanel {
 //			rend.setShapesFilled(true);
 
 			ChartPanel chartPanel = new ChartPanel(chart, true);
+			chartPanel.setDomainZoomable(false);
+			chartPanel.setRangeZoomable(false);
 			add(chartPanel);
+			
+			 // add click event
+	        chartPanel.addChartMouseListener(new ChartMouseListener() {
+	            @Override
+	            public void chartMouseClicked(ChartMouseEvent e) {
+	            	System.out.println(e.getTrigger());
+	            }
+
+	            @Override
+	            public void chartMouseMoved(ChartMouseEvent arg0) {
+	            }
+	        });
+	        
 		}
 	}
 
@@ -126,8 +144,9 @@ public class NonDominatedSetPanel extends JPanel {
 	 */
 	public void updateGraphs(NondominatedPopulation nds) {
 		this.nonDominatedSet = nds;
-		// draw NDS/solutions charts
-		refillXYSeries();
+		setNotifySeries(false);
+		refillXYSeries(); // draw NDS/solutions charts
+		setNotifySeries(true);
 	}
 
 	/**
@@ -162,6 +181,17 @@ public class NonDominatedSetPanel extends JPanel {
 		for (XYSeries graph : ndsSeries) {
 			// empty data series
 			graph.clear();
+		}
+	}
+
+	/**
+	 * enables/disables series changed event (to redraw the graph)
+	 * 
+	 * @param notify
+	 */
+	public void setNotifySeries(boolean notify) {
+		for (XYSeries graph : ndsSeries) {
+			graph.setNotify(notify);
 		}
 	}
 }

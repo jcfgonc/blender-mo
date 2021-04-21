@@ -42,7 +42,7 @@ public class BarChartPanel extends JPanel {
 				false);
 		RenderingHints renderingHints = GUI_Utils.createDefaultRenderingHints();
 		// disable anti-aliasing in the bar graph, if on it creates moire between the bars
-		renderingHints.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+	//	renderingHints.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 		chart.setRenderingHints(renderingHints);
 
 		ChartPanel chartPanel = new ChartPanel(chart);
@@ -61,7 +61,7 @@ public class BarChartPanel extends JPanel {
 		// renderer.setDrawBarOutline(false);
 		// background and bars alpha
 		catPlot.setBackgroundAlpha(1.0f);
-		catPlot.setForegroundAlpha(0.8f);
+		catPlot.setForegroundAlpha(1.0f);
 		// horizontal grid color
 		catPlot.setRangeGridlinePaint(new Color(0, 0, 0, 255));
 		CategoryAxis domainAxis = catPlot.getDomainAxis();
@@ -72,7 +72,7 @@ public class BarChartPanel extends JPanel {
 		domainAxis.setLowerMargin(0.0);
 		domainAxis.setUpperMargin(0.0);
 		// distance between the bars
-		domainAxis.setCategoryMargin(0.0);
+		domainAxis.setCategoryMargin(-0.00);
 		add(chartPanel);
 	}
 

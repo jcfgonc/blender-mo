@@ -108,11 +108,12 @@ public class BlenderMoLauncher {
 		Properties properties = new Properties();
 		properties.setProperty("operator", "CustomMutation");
 		properties.setProperty("CustomMutation.Rate", "1.0");
-		properties.setProperty("epsilon", "0.01"); // default is 0.01
-		properties.setProperty("windowSize", "1024");
-		properties.setProperty("maxWindowSize", "1024");
+		// eNSGA-II
+		properties.setProperty("epsilon", "0.0001"); // default is 0.01
+		properties.setProperty("windowSize", "999999"); // epoch to trigger eNSGA2 population injection
+		properties.setProperty("maxWindowSize", "999999"); // epoch to trigger eNSGA2 hard restart
 		properties.setProperty("injectionRate", Double.toString(1.0 / 0.25)); // population to archive ratio, default is 0.25
-
+		// NSGA-III
 		properties.setProperty("divisionsOuter", "10"); // 3
 		properties.setProperty("divisionsInner", "0"); // 2
 
@@ -134,6 +135,7 @@ public class BlenderMoLauncher {
 		for (int moea_run = 0; moea_run < MOEA_Config.MOEA_RUNS; moea_run++) {
 			if (ie.isCanceled())
 				break;
+		//	properties.setProperty("maximumPopulationSize", Integer.toString(MOEA_Config.POPULATION_SIZE * 2)); // default is 10 000
 			properties.setProperty("populationSize", Integer.toString(MOEA_Config.POPULATION_SIZE));
 			// do one run of 'n' epochs
 			NondominatedPopulation currentResults = ie.execute(moea_run);

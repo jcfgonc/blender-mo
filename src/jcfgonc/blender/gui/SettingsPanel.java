@@ -1,7 +1,6 @@
 package jcfgonc.blender.gui;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.FlowLayout;
 
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -20,10 +19,9 @@ public class SettingsPanel extends JPanel {
 	private JSpinner numberEpochs;
 	private JSpinner numberRuns;
 	private JSpinner populationSize;
-	private JCheckBox performanceGraphsEnabledCB;
+	private JCheckBox graphsEnabledCB;
 	private JCheckBox screenshotsCB;
-	private boolean performanceGraphsEnabled = MOEA_Config.PERFORMANCE_GRAPHS_ENABLED;
-	private boolean screenshotsEnabled = MOEA_Config.SCREENSHOTS_ENABLED;
+	private JCheckBox lastEpochScreenshotCB;
 
 	public SettingsPanel() {
 		super();
@@ -32,21 +30,20 @@ public class SettingsPanel extends JPanel {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
 		JPanel panel_0 = new JPanel();
+		FlowLayout flowLayout_1 = (FlowLayout) panel_0.getLayout();
+		flowLayout_1.setVgap(2);
 		add(panel_0);
 
-		JLabel label_0 = new JLabel("Performance Graphs Enabled");
+		JLabel label_0 = new JLabel("Update Graphs each Epoch");
 		panel_0.add(label_0);
 
-		performanceGraphsEnabledCB = new JCheckBox("", performanceGraphsEnabled);
-		performanceGraphsEnabledCB.setToolTipText("If enabled updates the performance graphs to the left.");
-		performanceGraphsEnabledCB.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				graphsEnabledClickEvent();
-			}
-		});
-		panel_0.add(performanceGraphsEnabledCB);
+		graphsEnabledCB = new JCheckBox("", MOEA_Config.GRAPHS_ENABLED);
+		graphsEnabledCB.setToolTipText("If enabled the graphs are updated each epoch.");
+		panel_0.add(graphsEnabledCB);
 
 		JPanel panel_1 = new JPanel();
+		FlowLayout flowLayout = (FlowLayout) panel_1.getLayout();
+		flowLayout.setVgap(2);
 		add(panel_1);
 
 		JLabel label_1 = new JLabel("Number of Epochs per Run");
@@ -59,11 +56,13 @@ public class SettingsPanel extends JPanel {
 				MOEA_Config.MAX_EPOCHS = value.intValue();
 			}
 		});
-		numberEpochs.setModel(new SpinnerNumberModel(512, 20, 16384, 1));
+		numberEpochs.setModel(new SpinnerNumberModel(512, 20, 999999, 1));
 		numberEpochs.setToolTipText("Number of epochs to execute for each run. Takes effect immediately.");
 		panel_1.add(numberEpochs);
 
 		JPanel panel_2 = new JPanel();
+		FlowLayout flowLayout_2 = (FlowLayout) panel_2.getLayout();
+		flowLayout_2.setVgap(2);
 		add(panel_2);
 
 		JLabel label_2 = new JLabel("Number of Runs");
@@ -76,11 +75,13 @@ public class SettingsPanel extends JPanel {
 				MOEA_Config.MOEA_RUNS = value.intValue();
 			}
 		});
-		numberRuns.setModel(new SpinnerNumberModel(256, 20, 16384, 1));
+		numberRuns.setModel(new SpinnerNumberModel(256, 20, 999999, 1));
 		numberRuns.setToolTipText("Number of runs (each of n epochs) to execute. Takes effect immediately.");
 		panel_2.add(numberRuns);
 
 		JPanel panel_3 = new JPanel();
+		FlowLayout flowLayout_3 = (FlowLayout) panel_3.getLayout();
+		flowLayout_3.setVgap(2);
 		add(panel_3);
 
 		JLabel label_3 = new JLabel("Population Size");
@@ -93,41 +94,45 @@ public class SettingsPanel extends JPanel {
 				MOEA_Config.POPULATION_SIZE = value.intValue();
 			}
 		});
-		populationSize.setModel(new SpinnerNumberModel(256, 20, 16384, 1));
+		populationSize.setModel(new SpinnerNumberModel(256, 20, 999999, 1));
 		populationSize.setToolTipText("Size of the population. Takes effect on the next run.");
 		panel_3.add(populationSize);
 
 		JPanel panel_4 = new JPanel();
+		FlowLayout flowLayout_4 = (FlowLayout) panel_4.getLayout();
+		flowLayout_4.setVgap(2);
 		add(panel_4);
 
 		JLabel label_4 = new JLabel("Take Runtime Screenshots");
 		panel_4.add(label_4);
 
-		screenshotsCB = new JCheckBox("", screenshotsEnabled);
+		screenshotsCB = new JCheckBox("", MOEA_Config.SCREENSHOTS_ENABLED);
 		screenshotsCB.setToolTipText("If enabled takes a screenshot of the GUI every epoch.");
-		screenshotsCB.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				screenshotsEnabledClickEvent();
-			}
-		});
 		panel_4.add(screenshotsCB);
 
+		JPanel panel_5 = new JPanel();
+		FlowLayout flowLayout_5 = (FlowLayout) panel_5.getLayout();
+		flowLayout_5.setVgap(2);
+		add(panel_5);
+
+		JLabel label_5 = new JLabel("Take Screenshot of the Last Epoch");
+		panel_5.add(label_5);
+
+		lastEpochScreenshotCB = new JCheckBox("", MOEA_Config.LAST_EPOCH_SCREENSHOT);
+		lastEpochScreenshotCB.setToolTipText("If enabled takes a screenshot of the GUI every epoch.");
+		panel_5.add(lastEpochScreenshotCB);
 	}
 
-	public void graphsEnabledClickEvent() {
-		performanceGraphsEnabled = performanceGraphsEnabledCB.isSelected();
-	}
-
-	public boolean isPerformanceGraphsEnabled() {
-		return performanceGraphsEnabled;
+	public boolean isGraphsEnabled() {
+		return graphsEnabledCB.isSelected();
 	}
 
 	public boolean isScreenshotsEnabled() {
-		return screenshotsEnabled;
+		return screenshotsCB.isSelected();
 	}
 
-	public void screenshotsEnabledClickEvent() {
-		screenshotsEnabled = screenshotsCB.isSelected();
+	public boolean isLastEpochScreenshotEnabled() {
+		return lastEpochScreenshotCB.isSelected();
 	}
 
 	public void setNumberEpochs(int v) {

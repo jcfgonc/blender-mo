@@ -1,6 +1,5 @@
 package jcfgonc.moea.generic;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
 
 import javax.swing.SwingUtilities;
@@ -19,7 +18,13 @@ import structures.Ticker;
 public class InteractiveExecutor {
 	private Properties algorithmProperties;
 	private NondominatedPopulation lastResult;
+	/**
+	 * cancels the MOEA in general
+	 */
 	private boolean canceled;
+	/**
+	 * cancels/skips the current run and jumps to the next
+	 */
 	private boolean skipCurrentRun;
 	private Problem problem;
 	private InteractiveExecutorGUI gui;
@@ -88,6 +93,7 @@ public class InteractiveExecutor {
 		} while (true);
 
 		algorithm.terminate();
+		gui.takeLastEpochScreenshot();
 		return lastResult;
 	}
 
@@ -102,12 +108,7 @@ public class InteractiveExecutor {
 				}
 			}
 		};
-		try {
-			SwingUtilities.invokeAndWait(updater);
-		} catch (InvocationTargetException | InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		SwingUtilities.invokeLater(updater);
 	}
 
 	private void clearGraphs() {
@@ -148,6 +149,7 @@ public class InteractiveExecutor {
 	 * Called when the user clicks on the abort button. Saves last results and exits the JVM.
 	 */
 	public void abortOptimization() {
+		gui.takeLastEpochScreenshot();
 		resultsWriter.appendResultsToFile(resultsFilename, lastResult, problem);
 		resultsWriter.close();
 		System.exit(-1);

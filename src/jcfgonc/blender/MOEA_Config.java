@@ -21,6 +21,7 @@ public class MOEA_Config {
 
 	public static final String vitalRelationsPath = "data/vital_relations.tsv";
 	public static final String screenshotsFolder = "screenshots";
-	public static final boolean PERFORMANCE_GRAPHS_ENABLED = true;
+	public static final boolean GRAPHS_ENABLED = true;
 	public static final boolean SCREENSHOTS_ENABLED = false;
+	public static final boolean LAST_EPOCH_SCREENSHOT = true;
 }

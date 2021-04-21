@@ -1,5 +1,6 @@
 package jcfgonc.blender.gui;
 
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -15,11 +16,9 @@ public class OptimisationControlPanel extends JPanel {
 	private JButton nextRunButton;
 	private JButton stopButton;
 	private AbstractButton abortButton;
-	private JButton debugButton;
 	private JButton printNDS_button;
 	private JPanel panelTop;
 	private JPanel panelMiddle;
-	private JPanel panelBottom;
 
 	public OptimisationControlPanel(InteractiveExecutorGUI interactiveExecutorGUI) {
 		this.gui = interactiveExecutorGUI;
@@ -28,13 +27,14 @@ public class OptimisationControlPanel extends JPanel {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
 		panelTop = new JPanel();
+		FlowLayout flowLayout = (FlowLayout) panelTop.getLayout();
+		flowLayout.setVgap(2);
 		add(panelTop);
 
 		panelMiddle = new JPanel();
+		FlowLayout flowLayout_1 = (FlowLayout) panelMiddle.getLayout();
+		flowLayout_1.setVgap(2);
 		add(panelMiddle);
-
-		panelBottom = new JPanel();
-		add(panelBottom);
 
 		printNDS_button = new JButton("Print Non Dominated Set");
 		printNDS_button.addActionListener(new ActionListener() {
@@ -71,20 +71,6 @@ public class OptimisationControlPanel extends JPanel {
 		});
 		abortButton.setToolTipText("Aborts the optimization by discarding the current epoch's results and returns the best results so far.");
 		panelMiddle.add(abortButton);
-
-		debugButton = new JButton("debug");
-		debugButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				debug();
-			}
-		});
-		debugButton.setToolTipText("does some useful debug thing only I know");
-		panelBottom.add(debugButton);
-
-	}
-
-	public void debug() {
-		gui.debug();
 	}
 
 }
