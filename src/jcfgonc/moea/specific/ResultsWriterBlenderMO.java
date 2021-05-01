@@ -9,7 +9,7 @@ import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 
 import graph.StringGraph;
-import jcfgonc.moea.generic.ProblemDescription;
+import jcfgonc.blender.logic.LogicUtils;
 
 public class ResultsWriterBlenderMO implements ResultsWriter {
 
@@ -25,16 +25,20 @@ public class ResultsWriterBlenderMO implements ResultsWriter {
 			FileWriter fw = new FileWriter(filename, true);
 			BufferedWriter bw = new BufferedWriter(fw);
 
-			ProblemDescription pd = (ProblemDescription) problem;
+			CustomProblem cp = (CustomProblem) problem;
 			int numberOfObjectives = problem.getNumberOfObjectives();
 			for (int i = 0; i < numberOfObjectives; i++) {
-				String objectiveDescription = pd.getObjectiveDescription(i);
+				String objectiveDescription = cp.getObjectiveDescription(i);
 				fw.write(String.format("%s\t", objectiveDescription));
 			}
-			// graph data header
+			// remaining headers
 			bw.write("d:graph's vertices\t");
 			bw.write("d:graph's edges\t");
-			bw.write(pd.getVariableDescription(0));
+			bw.write("f:novelty\t");
+
+			// graph column
+			bw.write(cp.getVariableDescription(0));
+
 			bw.newLine();
 			bw.close();
 			fw.close();
@@ -53,8 +57,9 @@ public class ResultsWriterBlenderMO implements ResultsWriter {
 
 			FileWriter fw = new FileWriter(filename, true);
 			BufferedWriter bw = new BufferedWriter(fw);
+			CustomProblem cp = (CustomProblem) problem;
 
-			int numberOfObjectives = problem.getNumberOfObjectives();
+			int numberOfObjectives = cp.getNumberOfObjectives();
 
 			for (Solution solution : results) {
 				// write objectives
@@ -68,8 +73,12 @@ public class ResultsWriterBlenderMO implements ResultsWriter {
 				CustomChromosome cc = (CustomChromosome) solution.getVariable(0); // unless the solution domain X has more than one dimension
 				StringGraph blendSpace = cc.getBlend().getBlendSpace();
 
+				// remaining headers
 				bw.write(String.format("%d\t", blendSpace.numberOfVertices()));
 				bw.write(String.format("%d\t", blendSpace.numberOfEdges()));
+				bw.write(String.format("%f\t", LogicUtils.calculateNovelty(blendSpace, cp.getInputSpace())));
+
+				// graph column
 				bw.write(String.format("%s", blendSpace));
 				bw.newLine();
 			}

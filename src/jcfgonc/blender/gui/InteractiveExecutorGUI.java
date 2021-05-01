@@ -9,21 +9,20 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.text.DecimalFormat;
-import java.util.Arrays;
 import java.util.Properties;
 
 import javax.swing.BoxLayout;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.StandardChartTheme;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
-import org.moeaframework.core.Solution;
 
 import jcfgonc.blender.MOEA_Config;
 import jcfgonc.moea.generic.InteractiveExecutor;
@@ -34,23 +33,27 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JPanel contentPane;
 	private NonDominatedSetPanel nonDominatedSetPanel;
 	private JPanel technicalPanel;
-	private InteractiveExecutor interactiveExecutor;
-	private int numberOfVariables;
-	private int numberOfObjectives;
-	private int numberOfConstraints;
-	private Problem problem;
+	private final InteractiveExecutor interactiveExecutor;
+	private final int numberOfObjectives;
+	private final Problem problem;
 	private StatusPanel statusPanel;
 	private OptimisationControlPanel optimisationControlPanel;
 	private BarChartPanel timeEpochPanel;
 	private JPanel upperPanel;
 	private JPanel upperLeftPanel;
 	private BarChartPanel ndsSizePanel;
-	private ObjectivesLineChartPanel objectivesLineChartPanel;
+	private ObjectivesChartPanel objectivesLineChartPanel;
 	private SettingsPanel settingsPanel;
 	private JPanel fillPanel;
 	private final DecimalFormat screenshotFilenameDecimalFormat = new DecimalFormat("0000");
 	private int epoch;
 	private int run;
+	private double epochDuration;
+	private NondominatedPopulation nds;
+	/**
+	 * used to update the gui before taking a screenshot
+	 */
+	private boolean guiUpdated;
 
 	/**
 	 * Create the frame.
@@ -69,11 +72,15 @@ public class InteractiveExecutorGUI extends JFrame {
 				abortOptimization();
 			}
 		});
+
 		this.interactiveExecutor = interactiveExecutor;
 		this.problem = interactiveExecutor.getProblem();
-		this.numberOfVariables = problem.getNumberOfVariables();
 		this.numberOfObjectives = problem.getNumberOfObjectives();
-		this.numberOfConstraints = problem.getNumberOfConstraints();
+		this.nds = null;
+		this.epoch = -1;
+		this.run = -1;
+		this.epochDuration = -1;
+
 		initialize();
 	}
 
@@ -99,7 +106,7 @@ public class InteractiveExecutorGUI extends JFrame {
 		ndsSizePanel = new BarChartPanel("Size of the Non Dominated Set vs Epoch", "Epoch", "Size of the Non Dominated Set", new Color(0, 200, 100));
 		upperLeftPanel.add(ndsSizePanel);
 
-		objectivesLineChartPanel = new ObjectivesLineChartPanel("Minimum of objective vs Epoch", "irrelevant", "Value", problem);
+		objectivesLineChartPanel = new ObjectivesChartPanel("Boxplot of Objectives", null, null, problem);
 		upperLeftPanel.add(objectivesLineChartPanel);
 
 		technicalPanel = new JPanel();
@@ -170,91 +177,100 @@ public class InteractiveExecutorGUI extends JFrame {
 		settingsPanel.setNumberEpochs(MOEA_Config.MAX_EPOCHS);
 		settingsPanel.setNumberRuns(MOEA_Config.MOEA_RUNS);
 		settingsPanel.setPopulationSize(MOEA_Config.POPULATION_SIZE);
+		settingsPanel.setRunTimeLimit(MOEA_Config.MAX_RUN_TIME);
 
 		statusPanel.initializedTimeCounters();
+		// display static properties
+		statusPanel.setObjectives(Integer.toString(numberOfObjectives));
+		statusPanel.setAlgorithm(MOEA_Config.ALGORITHM);
 
 //		setLocation(-6, 0);
 		windowResized(null);
 		pack();
+		setLocationRelativeTo(null);
 //		setPreferredSize(new Dimension(1920, 512));
 //		setMinimumSize(new Dimension(800, 640));
 		setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
 	}
 
-	private double[] calculateMinimumOfObjectives(NondominatedPopulation nds) {
-		int numberOfObjectives = problem.getNumberOfObjectives();
-		double[] minimums = new double[numberOfObjectives];
-		Arrays.fill(minimums, Double.MAX_VALUE);
-
-		// get the minimum in the current solution set
-		for (int solution_i = 0; solution_i < nds.size(); solution_i++) {
-			Solution solution = nds.get(solution_i);
-			// for each objective
-			for (int objective_i = 0; objective_i < numberOfObjectives; objective_i++) {
-				double val = solution.getObjective(objective_i);
-				if (val < minimums[objective_i]) {
-					minimums[objective_i] = val;
-				}
-			}
-		}
-//		VariousUtils.printArray(minimums);
-		return minimums;
-	}
-
 	/**
-	 * Update the GUI. If the given NondominatedPopulation is null or empty this function just updates the epoch and run JLabels.
+	 * Updates data structures and the GUI.
 	 * 
 	 * @param nds
 	 * @param epoch
 	 * @param run
 	 * @param epochDuration
 	 */
-	public void updateStatus(NondominatedPopulation nds, int epoch, int run, double epochDuration) {
-		this.epoch = epoch;
-		this.run = run;
-
-		statusPanel.setNumberRuns(Integer.toString(MOEA_Config.MOEA_RUNS));
-		statusPanel.setNumberEpochs(Integer.toString(MOEA_Config.MAX_EPOCHS));
-//		statusPanel.setPopulationSize(Integer.toString(MOEA_Config.POPULATION_SIZE));
-		statusPanel.setPopulationSize(getAlgorithmProperties().getProperty("populationSize")); // get directly from the algorithm's properties
-
-		statusPanel.setEpoch(Integer.toString(epoch));
-		statusPanel.setCurrentRun(Integer.toString(run));
-		statusPanel.setVariables(Integer.toString(numberOfVariables));
-		statusPanel.setObjectives(Integer.toString(numberOfObjectives));
-		statusPanel.setConstraints(Integer.toString(numberOfConstraints));
-		statusPanel.setAlgorithm(MOEA_Config.ALGORITHM);
-
-		// the first epoch has two calls, the first to initialize status (nds=null)
-		// the second with the results (nds) from the 0'th epoch
-		if (nds != null) {
-			statusPanel.setNDS_Size(Integer.toString(nds.size()));
-			statusPanel.setLastEpochDuration(epochDuration);
+	public void updateData(NondominatedPopulation nds, int epoch, int run, double epochDuration) {
+		// changed with a new run
+		if (run != this.run) {
+			statusPanel.setCurrentRun(Integer.toString(run));
+			statusPanel.setPopulationSize(getAlgorithmProperties().getProperty("populationSize")); // get directly from the algorithm's properties
 		}
 
+		this.nds = nds;
+		this.epoch = epoch;
+		this.run = run;
+		this.epochDuration = epochDuration;
+		guiUpdated = false;
+
+		// update text boxes with dynamic properties
+		statusPanel.setEpoch(Integer.toString(epoch));
+		statusPanel.setNDS_Size(Integer.toString(nds.size()));
+		statusPanel.setLastEpochDuration(epochDuration);
+		statusPanel.setNumberRuns(Integer.toString(MOEA_Config.MOEA_RUNS));
+		statusPanel.setNumberEpochs(Integer.toString(MOEA_Config.MAX_EPOCHS));
+		statusPanel.setRunTimeLimit(Double.toString(MOEA_Config.MAX_RUN_TIME));
+
 		if (settingsPanel.isGraphsEnabled()) {
-			if (nds != null) {
-				nonDominatedSetPanel.updateGraphs(nds);
-				timeEpochPanel.addSample(epoch, epochDuration);
-				ndsSizePanel.addSample(epoch, nds.size());
-				double[] objectiveMinimuns = calculateMinimumOfObjectives(nds);
-				objectivesLineChartPanel.addValue(objectiveMinimuns, epoch);
-			}
+			updateGUI();
 		}
 
 		if (settingsPanel.isScreenshotsEnabled()) {
-			new File(MOEA_Config.screenshotsFolder).mkdir();
-			String filename = String.format("run_%s_epoch_%s", screenshotFilenameDecimalFormat.format(run),
-					screenshotFilenameDecimalFormat.format(epoch));
-			saveScreenShotPNG(MOEA_Config.screenshotsFolder + File.separator + filename + ".png");
+			takeScreenshot();
 		}
 	}
 
+	private void updateGUI() {
+		if (nds != null) {
+			nonDominatedSetPanel.updateGraphs(nds);
+			timeEpochPanel.addSample(epoch, epochDuration);
+			ndsSizePanel.addSample(epoch, nds.size());
+			objectivesLineChartPanel.addValues(nds);
+		}
+		guiUpdated = true;
+	}
+
+	private void takeScreenshot() {
+		if (!guiUpdated) {
+			updateGUI();
+		}
+		new File(MOEA_Config.screenshotsFolder).mkdir();
+		String filename = String.format("run_%s_epoch_%s", screenshotFilenameDecimalFormat.format(run),
+				screenshotFilenameDecimalFormat.format(epoch));
+
+		saveScreenShotPNG(MOEA_Config.screenshotsFolder + File.separator + filename + ".png");
+	}
+
 	public void takeLastEpochScreenshot() {
-		if (settingsPanel.isLastEpochScreenshotEnabled()) {
-			new File(MOEA_Config.screenshotsFolder).mkdir();
-			String filename = String.format("run_%s_last_epoch", screenshotFilenameDecimalFormat.format(run));
-			saveScreenShotPNG(MOEA_Config.screenshotsFolder + File.separator + filename + ".png");
+		try {
+			if (settingsPanel.isLastEpochScreenshotEnabled()) {
+				Runnable updater = new Runnable() {
+					public void run() {
+						try {
+							takeScreenshot();
+						} catch (Exception e) {
+							e.printStackTrace();
+						} finally {
+						}
+					}
+				};
+				SwingUtilities.invokeAndWait(updater);
+			}
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -277,10 +293,10 @@ public class InteractiveExecutorGUI extends JFrame {
 	 * Saves the entire GUI to a file. Filename contains the extension/file format.
 	 */
 	public void saveScreenShotPNG(String filename) {
-		JComponent yourComponent = contentPane;
-		BufferedImage img = new BufferedImage(yourComponent.getWidth(), yourComponent.getHeight(), BufferedImage.TYPE_INT_RGB);
-		yourComponent.paint(img.getGraphics());
-
+		int w = contentPane.getWidth();
+		int h = contentPane.getHeight();
+		BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+		contentPane.paint(img.getGraphics());
 		GUI_Utils.saveScreenShotPNG(img, filename);
 	}
 

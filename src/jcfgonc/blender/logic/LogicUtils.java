@@ -7,6 +7,7 @@ import java.util.Set;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import graph.GraphAlgorithms;
+import graph.StringEdge;
 import graph.StringGraph;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -159,4 +160,17 @@ public class LogicUtils {
 	public static boolean isBlend(String concept) {
 		return concept.indexOf('|') >= 0;
 	}
+
+	public static double calculateNovelty(StringGraph blendSpace, StringGraph inputSpace) {
+		int uniqueEdges = 0;
+		for (StringEdge edge : blendSpace.edgeSet()) {
+			if (!inputSpace.containsEdge(edge)) {
+				uniqueEdges++;
+			}
+		}
+		int numberOfEdges = blendSpace.numberOfEdges();
+		double novelty = (double) uniqueEdges / numberOfEdges;
+		return novelty;
+	}
+
 }

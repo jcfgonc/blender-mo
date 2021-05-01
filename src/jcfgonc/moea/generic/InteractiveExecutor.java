@@ -71,11 +71,11 @@ public class InteractiveExecutor {
 
 		clearGraphs();
 		gui.resetCurrentRunTime();
-		gui.updateStatus(null, epoch, moea_run, 0);
+//		gui.updateStatus(null, epoch, moea_run, 0);
 
+		ticker.resetTicker();
 		do {
 			// count algorithm time
-			ticker.resetTicker();
 			algorithm.step();
 			double epochDuration = ticker.getTimeDeltaLastCall();
 
@@ -86,7 +86,13 @@ public class InteractiveExecutor {
 
 			// update blender visualizer
 //			blenderVisualizer.update(lastResult);
-			if (algorithm.isTerminated() || epoch >= MOEA_Config.MAX_EPOCHS || canceled || skipCurrentRun) {
+			double runElapsedTime = ticker.getElapsedTime() / 60.0;
+//			System.out.println(runElapsedTime);
+			if (algorithm.isTerminated() || //
+					runElapsedTime > MOEA_Config.MAX_RUN_TIME || //
+					epoch >= MOEA_Config.MAX_EPOCHS || //
+					canceled || //
+					skipCurrentRun) {
 				break; // break while loop
 			}
 			epoch++;
@@ -101,7 +107,7 @@ public class InteractiveExecutor {
 		Runnable updater = new Runnable() {
 			public void run() {
 				try {
-					gui.updateStatus(lastResult, epoch, moea_run, epochDuration);
+					gui.updateData(lastResult, epoch, moea_run, epochDuration);
 				} catch (Exception e) {
 					e.printStackTrace();
 				} finally {

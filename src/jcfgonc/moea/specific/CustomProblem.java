@@ -57,7 +57,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 		System.out.println("took " + ticker.getElapsedTime() + "s to convert frames to datalog queries");
 
 		datalogEngines = new ConcurrentLinkedDeque<>();
-		for (int i = 0; i < OSTools.getNumberOfCores(); i++) {
+		for (int i = 0; i < OSTools.getNumberOfCores() * 2; i++) {
 			datalogEngines.add(new JatalogInterface());
 		}
 	}
@@ -91,45 +91,45 @@ public class CustomProblem implements Problem, ProblemDescription {
 		StringGraph blendSpace = blend.getBlendSpace();
 		Mapping<String> mapping = blend.getMapping();
 
-		// get a datalog engine
-		JatalogInterface datalog = datalogEngines.pop();
-		BitSet queriesResults = null;
-		// check for frames matched in the blend
-		try {
-			// transform the blend space into a KB
-			datalog.clearFacts(); // very important, clear previous stuff
-			datalog.addFacts(blendSpace);
-			// do the queries
-			queriesResults = datalog.isQueryTrue(frameQueries);
-		} catch (DatalogException e) {
-			e.printStackTrace();
-		} finally {
-			datalogEngines.push(datalog);
-		}
+//		// get a datalog engine
+//		JatalogInterface datalog = datalogEngines.pop();
+//		BitSet queriesResults = null;
+//		// check for frames matched in the blend
+//		try {
+//			// transform the blend space into a KB
+//			datalog.clearFacts(); // very important, clear previous stuff
+//			datalog.addFacts(blendSpace);
+//			// do the queries
+//			queriesResults = datalog.isQueryTrue(frameQueries);
+//		} catch (DatalogException e) {
+//			e.printStackTrace();
+//		} finally {
+//			datalogEngines.push(datalog);
+//		}
+//
+//		// calculate frame qualities
+//		// process queries/frames results
+//		int cardinality = queriesResults.cardinality();
+//		// 10 is an acceptable limit to fit within a small graphical window
+//		// (i.e. if it was +Integer.MAX it would be hard to see small values)
+//		int edgesLargestFrame = 0; // maximize
+//		int numberMatchedFrames = cardinality;// 10; // minimize
+//		if (cardinality > 0) {
+////			if (cardinality < numberMatchedFrames) {
+////				numberMatchedFrames = cardinality;
+////			}
+//			// iterate through the set bits in the bitset
+//			for (int i = queriesResults.nextSetBit(0); i != -1; i = queriesResults.nextSetBit(i + 1)) {
+//				SemanticFrame frame = frames.get(i);
+//				// find largest frame
+//				StringGraph frameGraph = frame.getFrame();
+//				int numberOfEdges = frameGraph.numberOfEdges();
+//				if (numberOfEdges > edgesLargestFrame) {
+//					edgesLargestFrame = numberOfEdges;
+//				}
+//			}
+//		}
 
-		// calculate frame qualities
-		// 20 is an acceptable limit to fit within a small graphical window
-		// (i.e. if it was +Integer.MAX it would be hard to see small values)
-		int edgesLargestFrame = 0; // maximize
-		int numberMatchedFrames = 10; // minimize
-		// process queries/frames results
-		int cardinality = queriesResults.cardinality();
-		if (queriesResults != null && cardinality > 0) {
-			if (cardinality < numberMatchedFrames) {
-				numberMatchedFrames = cardinality;
-			}
-			// iterate through the set bits in the bitset
-			for (int i = queriesResults.nextSetBit(0); i != -1; i = queriesResults.nextSetBit(i + 1)) {
-				SemanticFrame frame = frames.get(i);
-				// find largest frame
-				StringGraph frameGraph = frame.getFrame();
-				int numberOfEdges = frameGraph.numberOfEdges();
-				if (numberOfEdges > edgesLargestFrame) {
-					edgesLargestFrame = numberOfEdges;
-				}
-			}
-		}
-		System.lineSeparator();
 		// now experimenting with blend SS instead of frames SS
 //		double frameSemanticSimilarity;
 //		if (matchedFrames.isEmpty()) {
@@ -162,24 +162,30 @@ public class CustomProblem implements Problem, ProblemDescription {
 //		int cycles = GraphAlgorithms.countCycles(blendSpace);
 
 		// vital relations
-		double vrScore = LogicUtils.evaluateVitalRelations(blendSpace, vitalRelations);
+		double vitalRelationsScore = LogicUtils.evaluateVitalRelations(blendSpace, vitalRelations);
 
 		// relation statistics
 		double[] rs = LogicUtils.calculateRelationStatistics(blendSpace);
 		double relationStdDev = rs[1]; // 0...1
 
-		double is_balance = LogicUtils.calculateInputSpacesBalance(blendSpace, mapping);
+		double inputSpacesBalance = LogicUtils.calculateInputSpacesBalance(blendSpace, mapping);
+
+//		int numEdges = blendSpace.numberOfEdges() < 10 ? blendSpace.numberOfEdges() : 0;
 
 		// set solution's objectives here
 		int obj_i = 0;
-		solution.setObjective(obj_i++, relationStdDev);
-		solution.setObjective(obj_i++, -mappingMix);
-		solution.setObjective(obj_i++, -edgesLargestFrame);// 7 is the expected max edges of largest frame
-		// solution.setObjective(obj_i++, -cycles);
-		solution.setObjective(obj_i++, numberMatchedFrames);// 20 is the expected max of number of matched frames and 1 the lowest
 		solution.setObjective(obj_i++, blendSemanticSimilarity);
-		solution.setObjective(obj_i++, -vrScore);
-		solution.setObjective(obj_i++, -is_balance);
+		solution.setObjective(obj_i++, -vitalRelationsScore);
+
+		solution.setObjective(obj_i++, -inputSpacesBalance);
+		solution.setObjective(obj_i++, -mappingMix);
+
+		// solution.setObjective(obj_i++, -cycles);
+//		solution.setObjective(obj_i++, -edgesLargestFrame);// 7 is the expected max edges of largest frame
+//		solution.setObjective(obj_i++, numberMatchedFrames);// 20 is the expected max of number of matched frames and 1 the lowest
+
+		solution.setObjective(obj_i++, relationStdDev);
+//		solution.setObjective(obj_i++, -numEdges);
 
 //		System.out.printf("%d\t%d\t%d\n", mappingMix, blendSpace.numberOfEdges(), blendSpace.numberOfVertices());
 
@@ -193,28 +199,33 @@ public class CustomProblem implements Problem, ProblemDescription {
 //			solution.setConstraint(0, 0);
 //		}
 	}
+	
+	private String[] objectivesDescription = { //
+			"f:mean of within-blend semantic similarity", //
+			"f:mean importance of vital relations", //
+
+			"f:input spaces balance", //
+			"f:mapping mix", //
+
+			// "d:number of cycles", //
+//			"d:number of edges of largest frame", //
+//			"d:number of matched frames", //
+
+			"f:relation similarity", //
+//			"d:number of edges", //
+	};
 
 	@Override
 	/**
 	 * The number of objectives defined by this problem.
 	 */
 	public int getNumberOfObjectives() {
-		return 7;
+		return objectivesDescription.length;
 	}
 
 	@Override
 	public String getObjectiveDescription(int varid) {
-		String[] objectives = { //
-				"f:relation similarity", //
-				"d:mapping mix", //
-				"d:number of edges of largest frame", //
-				// "d:number of cycles", //
-				"d:number of matched frames", //
-				"f:mean of within-blend semantic similarity", //
-				"f:mean importance of vital relations", //
-				"f:input spaces balance" //
-		};
-		return objectives[varid];
+		return objectivesDescription[varid];
 	}
 
 	@Override

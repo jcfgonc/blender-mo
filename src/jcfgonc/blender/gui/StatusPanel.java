@@ -15,9 +15,7 @@ import structures.Ticker;
 public class StatusPanel extends JPanel {
 	private static final long serialVersionUID = -3946006228924064009L;
 	private JLabel algorithmStatus;
-	private JLabel variablesStatus;
 	private JLabel objectivesStatus;
-	private JLabel constraintsStatus;
 	private JLabel populationSizeStatus;
 	private JLabel numEpochsStatus;
 	private JLabel epochStatus;
@@ -25,12 +23,13 @@ public class StatusPanel extends JPanel {
 	private JLabel currentRunStatus;
 	private JLabel ndsSizeStatus;
 	private JLabel lastEpochDuration;
-	private JLabel runTimeStatus;
+	private JLabel currentRunTimeStatus;
 	private JLabel totalRunTimeStatus;
 	private Ticker currentRunTimeCounter;
 	private Ticker totalRunTimeCounter;
 	private boolean countersInitialized = false;
 	private TimerThread timeCountingThread;
+	private JLabel runTimeLimitStatus;
 
 	public StatusPanel() {
 		setLayout(new GridLayout(0, 2, 0, 0));
@@ -44,14 +43,6 @@ public class StatusPanel extends JPanel {
 		algorithmStatus.setHorizontalAlignment(SwingConstants.LEFT);
 		add(algorithmStatus);
 
-		JLabel variablesLabel = new JLabel("Variables: ");
-		variablesLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		add(variablesLabel);
-
-		variablesStatus = new JLabel("");
-		variablesStatus.setHorizontalAlignment(SwingConstants.LEFT);
-		add(variablesStatus);
-
 		JLabel objectivesLabel = new JLabel("Objectives: ");
 		objectivesLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 		add(objectivesLabel);
@@ -59,14 +50,6 @@ public class StatusPanel extends JPanel {
 		objectivesStatus = new JLabel("");
 		objectivesStatus.setHorizontalAlignment(SwingConstants.LEFT);
 		add(objectivesStatus);
-
-		JLabel constraintsLabel = new JLabel("Constraints: ");
-		constraintsLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		add(constraintsLabel);
-
-		constraintsStatus = new JLabel("");
-		constraintsStatus.setHorizontalAlignment(SwingConstants.LEFT);
-		add(constraintsStatus);
 
 		JLabel populationSizeLabel = new JLabel("Population Size: ");
 		populationSizeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -107,14 +90,22 @@ public class StatusPanel extends JPanel {
 		currentRunStatus = new JLabel("");
 		currentRunStatus.setHorizontalAlignment(SwingConstants.LEFT);
 		add(currentRunStatus);
+//
+		JLabel runTimeLimitLabel = new JLabel("Run Time Limit (minutes): ");
+		runTimeLimitLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		add(runTimeLimitLabel);
 
+		runTimeLimitStatus = new JLabel("");
+		runTimeLimitStatus.setHorizontalAlignment(SwingConstants.LEFT);
+		add(runTimeLimitStatus);
+//
 		JLabel runTimeLabel = new JLabel("Current Run Time: ");
 		runTimeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 		add(runTimeLabel);
 
-		runTimeStatus = new JLabel("");
-		runTimeStatus.setHorizontalAlignment(SwingConstants.LEFT);
-		add(runTimeStatus);
+		currentRunTimeStatus = new JLabel("");
+		currentRunTimeStatus.setHorizontalAlignment(SwingConstants.LEFT);
+		add(currentRunTimeStatus);
 
 		JLabel totalRunTimeLabel = new JLabel("Total Run Time: ");
 		totalRunTimeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -140,10 +131,6 @@ public class StatusPanel extends JPanel {
 		ndsSizeStatus.setHorizontalAlignment(SwingConstants.LEFT);
 		add(ndsSizeStatus);
 
-	}
-
-	public void setConstraints(String text) {
-		constraintsStatus.setText(text);
 	}
 
 	public void setEpoch(String text) {
@@ -174,19 +161,19 @@ public class StatusPanel extends JPanel {
 		currentRunStatus.setText(text);
 	}
 
-	public void setVariables(String text) {
-		variablesStatus.setText(text);
-	}
-
 	public void setAlgorithm(String text) {
 		algorithmStatus.setText(text);
 	}
 
-	public void setRunTimeStatus(double seconds) {
+	public void setRunTimeLimit(String text) {
+		runTimeLimitStatus.setText(text);
+	}
+
+	public void setCurrentRunTime(double seconds) {
 		double millis = seconds * 1000.0;
 		String text = DurationFormatUtils.formatDuration((long) millis, "HH:mm:ss", true);
 		// String text = String.format("%s s", timeFormat.format(seconds));
-		runTimeStatus.setText(text);
+		currentRunTimeStatus.setText(text);
 	}
 
 	public void setTotalRunTimeStatus(double seconds) {
@@ -231,7 +218,7 @@ public class StatusPanel extends JPanel {
 					@Override
 					public void run() {
 						if (areCountersInitialized()) {
-							setRunTimeStatus(currentRunTimeCounter.getElapsedTime());
+							setCurrentRunTime(currentRunTimeCounter.getElapsedTime());
 							setTotalRunTimeStatus(totalRunTimeCounter.getElapsedTime());
 						}
 					}

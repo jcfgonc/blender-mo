@@ -22,6 +22,7 @@ public class SettingsPanel extends JPanel {
 	private JCheckBox graphsEnabledCB;
 	private JCheckBox screenshotsCB;
 	private JCheckBox lastEpochScreenshotCB;
+	private JSpinner runTimeLimit;
 
 	public SettingsPanel() {
 		super();
@@ -40,6 +41,23 @@ public class SettingsPanel extends JPanel {
 		graphsEnabledCB = new JCheckBox("", MOEA_Config.GRAPHS_ENABLED);
 		graphsEnabledCB.setToolTipText("If enabled the graphs are updated each epoch.");
 		panel_0.add(graphsEnabledCB);
+		
+		JPanel panel_6 = new JPanel();
+		add(panel_6);
+		
+		JLabel label_6 = new JLabel("Time Limit per Run (minutes)");
+		panel_6.add(label_6);
+		
+		runTimeLimit = new JSpinner();
+		runTimeLimit.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				Double value = (Double) runTimeLimit.getModel().getValue();
+				MOEA_Config.MAX_RUN_TIME = value.doubleValue();
+			}
+		});
+		runTimeLimit.setModel(new SpinnerNumberModel(15.0, 0.0, 99999.0, 1.0));
+		runTimeLimit.setToolTipText("Time limit (minutes) for each run. Takes effect immediately.");
+		panel_6.add(runTimeLimit);
 
 		JPanel panel_1 = new JPanel();
 		FlowLayout flowLayout = (FlowLayout) panel_1.getLayout();
@@ -56,7 +74,7 @@ public class SettingsPanel extends JPanel {
 				MOEA_Config.MAX_EPOCHS = value.intValue();
 			}
 		});
-		numberEpochs.setModel(new SpinnerNumberModel(512, 20, 999999, 1));
+		numberEpochs.setModel(new SpinnerNumberModel(512, 1, 999999, 1));
 		numberEpochs.setToolTipText("Number of epochs to execute for each run. Takes effect immediately.");
 		panel_1.add(numberEpochs);
 
@@ -75,7 +93,7 @@ public class SettingsPanel extends JPanel {
 				MOEA_Config.MOEA_RUNS = value.intValue();
 			}
 		});
-		numberRuns.setModel(new SpinnerNumberModel(256, 20, 999999, 1));
+		numberRuns.setModel(new SpinnerNumberModel(256, 1, 999999, 1));
 		numberRuns.setToolTipText("Number of runs (each of n epochs) to execute. Takes effect immediately.");
 		panel_2.add(numberRuns);
 
@@ -145,5 +163,9 @@ public class SettingsPanel extends JPanel {
 
 	public void setPopulationSize(int v) {
 		populationSize.setValue(v);
+	}
+	
+	public void setRunTimeLimit(double v) {
+		runTimeLimit.setValue(v);
 	}
 }

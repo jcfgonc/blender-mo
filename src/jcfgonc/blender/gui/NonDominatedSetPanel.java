@@ -68,19 +68,19 @@ public class NonDominatedSetPanel extends JPanel {
 			if (problem instanceof ProblemDescription) {
 				ProblemDescription pd = (ProblemDescription) problem;
 				if (objectiveIndex < numberOfObjectives - 1) { // only one objective
-					xAxisLabel = pd.getObjectiveDescription(objectiveIndex);
-					yAxisLabel = pd.getObjectiveDescription(objectiveIndex + 1);
+					xAxisLabel = String.format("(%d) %s", objectiveIndex, pd.getObjectiveDescription(objectiveIndex));
+					yAxisLabel = String.format("(%d) %s", objectiveIndex + 1, pd.getObjectiveDescription(objectiveIndex + 1));
 				} else { // more than two objectives to follow
-					xAxisLabel = pd.getObjectiveDescription(0);
-					yAxisLabel = pd.getObjectiveDescription(objectiveIndex);
+					xAxisLabel = String.format("(%d) %s", 0, pd.getObjectiveDescription(0));
+					yAxisLabel = String.format("(%d) %s", objectiveIndex, pd.getObjectiveDescription(objectiveIndex));
 				}
 			} else {
 				if (objectiveIndex < numberOfObjectives - 1) { // only one objective
-					xAxisLabel = String.format("Objective %d", objectiveIndex);
-					yAxisLabel = String.format("Objective %d", objectiveIndex + 1);
+					xAxisLabel = String.format("(%d) Objective %d", objectiveIndex, objectiveIndex);
+					yAxisLabel = String.format("(%d) Objective %d", objectiveIndex + 1, objectiveIndex + 1);
 				} else { // more than two objectives to follow
-					xAxisLabel = String.format("Objective %d", 0);
-					yAxisLabel = String.format("Objective %d", objectiveIndex);
+					xAxisLabel = String.format("(%d) Objective %d", 0, 0);
+					yAxisLabel = String.format("(%d) Objective %d", objectiveIndex, objectiveIndex);
 				}
 			}
 			objectiveIndex += 2;
@@ -103,19 +103,19 @@ public class NonDominatedSetPanel extends JPanel {
 			chartPanel.setDomainZoomable(false);
 			chartPanel.setRangeZoomable(false);
 			add(chartPanel);
-			
-			 // add click event
-	        chartPanel.addChartMouseListener(new ChartMouseListener() {
-	            @Override
-	            public void chartMouseClicked(ChartMouseEvent e) {
-	            	System.out.println(e.getTrigger());
-	            }
 
-	            @Override
-	            public void chartMouseMoved(ChartMouseEvent arg0) {
-	            }
-	        });
-	        
+			// add click event
+			chartPanel.addChartMouseListener(new ChartMouseListener() {
+				@Override
+				public void chartMouseClicked(ChartMouseEvent e) {
+				//	System.out.println(e.getTrigger());
+				}
+
+				@Override
+				public void chartMouseMoved(ChartMouseEvent arg0) {
+				}
+			});
+
 		}
 	}
 
