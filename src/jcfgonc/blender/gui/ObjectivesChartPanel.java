@@ -16,7 +16,7 @@ import org.moeaframework.core.Solution;
 import jcfgonc.moea.generic.ProblemDescription;
 
 /**
- * This class handles the drawing of multiple lines, each associated to an objective.
+ * This class handles the drawing of the objective's statistics.
  * 
  * @author jcfgonc@gmail.com
  *
@@ -24,24 +24,25 @@ import jcfgonc.moea.generic.ProblemDescription;
 public class ObjectivesChartPanel extends JPanel {
 
 	private static final long serialVersionUID = 6897997626552672853L;
-	final private DefaultBoxAndWhiskerCategoryDataset dataset;
 	final private String valueAxisLabel;
 	final private String categoryAxisLabel;
-	final private String title;
-//	private CategoryPlot plot;
-//	private Paint paint;
 	final private Problem problem;
 	final private int numberOfObjectives;
 	final private ArrayList<String> nameObjectives;
+	final private ArrayList<DefaultBoxAndWhiskerCategoryDataset> objectivesDataset;
 
-	public ObjectivesChartPanel(String title, String categoryAxisLabel, String valueAxisLabel, Problem problem) {
-		this.title = title;
+	public ObjectivesChartPanel(String categoryAxisLabel, String valueAxisLabel, Problem problem) {
 		this.categoryAxisLabel = categoryAxisLabel;
 		this.valueAxisLabel = valueAxisLabel;
 		this.problem = problem;
 		this.numberOfObjectives = problem.getNumberOfObjectives();
 		this.nameObjectives = new ArrayList<String>(numberOfObjectives);
-		this.dataset = new DefaultBoxAndWhiskerCategoryDataset();
+
+		this.objectivesDataset = new ArrayList<DefaultBoxAndWhiskerCategoryDataset>();
+
+		for (int i = 0; i < numberOfObjectives; i++) {
+			this.objectivesDataset.add(new DefaultBoxAndWhiskerCategoryDataset());
+		}
 
 		// list of objectives description
 		for (int objective_i = 0; objective_i < numberOfObjectives; objective_i++) {
@@ -57,57 +58,54 @@ public class ObjectivesChartPanel extends JPanel {
 		}
 
 		// this is important, otherwise the panel will overflow its bounds
-		setBorder(null);
 		setLayout(new GridLayout(1, 0, 0, 0));
 	}
 
 	public void initialize() {
-		JFreeChart chart = ChartFactory.createBoxAndWhiskerChart(title, categoryAxisLabel, valueAxisLabel, dataset, false);
-		chart.setRenderingHints(GUI_Utils.createDefaultRenderingHints());
-		ChartPanel chartPanel = new ChartPanel(chart);
-//		CategoryPlot plot = chart.getCategoryPlot();
-//		CategoryItemRenderer renderer = plot.getRenderer();
-		// this is to change the type of bar
-//		StandardBarPainter painter = new StandardBarPainter();
-//		renderer.setBarPainter(painter);
-		// disable bar shadows
-//		renderer.setShadowVisible(false);
-//		renderer.setSeriesPaint(0, paint);
-//		plot.setBackgroundAlpha(1);
-//		CategoryAxis domainAxis = plot.getDomainAxis();
-		// hide domain axis/labels
-//		domainAxis.setAxisLineVisible(false);
-//		domainAxis.setVisible(false);
-		// ValueAxis rangeAxis = plot.getRangeAxis();
-
-		add(chartPanel);
+		// create N boxplot graphs
+		for (int i = 0; i < numberOfObjectives; i++) {
+			DefaultBoxAndWhiskerCategoryDataset dataset = objectivesDataset.get(i);
+			JFreeChart chart = ChartFactory.createBoxAndWhiskerChart(null, categoryAxisLabel, valueAxisLabel, dataset, false);
+			chart.setRenderingHints(GUI_Utils.createDefaultRenderingHints());
+			ChartPanel chartPanel = new ChartPanel(chart);
+			add(chartPanel);
+		}
 	}
 
 	public void clearData() {
-		dataset.clear();
+		for (int i = 0; i < numberOfObjectives; i++) {
+			DefaultBoxAndWhiskerCategoryDataset dataset = objectivesDataset.get(i);
+			dataset.clear();
+		}
+	}
+
+	public void setNotify(boolean flag) {
+		for (int i = 0; i < numberOfObjectives; i++) {
+			DefaultBoxAndWhiskerCategoryDataset dataset = objectivesDataset.get(i);
+			dataset.setNotify(flag);
+		}
+	}
+
+	/**
+	 * jfreechart's boxplot requires an arraylist of Double with the data. This function creates it for the given objective.
+	 * 
+	 * @param nds
+	 * @param objective
+	 * @return
+	 */
+	private ArrayList<Double> createObjectiveData(NondominatedPopulation nds, int objective) {
+		int numberOfSolutions = nds.size();
+		ArrayList<Double> series = new ArrayList<Double>();
+		for (int solution_i = 0; solution_i < numberOfSolutions; solution_i++) {
+			Solution solution = nds.get(solution_i);
+			series.add(solution.getObjective(objective));
+		}
+		return series;
 	}
 
 	public void addValues(NondominatedPopulation nds) {
-		dataset.setNotify(false);
-
-		int numberOfSolutions = nds.size();
+		setNotify(false);
 		clearData();
-		// create an array per objective to store each solutions' objective
-		ArrayList<ArrayList<Double>> boxplotLists = new ArrayList<ArrayList<Double>>(numberOfObjectives);
-		for (int objective_i = 0; objective_i < numberOfObjectives; objective_i++) {
-			ArrayList<Double> boxplotList = new ArrayList<Double>(numberOfSolutions);
-			boxplotLists.add(boxplotList);
-		}
-
-		for (int solution_i = 0; solution_i < numberOfSolutions; solution_i++) {
-			Solution solution = nds.get(solution_i);
-			// for each objective
-			for (int objective_i = 0; objective_i < numberOfObjectives; objective_i++) {
-				ArrayList<Double> boxplotData = boxplotLists.get(objective_i);
-				double objValue = solution.getObjective(objective_i);
-				boxplotData.add(Double.valueOf(objValue));
-			}
-		}
 
 		for (int objective_i = 0; objective_i < numberOfObjectives; objective_i++) {
 //			String category;
@@ -119,11 +117,10 @@ public class ObjectivesChartPanel extends JPanel {
 //				category = String.format("Objective %d", objective_i);
 //			}
 
-			ArrayList<Double> boxplotData = boxplotLists.get(objective_i);
-			// dataset.add(boxplotData, category,"0");
-			dataset.add(boxplotData, "0", String.format("(%d)", objective_i));
-			// dataset.add(boxplotData, "0", String.format("(%d) %s", objective_i, category));
+			DefaultBoxAndWhiskerCategoryDataset dataset = objectivesDataset.get(objective_i);
+			ArrayList<Double> objectiveData = createObjectiveData(nds, objective_i);
+			dataset.add(objectiveData, "0", String.format("(%d)", objective_i));
 		}
-		dataset.setNotify(true);
+		setNotify(true);
 	}
 }

@@ -42,7 +42,7 @@ public class InteractiveExecutorGUI extends JFrame {
 	private JPanel upperPanel;
 	private JPanel upperLeftPanel;
 	private BarChartPanel ndsSizePanel;
-	private ObjectivesChartPanel objectivesLineChartPanel;
+	private ObjectivesChartPanel objectivesBoxplotPanel;
 	private SettingsPanel settingsPanel;
 	private JPanel fillPanel;
 	private final DecimalFormat screenshotFilenameDecimalFormat = new DecimalFormat("0000");
@@ -54,6 +54,7 @@ public class InteractiveExecutorGUI extends JFrame {
 	 * used to update the gui before taking a screenshot
 	 */
 	private boolean guiUpdated;
+	private JPanel timeSeriesPanel;
 
 	/**
 	 * Create the frame.
@@ -100,14 +101,18 @@ public class InteractiveExecutorGUI extends JFrame {
 		upperPanel.add(upperLeftPanel);
 		upperLeftPanel.setLayout(new GridLayout(1, 0, 0, 0));
 
+		timeSeriesPanel = new JPanel();
+		upperLeftPanel.add(timeSeriesPanel);
+		timeSeriesPanel.setLayout(new GridLayout(1, 0, 0, 0));
+
+		objectivesBoxplotPanel = new ObjectivesChartPanel(null, null, problem);
+		upperLeftPanel.add(objectivesBoxplotPanel);
+
 		timeEpochPanel = new BarChartPanel("Time vs Epoch", "Epoch", "Time (s)", new Color(200, 0, 100));
-		upperLeftPanel.add(timeEpochPanel);
+		timeSeriesPanel.add(timeEpochPanel);
 
-		ndsSizePanel = new BarChartPanel("Size of the Non Dominated Set vs Epoch", "Epoch", "Size of the Non Dominated Set", new Color(0, 200, 100));
-		upperLeftPanel.add(ndsSizePanel);
-
-		objectivesLineChartPanel = new ObjectivesChartPanel("Boxplot of Objectives", null, null, problem);
-		upperLeftPanel.add(objectivesLineChartPanel);
+		ndsSizePanel = new BarChartPanel("Non Dominated Set Size vs Epoch", "Epoch", "Size of the Non Dominated Set", new Color(0, 200, 100));
+		timeSeriesPanel.add(ndsSizePanel);
 
 		technicalPanel = new JPanel();
 		upperPanel.add(technicalPanel);
@@ -170,7 +175,7 @@ public class InteractiveExecutorGUI extends JFrame {
 //		ndsSizePanel.initialize(new Color(83, 255, 169));
 		timeEpochPanel.initialize();
 		ndsSizePanel.initialize();
-		objectivesLineChartPanel.initialize();
+		objectivesBoxplotPanel.initialize();
 
 //		this.setLocationRelativeTo(null); // center jframe
 
@@ -236,7 +241,7 @@ public class InteractiveExecutorGUI extends JFrame {
 			nonDominatedSetPanel.updateGraphs(nds);
 			timeEpochPanel.addSample(epoch, epochDuration);
 			ndsSizePanel.addSample(epoch, nds.size());
-			objectivesLineChartPanel.addValues(nds);
+			objectivesBoxplotPanel.addValues(nds);
 		}
 		guiUpdated = true;
 	}
@@ -278,7 +283,7 @@ public class InteractiveExecutorGUI extends JFrame {
 		nonDominatedSetPanel.clearData();
 		ndsSizePanel.clearData();
 		timeEpochPanel.clearData();
-		objectivesLineChartPanel.clearData();
+		objectivesBoxplotPanel.clearData();
 	}
 
 	protected void windowResized(ComponentEvent e) {

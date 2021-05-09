@@ -74,10 +74,12 @@ public class ResultsWriterBlenderMO implements ResultsWriter {
 				StringGraph blendSpace = cc.getBlend().getBlendSpace();
 
 				// remaining headers
-				bw.write(String.format("%d\t", blendSpace.numberOfVertices()));
-				bw.write(String.format("%d\t", blendSpace.numberOfEdges()));
-				bw.write(String.format("%f\t", LogicUtils.calculateNovelty(blendSpace, cp.getInputSpace())));
-
+				bw.write(Integer.toString(blendSpace.numberOfVertices()));
+				bw.write('\t');
+				bw.write(Integer.toString(blendSpace.numberOfEdges()));
+				bw.write('\t');
+				bw.write(Double.toString(LogicUtils.calculateNovelty(blendSpace, cp.getInputSpace())));
+				bw.write('\t');
 				// graph column
 				bw.write(String.format("%s", blendSpace));
 				bw.newLine();

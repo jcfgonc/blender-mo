@@ -111,9 +111,9 @@ public class BlenderMoLauncher {
 		properties.setProperty("operator", "CustomMutation");
 		properties.setProperty("CustomMutation.Rate", "1.0");
 		// eNSGA-II
-		properties.setProperty("epsilon", "0.01"); // default is 0.01
-		properties.setProperty("windowSize", "99999"); // epoch to trigger eNSGA2 population injection
-		properties.setProperty("maxWindowSize", "99999"); // epoch to trigger eNSGA2 hard restart
+		properties.setProperty("epsilon", "0.0001"); // default is 0.01
+		properties.setProperty("windowSize", "256"); // epoch to trigger eNSGA2 population injection
+		properties.setProperty("maxWindowSize", "480"); // epoch to trigger eNSGA2 hard restart
 //		properties.setProperty("injectionRate", Double.toString(1.0 / 0.25)); // population to archive ratio, default is 0.25
 		// NSGA-III
 		properties.setProperty("divisionsOuter", "10"); // 3

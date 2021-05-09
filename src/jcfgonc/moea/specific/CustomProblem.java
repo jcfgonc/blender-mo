@@ -91,44 +91,44 @@ public class CustomProblem implements Problem, ProblemDescription {
 		StringGraph blendSpace = blend.getBlendSpace();
 		Mapping<String> mapping = blend.getMapping();
 
-//		// get a datalog engine
-//		JatalogInterface datalog = datalogEngines.pop();
-//		BitSet queriesResults = null;
-//		// check for frames matched in the blend
-//		try {
-//			// transform the blend space into a KB
-//			datalog.clearFacts(); // very important, clear previous stuff
-//			datalog.addFacts(blendSpace);
-//			// do the queries
-//			queriesResults = datalog.isQueryTrue(frameQueries);
-//		} catch (DatalogException e) {
-//			e.printStackTrace();
-//		} finally {
-//			datalogEngines.push(datalog);
-//		}
-//
-//		// calculate frame qualities
-//		// process queries/frames results
-//		int cardinality = queriesResults.cardinality();
-//		// 10 is an acceptable limit to fit within a small graphical window
-//		// (i.e. if it was +Integer.MAX it would be hard to see small values)
-//		int edgesLargestFrame = 0; // maximize
-//		int numberMatchedFrames = cardinality;// 10; // minimize
-//		if (cardinality > 0) {
-////			if (cardinality < numberMatchedFrames) {
-////				numberMatchedFrames = cardinality;
-////			}
-//			// iterate through the set bits in the bitset
-//			for (int i = queriesResults.nextSetBit(0); i != -1; i = queriesResults.nextSetBit(i + 1)) {
-//				SemanticFrame frame = frames.get(i);
-//				// find largest frame
-//				StringGraph frameGraph = frame.getFrame();
-//				int numberOfEdges = frameGraph.numberOfEdges();
-//				if (numberOfEdges > edgesLargestFrame) {
-//					edgesLargestFrame = numberOfEdges;
-//				}
+		// get a datalog engine
+		JatalogInterface datalog = datalogEngines.pop();
+		BitSet queriesResults = null;
+		// check for frames matched in the blend
+		try {
+			// transform the blend space into a KB
+			datalog.clearFacts(); // very important, clear previous stuff
+			datalog.addFacts(blendSpace);
+			// do the queries
+			queriesResults = datalog.isQueryTrue(frameQueries);
+		} catch (DatalogException e) {
+			e.printStackTrace();
+		} finally {
+			datalogEngines.push(datalog);
+		}
+
+		// calculate frame qualities
+		// process queries/frames results
+		int cardinality = queriesResults.cardinality();
+		// 10 is an acceptable limit to fit within a small graphical window
+		// (i.e. if it was +Integer.MAX it would be hard to see small values)
+		int edgesLargestFrame = 0; // maximize
+		int numberMatchedFrames = cardinality;// 10; // minimize
+		if (cardinality > 0) {
+//			if (cardinality < numberMatchedFrames) {
+//				numberMatchedFrames = cardinality;
 //			}
-//		}
+			// iterate through the set bits in the bitset
+			for (int i = queriesResults.nextSetBit(0); i != -1; i = queriesResults.nextSetBit(i + 1)) {
+				SemanticFrame frame = frames.get(i);
+				// find largest frame
+				StringGraph frameGraph = frame.getFrame();
+				int numberOfEdges = frameGraph.numberOfEdges();
+				if (numberOfEdges > edgesLargestFrame) {
+					edgesLargestFrame = numberOfEdges;
+				}
+			}
+		}
 
 		// now experimenting with blend SS instead of frames SS
 //		double frameSemanticSimilarity;
@@ -181,8 +181,8 @@ public class CustomProblem implements Problem, ProblemDescription {
 		solution.setObjective(obj_i++, -mappingMix);
 
 		// solution.setObjective(obj_i++, -cycles);
-//		solution.setObjective(obj_i++, -edgesLargestFrame);// 7 is the expected max edges of largest frame
-//		solution.setObjective(obj_i++, numberMatchedFrames);// 20 is the expected max of number of matched frames and 1 the lowest
+		solution.setObjective(obj_i++, -edgesLargestFrame);// 7 is the expected max edges of largest frame
+		solution.setObjective(obj_i++, numberMatchedFrames);// 20 is the expected max of number of matched frames and 1 the lowest
 
 		solution.setObjective(obj_i++, relationStdDev);
 //		solution.setObjective(obj_i++, -numEdges);
@@ -208,8 +208,8 @@ public class CustomProblem implements Problem, ProblemDescription {
 			"f:mapping mix", //
 
 			// "d:number of cycles", //
-//			"d:number of edges of largest frame", //
-//			"d:number of matched frames", //
+			"d:number of edges of largest frame", //
+			"d:number of matched frames", //
 
 			"f:relation similarity", //
 //			"d:number of edges", //

@@ -196,6 +196,7 @@ public class StatusPanel extends JPanel {
 		this.totalRunTimeCounter = new Ticker();
 		countersInitialized = true;
 		timeCountingThread = new TimerThread();
+		timeCountingThread.setDaemon(true);
 		timeCountingThread.start();
 	}
 
