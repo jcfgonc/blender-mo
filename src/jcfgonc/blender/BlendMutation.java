@@ -186,7 +186,7 @@ public class BlendMutation {
 				StringEdge edgeToAdd = edge_a.replaceSourceOrTarget(a, referenceConcept);
 				edgeToAdd = edgeToAdd.replaceSourceOrTarget(c, conceptPair.toString());
 				if (blendSpace.addEdge(edgeToAdd)) {
-			//		LogicUtils.calculateUnpacking(blendSpace, mapping);
+					// LogicUtils.calculateUnpacking(blendSpace, mapping);
 					return true; // done, one edge added
 				}
 				return false;
@@ -209,7 +209,7 @@ public class BlendMutation {
 					// recreate the edge renaming the other concept to a concept pair blend
 					StringEdge edgeToAdd = edge.replaceSourceOrTarget(a, conceptPair.toString());
 					if (blendSpace.addEdge(edgeToAdd)) {
-				//		LogicUtils.calculateUnpacking(blendSpace, mapping);
+						// LogicUtils.calculateUnpacking(blendSpace, mapping);
 						return true; // done, one edge added
 					}
 				}
@@ -239,7 +239,9 @@ public class BlendMutation {
 	}
 
 	private static void addRandomEdge(StringGraph blendSpace, Mapping<String> mapping) {
-		// either add a random edge using the mapping or not
+		// in general: either add a random edge using the mapping or not
+
+		// BOOT blend space (it is empty)
 		if (blendSpace.isEmpty()) {
 			if (random.nextBoolean()) { // use the mapping
 				// get a random pair from the mapping
@@ -249,6 +251,7 @@ public class BlendMutation {
 				addNeighbourEdge(blendSpace, null);
 			}
 		} else {
+			// blend space not empty
 			if (random.nextBoolean()) { // use the mapping
 				// iterate *randomly* through the blend searching for insertable edges connecting one concept/blended concept to a concept pair
 				ArrayList<String> blendConcepts = VariousUtils.asShuffledArray(blendSpace.getVertexSet(), random);
@@ -309,6 +312,6 @@ public class BlendMutation {
 		StringEdge edgeToDelete = VariousUtils.getRandomElementFromCollection(edgesOfLowest, random);
 		blendSpace.removeEdge(edgeToDelete);
 		// remove smaller components if more than one
-		GraphAlgorithms.removeSmallerComponents(blendSpace);
+	//	GraphAlgorithms.removeSmallerComponents(blendSpace);
 	}
 }

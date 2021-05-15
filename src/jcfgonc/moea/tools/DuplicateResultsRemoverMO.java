@@ -1,68 +1,106 @@
 package jcfgonc.moea.tools;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Solution;
-import org.moeaframework.core.Variable;
 
-import structures.CSVReader;
+import utils.VariousUtils;
 
 public class DuplicateResultsRemoverMO {
 
-	@SuppressWarnings("serial")
-	class StringVariable implements Variable {
-
-		final private String text;
-		final private int group;
-
-		StringVariable(String text, int group) {
-			this.text = text;
-			this.group = group;
-		}
-
-		@Override
-		public Variable copy() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public void randomize() {
-			// TODO Auto-generated method stub
-
-		}
-
-		public String getText() {
-			return text;
-		}
-
-		public int getGroup() {
-			return group;
-		}
-	}
-
 	public static void main(String[] args) throws IOException {
-		String folder = "..\\BlenderMO\\results";
-		String datafile = "C:\\Desktop\\github\\BlenderMO\\results\\dataset.tsv";
-		CSVReader reader = new CSVReader("\t", datafile, true);
+		String datafile = "C:\\Desktop\\github\\BlenderMO\\results\\no frames 0.tsv";
+		final int numberNonObjectiveColumns = 5;
+		
+		NondominatedPopulation pop = new NondominatedPopulation();
+		ArrayList<Solution> solutions = new ArrayList<Solution>();
 
 		// --- BLENDERMO results HEADER
-		// d:class f:mean of within-blend semantic similarity f:mean importance of vital relations f:input spaces balance f:mapping mix f:relation
-		// similarity d:graph's vertices d:graph's edges f:novelty g:blend space
+		// first columns are the objectives
+		// last 4 columns are
+		// d:graph's vertices
+		// d:graph's edges
+		// f:novelty
+		// g:blend space
 
-		NondominatedPopulation pop = new NondominatedPopulation();
-		for (ArrayList<String> row : reader.getRows()) {
-			System.out.println(row);
-			Solution solution = new Solution(1, 5);
-			solution.setVariable(0, new StringVariable(datafile));
+		String header = readResultsFile(solutions, datafile, numberNonObjectiveColumns);
+		// put the solutions in a ndp
+		for (Solution solution : solutions) {
 			pop.add(solution);
 		}
+		System.out.println("read " + solutions.size() + " solutions");
+		System.out.println("NondominatedPopulation contains " + pop.size() + " solutions");
+		saveResultsFile(pop, VariousUtils.appendSuffixToFilename(datafile, "_merged"), header);
+	}
 
-//		DoubleCSVReader dr = new DoubleCSVReader("\t", datafile, true);
-//		for (int i = 0; i < dr.getNumberOfRows(); i++) {
-//			System.out.println(dr.getRow(i));
-//		}
+	private static void saveResultsFile(Iterable<Solution> pop, String datafile, String header) throws IOException {
+		BufferedWriter bw = new BufferedWriter(new FileWriter(datafile, StandardCharsets.UTF_8), 1 << 16);
+		bw.write(header);
+		bw.newLine();
+		for (Solution sol : pop) {
+			// these are double
+			for (int i = 0; i < sol.getNumberOfObjectives(); i++) {
+				bw.write(Double.toString(sol.getObjective(i)));
+				bw.write('\t');
+			}
+			// now the fields
+			StringVariable variable = (StringVariable) sol.getVariable(0);
+			for (int i = 0; i < variable.getNumberFields(); i++) {
+				String field = variable.getField(i);
+				bw.write(field);
+				bw.write('\t');
+			}
+			// and finally the graph
+			bw.write(variable.getText());
+			bw.newLine();
+		}
+		bw.close();
+	}
+
+	private static String readResultsFile(ArrayList<Solution> solutions, String datafile, final int numberNonObjectiveColumns) throws IOException {
+		BufferedReader br = new BufferedReader(new FileReader(datafile, StandardCharsets.UTF_8), 1 << 24);
+		String line;
+		boolean headRead = false;
+		int numberObjectives = 0;
+		String header = null;
+		while ((line = br.readLine()) != null) {
+			line = line.trim();
+			if (line.isEmpty())
+				continue;
+			String[] cells = VariousUtils.fastSplit(line, "\t");
+			if (!headRead) {
+				headRead = true;
+				numberObjectives = cells.length - numberNonObjectiveColumns;
+				header = line;
+				continue;
+			} else {
+				Solution solution = new Solution(1, numberObjectives);
+				// class + blend
+				StringVariable variable = new StringVariable(cells[cells.length - 1]);
+
+				for (int i = 0; i < numberObjectives; i++) {
+					double obj = Double.parseDouble(cells[i]);
+					solution.setObjective(i, obj);
+				}
+
+				// store remaining fields except the graph
+				for (int i = 0; i < numberNonObjectiveColumns - 1; i++) {
+					String fieldData = cells[numberObjectives + i];
+					variable.addField(fieldData);
+				}
+
+				solution.setVariable(0, variable);
+				solutions.add(solution);
+			}
+		}
+		br.close();
+		return header;
 	}
 }

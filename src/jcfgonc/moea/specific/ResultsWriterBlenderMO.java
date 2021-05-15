@@ -32,8 +32,8 @@ public class ResultsWriterBlenderMO implements ResultsWriter {
 				fw.write(String.format("%s\t", objectiveDescription));
 			}
 			// remaining headers
-			bw.write("d:graph's vertices\t");
-			bw.write("d:graph's edges\t");
+			bw.write("d:graphs vertices\t");
+			bw.write("d:graphs edges\t");
 			bw.write("f:novelty\t");
 
 			// graph column

@@ -50,7 +50,7 @@ public class FileTools {
 		String line;
 		while ((line = br.readLine()) != null) {
 			line = line.trim();
-			if (line.startsWith("#"))
+			if (line.contains(":")) // header, eg, s:relation
 				continue;
 			String[] cells = VariousUtils.fastSplitWhiteSpace(line);
 			String relation = cells[0];

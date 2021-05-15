@@ -11,6 +11,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.text.DecimalFormat;
+import java.util.Collection;
 import java.util.Properties;
 
 import javax.swing.BoxLayout;
@@ -21,8 +22,8 @@ import javax.swing.SwingUtilities;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.StandardChartTheme;
-import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
+import org.moeaframework.core.Solution;
 
 import jcfgonc.blender.MOEA_Config;
 import jcfgonc.moea.generic.InteractiveExecutor;
@@ -49,7 +50,7 @@ public class InteractiveExecutorGUI extends JFrame {
 	private int epoch;
 	private int run;
 	private double epochDuration;
-	private NondominatedPopulation nds;
+	private Collection<Solution> nds;
 	/**
 	 * used to update the gui before taking a screenshot
 	 */
@@ -206,7 +207,7 @@ public class InteractiveExecutorGUI extends JFrame {
 	 * @param run
 	 * @param epochDuration
 	 */
-	public void updateData(NondominatedPopulation nds, int epoch, int run, double epochDuration) {
+	public void updateData(Collection<Solution> nds, int epoch, int run, double epochDuration) {
 		// changed with a new run
 		if (run != this.run) {
 			statusPanel.setCurrentRun(Integer.toString(run));
@@ -247,9 +248,13 @@ public class InteractiveExecutorGUI extends JFrame {
 	}
 
 	private void takeScreenshot() {
+		// maximize window
+		setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
+		// update gui if out-dated
 		if (!guiUpdated) {
 			updateGUI();
 		}
+		// take the screenshot
 		new File(MOEA_Config.screenshotsFolder).mkdir();
 		String filename = String.format("run_%s_epoch_%s", screenshotFilenameDecimalFormat.format(run),
 				screenshotFilenameDecimalFormat.format(epoch));

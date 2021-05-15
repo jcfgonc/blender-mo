@@ -2,8 +2,8 @@ package jcfgonc.blender;
 
 public class MOEA_Config {
 	public static final String ALGORITHM = "eNSGAII";
-	public static int POPULATION_SIZE = 512;
-	public static int MAX_EPOCHS = 99999; // maximum number of epochs/generations to iterate
+	public static int POPULATION_SIZE = 4096;
+	public static int MAX_EPOCHS = 10000; // maximum number of epochs/generations to iterate
 	public static int MOEA_RUNS = 9999; // maximum number of MOEA runs (each run iterates max_epochs)
 	public static double MAX_RUN_TIME = 15.0; // maximum amount of time (minutes) allowed for each MOEA run
 

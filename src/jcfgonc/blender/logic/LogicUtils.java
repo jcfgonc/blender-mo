@@ -38,7 +38,6 @@ public class LogicUtils {
 	public static double evaluateVitalRelations(StringGraph blendSpace, Object2DoubleOpenHashMap<String> vitalRelations) {
 		// histogram of blend relations
 		Object2IntOpenHashMap<String> relHist = GraphAlgorithms.countRelations(blendSpace);
-
 		// multiply-accumulate
 		double sum = 0;
 		for (Object2IntMap.Entry<String> entry : relHist.object2IntEntrySet()) {
@@ -47,8 +46,36 @@ public class LogicUtils {
 			double weight = vitalRelations.getDouble(relation);
 			sum += occurrences * weight;
 		}
+		// normalize score using the number of edges
 		double mean = sum / (double) blendSpace.numberOfEdges();
 		return mean;
+	}
+
+	public static double getLeastImportantVitalRelation(StringGraph blendSpace, Object2DoubleOpenHashMap<String> vitalRelations) {
+		double leastImportant = Double.MAX_VALUE;
+		for (StringEdge edge : blendSpace.edgeSet()) {
+			double weight = vitalRelations.getDouble(edge.getLabel());
+			if (weight < leastImportant) {
+				leastImportant = weight;
+			}
+		}
+		return leastImportant;
+	}
+
+	public static double calculateMeanImportantanceVitalRelations(StringGraph blendSpace, Object2DoubleOpenHashMap<String> vitalRelations) {
+		double accum = 0;
+		HashSet<String> checkedLabels = new HashSet<String>();
+		for (StringEdge edge : blendSpace.edgeSet()) {
+			String label = edge.getLabel();
+			if (checkedLabels.contains(label)) {
+				continue;
+			}
+			checkedLabels.add(label);
+			double weight = vitalRelations.getDouble(label);
+			accum += weight;
+		}
+		accum = accum / checkedLabels.size();
+		return accum;
 	}
 
 	public static double calculateInputSpacesBalance(StringGraph blendSpace, Mapping<String> mapping) {
@@ -89,6 +116,13 @@ public class LogicUtils {
 		return u;
 	}
 
+	/**
+	 * Calculates statistics about the number of relations of each type in the blend. Returns an array with the measurements mean, stddev and number
+	 * of relations of each type.
+	 * 
+	 * @param blendSpace
+	 * @return
+	 */
 	public static double[] calculateRelationStatistics(StringGraph blendSpace) {
 		double[] stats = new double[3];
 		Object2IntOpenHashMap<String> relHist = GraphAlgorithms.countRelations(blendSpace);
@@ -171,6 +205,12 @@ public class LogicUtils {
 		int numberOfEdges = blendSpace.numberOfEdges();
 		double novelty = (double) uniqueEdges / numberOfEdges;
 		return novelty;
+	}
+
+	public static double calculateBlendedConceptsPercentage(StringGraph blendSpace) {
+		int count = GraphAlgorithms.countBlendedConcepts(blendSpace);
+		double p = (double) count / blendSpace.numberOfVertices();
+		return p;
 	}
 
 }

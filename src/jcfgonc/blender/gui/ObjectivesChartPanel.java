@@ -2,6 +2,7 @@ package jcfgonc.blender.gui;
 
 import java.awt.GridLayout;
 import java.util.ArrayList;
+import java.util.Collection;
 
 import javax.swing.JPanel;
 
@@ -9,7 +10,6 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
-import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 
@@ -26,7 +26,7 @@ public class ObjectivesChartPanel extends JPanel {
 	private static final long serialVersionUID = 6897997626552672853L;
 	final private String valueAxisLabel;
 	final private String categoryAxisLabel;
-	final private Problem problem;
+//	final private Problem problem; //commented because it fills the available space
 	final private int numberOfObjectives;
 	final private ArrayList<String> nameObjectives;
 	final private ArrayList<DefaultBoxAndWhiskerCategoryDataset> objectivesDataset;
@@ -34,7 +34,7 @@ public class ObjectivesChartPanel extends JPanel {
 	public ObjectivesChartPanel(String categoryAxisLabel, String valueAxisLabel, Problem problem) {
 		this.categoryAxisLabel = categoryAxisLabel;
 		this.valueAxisLabel = valueAxisLabel;
-		this.problem = problem;
+//		this.problem = problem;
 		this.numberOfObjectives = problem.getNumberOfObjectives();
 		this.nameObjectives = new ArrayList<String>(numberOfObjectives);
 
@@ -93,21 +93,20 @@ public class ObjectivesChartPanel extends JPanel {
 	 * @param objective
 	 * @return
 	 */
-	private ArrayList<Double> createObjectiveData(NondominatedPopulation nds, int objective) {
-		int numberOfSolutions = nds.size();
-		ArrayList<Double> series = new ArrayList<Double>();
-		for (int solution_i = 0; solution_i < numberOfSolutions; solution_i++) {
-			Solution solution = nds.get(solution_i);
+	private ArrayList<Double> createObjectiveData(Collection<Solution> nds, int objective) {
+		ArrayList<Double> series = new ArrayList<Double>(nds.size());
+		for (Solution solution : nds) {
 			series.add(solution.getObjective(objective));
 		}
 		return series;
 	}
 
-	public void addValues(NondominatedPopulation nds) {
-		setNotify(false);
-		clearData();
+	public void addValues(Collection<Solution> nds) {
+		try {
+			setNotify(false);
+			clearData();
 
-		for (int objective_i = 0; objective_i < numberOfObjectives; objective_i++) {
+			for (int objective_i = 0; objective_i < numberOfObjectives; objective_i++) {
 //			String category;
 //			if (problem instanceof ProblemDescription) {
 //				ProblemDescription pd = (ProblemDescription) problem;
@@ -117,10 +116,13 @@ public class ObjectivesChartPanel extends JPanel {
 //				category = String.format("Objective %d", objective_i);
 //			}
 
-			DefaultBoxAndWhiskerCategoryDataset dataset = objectivesDataset.get(objective_i);
-			ArrayList<Double> objectiveData = createObjectiveData(nds, objective_i);
-			dataset.add(objectiveData, "0", String.format("(%d)", objective_i));
+				DefaultBoxAndWhiskerCategoryDataset dataset = objectivesDataset.get(objective_i);
+				ArrayList<Double> objectiveData = createObjectiveData(nds, objective_i);
+				dataset.add(objectiveData, "0", String.format("(%d)", objective_i));
+			}
+			setNotify(true);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		setNotify(true);
 	}
 }

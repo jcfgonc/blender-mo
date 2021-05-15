@@ -77,13 +77,21 @@ public class BarChartPanel extends JPanel {
 	}
 
 	public void addSample(double x, double y, String category) {
-		// second and third arguments must be constant
-		dataset.addValue(y, category, Double.toString(x));
+		try {
+			// second and third arguments must be constant
+			dataset.addValue(y, category, Double.toString(x));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void addSample(int x, double y, String category) {
-		// second and third arguments must be constant
-		dataset.addValue(y, category, Integer.toString(x));
+		try {
+			// second and third arguments must be constant
+			dataset.addValue(y, category, Integer.toString(x));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void addSample(int x, double y) {

@@ -2,7 +2,6 @@ package jcfgonc.moea.specific;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -23,7 +22,6 @@ import structures.UnorderedPair;
 import utils.JatalogInterface;
 import utils.OSTools;
 import wordembedding.WordEmbeddingUtils;
-import za.co.wstoop.jatalog.DatalogException;
 import za.co.wstoop.jatalog.Expr;
 
 public class CustomProblem implements Problem, ProblemDescription {
@@ -91,44 +89,44 @@ public class CustomProblem implements Problem, ProblemDescription {
 		StringGraph blendSpace = blend.getBlendSpace();
 		Mapping<String> mapping = blend.getMapping();
 
-		// get a datalog engine
-		JatalogInterface datalog = datalogEngines.pop();
-		BitSet queriesResults = null;
-		// check for frames matched in the blend
-		try {
-			// transform the blend space into a KB
-			datalog.clearFacts(); // very important, clear previous stuff
-			datalog.addFacts(blendSpace);
-			// do the queries
-			queriesResults = datalog.isQueryTrue(frameQueries);
-		} catch (DatalogException e) {
-			e.printStackTrace();
-		} finally {
-			datalogEngines.push(datalog);
-		}
-
-		// calculate frame qualities
-		// process queries/frames results
-		int cardinality = queriesResults.cardinality();
-		// 10 is an acceptable limit to fit within a small graphical window
-		// (i.e. if it was +Integer.MAX it would be hard to see small values)
-		int edgesLargestFrame = 0; // maximize
-		int numberMatchedFrames = cardinality;// 10; // minimize
-		if (cardinality > 0) {
-//			if (cardinality < numberMatchedFrames) {
-//				numberMatchedFrames = cardinality;
+//		// get a datalog engine
+//		JatalogInterface datalog = datalogEngines.pop();
+//		BitSet queriesResults = null;
+//		// check for frames matched in the blend
+//		try {
+//			// transform the blend space into a KB
+//			datalog.clearFacts(); // very important, clear previous stuff
+//			datalog.addFacts(blendSpace);
+//			// do the queries
+//			queriesResults = datalog.isQueryTrue(frameQueries);
+//		} catch (DatalogException e) {
+//			e.printStackTrace();
+//		} finally {
+//			datalogEngines.push(datalog);
+//		}
+//
+//		// calculate frame qualities
+//		// process queries/frames results
+//		int cardinality = queriesResults.cardinality();
+//		// 10 is an acceptable limit to fit within a small graphical window
+//		// (i.e. if it was +Integer.MAX it would be hard to see small values)
+//		int edgesLargestFrame = 0; // maximize
+//		int numberMatchedFrames = cardinality;// 10; // minimize
+//		if (cardinality > 0) {
+////			if (cardinality < numberMatchedFrames) {
+////				numberMatchedFrames = cardinality;
+////			}
+//			// iterate through the set bits in the bitset
+//			for (int i = queriesResults.nextSetBit(0); i != -1; i = queriesResults.nextSetBit(i + 1)) {
+//				SemanticFrame frame = frames.get(i);
+//				// find largest frame
+//				StringGraph frameGraph = frame.getFrame();
+//				int numberOfEdges = frameGraph.numberOfEdges();
+//				if (numberOfEdges > edgesLargestFrame) {
+//					edgesLargestFrame = numberOfEdges;
+//				}
 //			}
-			// iterate through the set bits in the bitset
-			for (int i = queriesResults.nextSetBit(0); i != -1; i = queriesResults.nextSetBit(i + 1)) {
-				SemanticFrame frame = frames.get(i);
-				// find largest frame
-				StringGraph frameGraph = frame.getFrame();
-				int numberOfEdges = frameGraph.numberOfEdges();
-				if (numberOfEdges > edgesLargestFrame) {
-					edgesLargestFrame = numberOfEdges;
-				}
-			}
-		}
+//		}
 
 		// now experimenting with blend SS instead of frames SS
 //		double frameSemanticSimilarity;
@@ -144,12 +142,12 @@ public class CustomProblem implements Problem, ProblemDescription {
 //		}
 
 		// blend edge semantic similarity
-		double blendSemanticSimilarity = 1; // set to 1 (the max) by default because we want to minimize this
+		double blendSemanticSimilarity = 0.0;
 		if (blendSpace.numberOfEdges() >= 2) { // measuring similarity requires at least two edges
 			// this array contains pairwise similarities of nearby edges
 			double[] edgePairsSimilarities = WordEmbeddingUtils.calculateEdgeSemanticSimilarity(blendSpace, wps);
 			DescriptiveStatistics ds = new DescriptiveStatistics(edgePairsSimilarities);
-			blendSemanticSimilarity = ds.getMean();
+			blendSemanticSimilarity = ds.getMean(); // ds.getMean();
 			if (blendSemanticSimilarity > 1.1) {
 				System.err.println("questionable semantic similarity for graph " + blendSpace + " = " + Arrays.toString(edgePairsSimilarities));
 			}
@@ -158,19 +156,22 @@ public class CustomProblem implements Problem, ProblemDescription {
 		// mapping usage
 		double mappingMix = (double) LogicUtils.calculateMappingMix(blendSpace, mapping) / blendSpace.numberOfEdges();
 
+		// balance between the two input spaces
+		double inputSpacesBalance = LogicUtils.calculateInputSpacesBalance(blendSpace, mapping);
+
 		// cycles
 //		int cycles = GraphAlgorithms.countCycles(blendSpace);
 
 		// vital relations
-		double vitalRelationsScore = LogicUtils.evaluateVitalRelations(blendSpace, vitalRelations);
+		// double vitalRelationsScore = LogicUtils.evaluateVitalRelations(blendSpace, vitalRelations);
+		// maximize the least important relation (and consequently the remaining relations which are more important)
+		double vitalRelationsScore = LogicUtils.calculateMeanImportantanceVitalRelations(blendSpace, vitalRelations);
+
+		double blendedConcepts = LogicUtils.calculateBlendedConceptsPercentage(blendSpace);
 
 		// relation statistics
-		double[] rs = LogicUtils.calculateRelationStatistics(blendSpace);
-		double relationStdDev = rs[1]; // 0...1
-
-		double inputSpacesBalance = LogicUtils.calculateInputSpacesBalance(blendSpace, mapping);
-
-//		int numEdges = blendSpace.numberOfEdges() < 10 ? blendSpace.numberOfEdges() : 0;
+//		double[] rs = LogicUtils.calculateRelationStatistics(blendSpace);
+//		double relationStdDev = rs[1]; // 0...1
 
 		// set solution's objectives here
 		int obj_i = 0;
@@ -179,41 +180,42 @@ public class CustomProblem implements Problem, ProblemDescription {
 
 		solution.setObjective(obj_i++, -inputSpacesBalance);
 		solution.setObjective(obj_i++, -mappingMix);
+		solution.setObjective(obj_i++, -blendedConcepts);
 
 		// solution.setObjective(obj_i++, -cycles);
-		solution.setObjective(obj_i++, -edgesLargestFrame);// 7 is the expected max edges of largest frame
-		solution.setObjective(obj_i++, numberMatchedFrames);// 20 is the expected max of number of matched frames and 1 the lowest
+//		solution.setObjective(obj_i++, -edgesLargestFrame);// 7 is the expected max edges of largest frame
+//		solution.setObjective(obj_i++, numberMatchedFrames);// 20 is the expected max of number of matched frames and 1 the lowest
 
-		solution.setObjective(obj_i++, relationStdDev);
+//		solution.setObjective(obj_i++, relationStdDev - 1);
 //		solution.setObjective(obj_i++, -numEdges);
 
 //		System.out.printf("%d\t%d\t%d\n", mappingMix, blendSpace.numberOfEdges(), blendSpace.numberOfVertices());
 
 		// if required define constraints below
 		// violated constraints are set to 1, otherwise set to 0
-
-		// range number of vertices in the blend space
-//		if (blendSpace.numberOfVertices() > 10) {
-//			solution.setConstraint(0, 1);
-//		} else {
-//			solution.setConstraint(0, 0);
-//		}
+		if (blendSpace.numberOfVertices() < 4 || blendSpace.numberOfVertices() > 10) { // range number of vertices in the blend space
+			solution.setConstraint(0, 1);
+		} else {
+			solution.setConstraint(0, 0);
+		}
 	}
-	
-	private String[] objectivesDescription = { //
-			"f:mean of within-blend semantic similarity", //
-			"f:mean importance of vital relations", //
 
+	private String[] objectivesDescription = { //
+			"f:mean within-blend semantic similarity", //
+			"f:mean importance of vital relations", //
 			"f:input spaces balance", //
 			"f:mapping mix", //
-
+			"f:blended concepts", //
 			// "d:number of cycles", //
-			"d:number of edges of largest frame", //
-			"d:number of matched frames", //
+//			"d:number of edges of largest frame", //
+//			"d:number of matched frames", //
 
-			"f:relation similarity", //
+//			"f:relation balance", //
 //			"d:number of edges", //
 	};
+
+	private String[] constraintsDescription = { //
+			"required number of vertices", };
 
 	@Override
 	/**
@@ -233,12 +235,12 @@ public class CustomProblem implements Problem, ProblemDescription {
 	 * The number of constraints defined by this problem.
 	 */
 	public int getNumberOfConstraints() {
-		return 0;
+		return constraintsDescription.length;
 	}
 
 	@Override
-	public String getConstraintDescription(int varid) {
-		return "TODO";
+	public String getConstraintsDescription(int varid) {
+		return constraintsDescription[varid];
 	}
 
 	@Override

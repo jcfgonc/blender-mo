@@ -14,5 +14,5 @@ public interface ProblemDescription {
 
 	public String getObjectiveDescription(int varid);
 
-	public String getConstraintDescription(int varid);
+	public String getConstraintsDescription(int varid);
 }

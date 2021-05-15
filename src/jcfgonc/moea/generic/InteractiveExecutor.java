@@ -1,5 +1,6 @@
 package jcfgonc.moea.generic;
 
+import java.util.ArrayList;
 import java.util.Properties;
 
 import javax.swing.SwingUtilities;
@@ -8,6 +9,7 @@ import javax.swing.UIManager;
 import org.moeaframework.core.Algorithm;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
+import org.moeaframework.core.Solution;
 import org.moeaframework.core.spi.AlgorithmFactory;
 
 import jcfgonc.blender.MOEA_Config;
@@ -31,6 +33,7 @@ public class InteractiveExecutor {
 	private ResultsWriter resultsWriter;
 	private String resultsFilename;
 //	private BlenderVisualizer blenderVisualizer;
+	private volatile boolean guiUpdatingThreadRunning;
 
 	public InteractiveExecutor(Problem problem, Properties algorithmProperties, String resultsFilename, ResultsWriter rw) {
 		this.problem = problem;
@@ -63,6 +66,7 @@ public class InteractiveExecutor {
 
 		int epoch = 0;
 		Algorithm algorithm = null;
+		guiUpdatingThreadRunning = false;
 
 		algorithm = AlgorithmFactory.getInstance().getAlgorithm(MOEA_Config.ALGORITHM, algorithmProperties, problem);
 		canceled = false;
@@ -73,13 +77,17 @@ public class InteractiveExecutor {
 		gui.resetCurrentRunTime();
 //		gui.updateStatus(null, epoch, moea_run, 0);
 
+		lastResult = new NondominatedPopulation();
+		// lastResult = new EpsilonBoxDominanceArchive(0.01);
+
 		ticker.resetTicker();
 		do {
 			// count algorithm time
 			algorithm.step();
 			double epochDuration = ticker.getTimeDeltaLastCall();
 
-			lastResult = algorithm.getResult();
+			// lastResult = algorithm.getResult();
+			lastResult.addAll(algorithm.getResult());
 
 			// update GUI stuff
 			updateStatus(moea_run, epoch, epochDuration);
@@ -104,13 +112,24 @@ public class InteractiveExecutor {
 	}
 
 	private void updateStatus(int moea_run, int epoch, double epochDuration) {
+		// do not queue gui updates, only do one at a time
+		if (guiUpdatingThreadRunning) {
+			// System.out.println("guiUpdatingThread busy");
+			return;
+		}
+
 		Runnable updater = new Runnable() {
+			// local copy of the solution list to prevent concurrent modified exception
+			ArrayList<Solution> nds = new ArrayList<Solution>(lastResult.getElements());
 			public void run() {
 				try {
-					gui.updateData(lastResult, epoch, moea_run, epochDuration);
+					guiUpdatingThreadRunning = true;
+					gui.updateData(nds, epoch, moea_run, epochDuration);
 				} catch (Exception e) {
+					System.err.println("updateStatus(): BOOM there goes the dynamite");
 					e.printStackTrace();
 				} finally {
+					guiUpdatingThreadRunning = false;
 				}
 			}
 		};

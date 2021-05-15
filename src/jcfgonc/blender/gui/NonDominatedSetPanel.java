@@ -5,6 +5,7 @@ import java.awt.GridLayout;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 
 import javax.swing.JPanel;
@@ -19,7 +20,6 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 
@@ -30,7 +30,7 @@ public class NonDominatedSetPanel extends JPanel {
 	private static final long serialVersionUID = -3640671737661415056L;
 	private int numberOfObjectives;
 	private ArrayList<XYSeries> ndsSeries;
-	private NondominatedPopulation nonDominatedSet;
+	private Collection<Solution> nonDominatedSet;
 	private XYPlot plot;
 	private Problem problem;
 	private Color paint;
@@ -142,11 +142,15 @@ public class NonDominatedSetPanel extends JPanel {
 	 * 
 	 * @param nds
 	 */
-	public void updateGraphs(NondominatedPopulation nds) {
-		this.nonDominatedSet = nds;
-		setNotifySeries(false);
-		refillXYSeries(); // draw NDS/solutions charts
-		setNotifySeries(true);
+	public void updateGraphs(Collection<Solution> nds) {
+		try {
+			this.nonDominatedSet = nds;
+			setNotifySeries(false);
+			refillXYSeries(); // draw NDS/solutions charts
+			setNotifySeries(true);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**

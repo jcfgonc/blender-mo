@@ -10,7 +10,6 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 import org.apache.commons.math3.random.RandomAdaptor;
 import org.apache.commons.math3.random.Well44497b;
-import org.moeaframework.core.EpsilonBoxDominanceArchive;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
@@ -116,8 +115,8 @@ public class BlenderMoLauncher {
 		properties.setProperty("maxWindowSize", "480"); // epoch to trigger eNSGA2 hard restart
 //		properties.setProperty("injectionRate", Double.toString(1.0 / 0.25)); // population to archive ratio, default is 0.25
 		// NSGA-III
-		properties.setProperty("divisionsOuter", "10"); // 3
-		properties.setProperty("divisionsInner", "0"); // 2
+//		properties.setProperty("divisionsOuter", "10"); // 3
+//		properties.setProperty("divisionsInner", "1"); // 2
 
 		BlendMutation.setInputSpace(inputSpace);
 		BlendMutation.setRandom(random);
@@ -136,7 +135,7 @@ public class BlenderMoLauncher {
 
 		// do 'k' runs of 'n' epochs
 		int totalRuns = MOEA_Config.MOEA_RUNS;
-		ArrayList<NondominatedPopulation> allResults = new ArrayList<NondominatedPopulation>(totalRuns);
+	//	ArrayList<NondominatedPopulation> allResults = new ArrayList<NondominatedPopulation>(totalRuns);
 		for (int moea_run = 0; moea_run < totalRuns; moea_run++) {
 			if (ie.isCanceled())
 				break;
@@ -144,13 +143,12 @@ public class BlenderMoLauncher {
 			properties.setProperty("populationSize", Integer.toString(MOEA_Config.POPULATION_SIZE));
 			// do one run of 'n' epochs
 			NondominatedPopulation currentResults = ie.execute(moea_run);
-			allResults.add(currentResults);
-
+		//	allResults.add(currentResults);
 			resultsWriter.appendResultsToFile(resultsFilename, currentResults, problem);
 		}
 		resultsWriter.close();
 		ie.closeGUI();
-		mergeAndSaveResults(String.format("moea_results_%s_merged.tsv", dateTimeStamp), allResults, problem, 0.01);
+	//	mergeAndSaveResults(String.format("moea_results_%s_merged.tsv", dateTimeStamp), allResults, problem, 0.01);
 
 		// terminate daemon threads
 		System.exit(0);
@@ -163,8 +161,10 @@ public class BlenderMoLauncher {
 	 * @param allResults
 	 * @param problem
 	 */
+	@SuppressWarnings("unused")
 	private static void mergeAndSaveResults(String filename, ArrayList<NondominatedPopulation> allResults, CustomProblem problem, double epsilon) {
-		EpsilonBoxDominanceArchive mergedResults = new EpsilonBoxDominanceArchive(epsilon);
+		NondominatedPopulation mergedResults = new NondominatedPopulation();
+		// new EpsilonBoxDominanceArchive(epsilon);
 		for (NondominatedPopulation result : allResults) {
 			for (Solution solution : result) {
 				mergedResults.add(solution);
