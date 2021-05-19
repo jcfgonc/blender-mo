@@ -167,6 +167,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 		// maximize the least important relation (and consequently the remaining relations which are more important)
 		double vitalRelationsScore = LogicUtils.calculateMeanImportantanceVitalRelations(blendSpace, vitalRelations);
 
+		// percentage of blended concepts in the blend space (0...1)
 		double blendedConcepts = LogicUtils.calculateBlendedConceptsPercentage(blendSpace);
 
 		// relation statistics
@@ -180,7 +181,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 
 		solution.setObjective(obj_i++, -inputSpacesBalance);
 		solution.setObjective(obj_i++, -mappingMix);
-		solution.setObjective(obj_i++, -blendedConcepts);
+		solution.setObjective(obj_i++, blendedConcepts);
 
 		// solution.setObjective(obj_i++, -cycles);
 //		solution.setObjective(obj_i++, -edgesLargestFrame);// 7 is the expected max edges of largest frame
@@ -193,7 +194,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 
 		// if required define constraints below
 		// violated constraints are set to 1, otherwise set to 0
-		if (blendSpace.numberOfVertices() < 4 || blendSpace.numberOfVertices() > 10) { // range number of vertices in the blend space
+		if (blendSpace.numberOfVertices() < 3 || blendSpace.numberOfVertices() > 6) { // range number of vertices in the blend space
 			solution.setConstraint(0, 1);
 		} else {
 			solution.setConstraint(0, 0);

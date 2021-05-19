@@ -53,11 +53,11 @@ public class BlendMutation {
 		int numEdges = blendSpace.numberOfEdges();
 		if (numEdges == 0) { // no edge -> always add one edge
 			addRandomEdge(blendSpace, mapping);
-		} else if (numEdges == 1) { // one edge -> add another edge with the possibility of clearing the blend before
+		} else if (numEdges == 1) { // one edge -> add another edge with the possibility of clearing the blend before (just an optimization)
 			if (random.nextBoolean()) { // remove the existing edge if random wishes so
 				blendSpace.clear();
 			}
-			addRandomEdge(blendSpace, mapping);
+			addRandomEdge(blendSpace, mapping); // make sure the blend has at least one edge
 		} else { // two or more edges -> add another edge OR remove one of the existing
 			if (random.nextBoolean()) {
 				addRandomEdge(blendSpace, mapping);
@@ -82,10 +82,11 @@ public class BlendMutation {
 			concept = VariousUtils.getRandomElementFromCollection(inputSpaceVerticesList, random);
 		}
 
-		if (concept.indexOf('|') < 0) { // not a blended concept
+		boolean conceptIsNormal = concept.indexOf('|') < 0;
+		if (conceptIsNormal) { // not a blended concept
 			// get neighbor edges touching the concept in the input space
 			// subtract from those edges the ones already existing in the blend space
-			Set<StringEdge> newEdges = VariousUtils.subtract(inputSpace.edgesOf(concept), blendSpace.edgeSet(), false);
+			Set<StringEdge> newEdges = VariousUtils.subtract(inputSpace.edgesOf(concept), blendSpace.edgeSet());
 			if (newEdges.isEmpty()) {
 				return false;
 			}
@@ -118,7 +119,7 @@ public class BlendMutation {
 				return false;
 			}
 			// subtract from those edges the ones already existing in the blend space
-			Set<StringEdge> newEdges = VariousUtils.subtract(ec, blendSpace.edgeSet(), false);
+			Set<StringEdge> newEdges = VariousUtils.subtract(ec, blendSpace.edgeSet());
 			if (newEdges.isEmpty()) {
 				return false;
 			}
@@ -161,7 +162,7 @@ public class BlendMutation {
 				System.err.printf("175: concept %s involved in mapping %s has no edges\n", b, referenceConcept);
 				return false;
 			}
-			edges_a = VariousUtils.subtract(edges_a, blendSpace.edgeSet(), false);
+			edges_a = VariousUtils.subtract(edges_a, blendSpace.edgeSet());
 			// edges_b = VariousUtils.subtract(edges_b, blendSpace.edgeSet(), false); // unused because of the below getEdgesConnecting()
 			edges_b = null; // unused variable, free memory
 
@@ -173,13 +174,11 @@ public class BlendMutation {
 				String d = conceptPair.getOpposingConcept(c);
 				String relation = edge_a.getLabel();
 				if (edge_a.outgoesFrom(a)) {
-					Set<StringEdge> edges_b_filtered = VariousUtils.subtract(inputSpace.getEdgesConnecting(b, d, relation), blendSpace.edgeSet(),
-							false);
+					Set<StringEdge> edges_b_filtered = VariousUtils.subtract(inputSpace.getEdgesConnecting(b, d, relation), blendSpace.edgeSet());
 					if (edges_b_filtered.isEmpty())
 						continue;
 				} else {
-					Set<StringEdge> edges_b_filtered = VariousUtils.subtract(inputSpace.getEdgesConnecting(d, b, relation), blendSpace.edgeSet(),
-							false);
+					Set<StringEdge> edges_b_filtered = VariousUtils.subtract(inputSpace.getEdgesConnecting(d, b, relation), blendSpace.edgeSet());
 					if (edges_b_filtered.isEmpty())
 						continue;
 				}
@@ -196,7 +195,7 @@ public class BlendMutation {
 			// try to connect the given normal concept to a concept pair existing in the mapping
 			// subtract from those edges the ones already existing in the blend space
 			String c = referenceConcept;
-			Set<StringEdge> edges = VariousUtils.subtract(inputSpace.edgesOf(c), blendSpace.edgeSet(), false);
+			Set<StringEdge> edges = VariousUtils.subtract(inputSpace.edgesOf(c), blendSpace.edgeSet());
 			if (edges.isEmpty()) {
 				return false;
 			}
@@ -206,8 +205,14 @@ public class BlendMutation {
 				if (mapping.containsConcept(a)) { // other concept is involved in the mapping
 					// get the involved concept pair
 					ConceptPair<String> conceptPair = mapping.getConceptPair(a);
-					// recreate the edge renaming the other concept to a concept pair blend
-					StringEdge edgeToAdd = edge.replaceSourceOrTarget(a, conceptPair.toString());
+					// recreate the edge renaming the concept 'a' to either 'a', 'b' OR 'a|'b
+					String targetRename;
+					if (random.nextBoolean()) {
+						targetRename = conceptPair.getOpposingConcept(a);
+					} else {
+						targetRename = conceptPair.toString();
+					}
+					StringEdge edgeToAdd = edge.replaceSourceOrTarget(a, targetRename);
 					if (blendSpace.addEdge(edgeToAdd)) {
 						// LogicUtils.calculateUnpacking(blendSpace, mapping);
 						return true; // done, one edge added
@@ -278,21 +283,50 @@ public class BlendMutation {
 	}
 
 	// OK, TESTED
+	/**
+	 * adds a random edge using a randomly chosen concept pair (does not connect to existing concept pairs)
+	 * 
+	 * @param blendSpace
+	 * @param conceptPair
+	 * @return
+	 */
 	private static boolean addFirstMappingEdge(StringGraph blendSpace, ConceptPair<String> conceptPair) {
 		// first get all edges touching the left and right concepts in the pair
-		String a = conceptPair.getLeftConcept();
-		String b = conceptPair.getRightConcept();
-		Set<StringEdge> newEdges = VariousUtils.mergeSets(inputSpace.edgesOf(a), inputSpace.edgesOf(b));
+		String l = conceptPair.getLeftConcept();
+		String r = conceptPair.getRightConcept();
+
+		Set<StringEdge> newEdges = VariousUtils.mergeSets(inputSpace.edgesOf(l), inputSpace.edgesOf(r));
 		if (newEdges.isEmpty()) {
 			return false;
 		}
-		String blend = a + "|" + b;
 		ArrayList<StringEdge> shuffledEdges = VariousUtils.asShuffledArray(newEdges, random);
-		for (StringEdge edge : shuffledEdges) {
-			// add one of the touching edges, replacing left/right concepts with the blended pair
-			StringEdge edgeToAdd = edge.replaceSourceOrTarget(a, blend).replaceSourceOrTarget(b, blend);
-			if (blendSpace.addEdge(edgeToAdd)) {
-				return true;
+
+		// either swap l/r concepts OR blend them
+		if (random.nextBoolean()) {
+			// pick an edge
+			for (StringEdge edge : shuffledEdges) {
+				String originalConcept, swappedConcept;
+				// which concept l/r does the edge have?
+				if (edge.containsConcept(l)) {
+					originalConcept = l;
+					swappedConcept = r;
+				} else {
+					originalConcept = r;
+					swappedConcept = l;
+				}
+				StringEdge edgeToAdd = edge.replaceSourceOrTarget(originalConcept, swappedConcept);
+				if (blendSpace.addEdge(edgeToAdd)) {
+					return true;
+				}
+			}
+		} else { // use both concepts from the pair
+			String blend = l + "|" + r;
+			for (StringEdge edge : shuffledEdges) {
+				// add one of the touching edges, replacing left/right concepts with the blended pair
+				StringEdge edgeToAdd = edge.replaceSourceOrTarget(l, blend).replaceSourceOrTarget(r, blend);
+				if (blendSpace.addEdge(edgeToAdd)) {
+					return true;
+				}
 			}
 		}
 		return false;
@@ -312,6 +346,6 @@ public class BlendMutation {
 		StringEdge edgeToDelete = VariousUtils.getRandomElementFromCollection(edgesOfLowest, random);
 		blendSpace.removeEdge(edgeToDelete);
 		// remove smaller components if more than one
-	//	GraphAlgorithms.removeSmallerComponents(blendSpace);
+		// GraphAlgorithms.removeSmallerComponents(blendSpace);
 	}
 }

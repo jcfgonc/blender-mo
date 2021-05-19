@@ -1,5 +1,6 @@
 package jcfgonc.blender;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import org.apache.commons.math3.random.RandomAdaptor;
+import org.apache.commons.math3.random.SynchronizedRandomGenerator;
 import org.apache.commons.math3.random.Well44497b;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
@@ -64,13 +66,21 @@ public class BlenderMoLauncher {
 			IllegalAccessException, UnsupportedLookAndFeelException, InterruptedException {
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-		RandomAdaptor random = new RandomAdaptor(new Well44497b());
+		RandomAdaptor random = new RandomAdaptor(new SynchronizedRandomGenerator(new Well44497b()));
 
 		// read input space
 		StringGraph inputSpace = FileTools.readInputSpace(MOEA_Config.inputSpacePath);
 
 		// read mappings file (contains multiple mappings)
-		ArrayList<Mapping<String>> mappings = FileTools.readMappings(MOEA_Config.mappingPath);
+		ArrayList<Mapping<String>> mappings = Mapping.readMappingsCSV(new File(MOEA_Config.mappingPath));
+//		Iterator<Mapping<String>> mapIt = mappings.iterator();
+//		while (mapIt.hasNext()) {
+//			Mapping<String> mapping = mapIt.next();
+//			if (mapping.getSize() > 4 && mapping.size() < 100) {
+//				mapIt.remove();
+//			}
+//		}
+		System.out.printf("using %d mappings\n", mappings.size());
 
 		// read frames file
 		ArrayList<SemanticFrame> frames0 = FrameReadWrite.readPatternFrames(MOEA_Config.framesPath);
@@ -110,7 +120,7 @@ public class BlenderMoLauncher {
 		properties.setProperty("operator", "CustomMutation");
 		properties.setProperty("CustomMutation.Rate", "1.0");
 		// eNSGA-II
-		properties.setProperty("epsilon", "0.0001"); // default is 0.01
+		properties.setProperty("epsilon", "0.00005"); // default is 0.01
 		properties.setProperty("windowSize", "256"); // epoch to trigger eNSGA2 population injection
 		properties.setProperty("maxWindowSize", "480"); // epoch to trigger eNSGA2 hard restart
 //		properties.setProperty("injectionRate", Double.toString(1.0 / 0.25)); // population to archive ratio, default is 0.25
@@ -135,7 +145,7 @@ public class BlenderMoLauncher {
 
 		// do 'k' runs of 'n' epochs
 		int totalRuns = MOEA_Config.MOEA_RUNS;
-	//	ArrayList<NondominatedPopulation> allResults = new ArrayList<NondominatedPopulation>(totalRuns);
+		// ArrayList<NondominatedPopulation> allResults = new ArrayList<NondominatedPopulation>(totalRuns);
 		for (int moea_run = 0; moea_run < totalRuns; moea_run++) {
 			if (ie.isCanceled())
 				break;
@@ -143,12 +153,12 @@ public class BlenderMoLauncher {
 			properties.setProperty("populationSize", Integer.toString(MOEA_Config.POPULATION_SIZE));
 			// do one run of 'n' epochs
 			NondominatedPopulation currentResults = ie.execute(moea_run);
-		//	allResults.add(currentResults);
+			// allResults.add(currentResults);
 			resultsWriter.appendResultsToFile(resultsFilename, currentResults, problem);
 		}
 		resultsWriter.close();
 		ie.closeGUI();
-	//	mergeAndSaveResults(String.format("moea_results_%s_merged.tsv", dateTimeStamp), allResults, problem, 0.01);
+		// mergeAndSaveResults(String.format("moea_results_%s_merged.tsv", dateTimeStamp), allResults, problem, 0.01);
 
 		// terminate daemon threads
 		System.exit(0);

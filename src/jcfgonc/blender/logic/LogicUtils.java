@@ -78,6 +78,13 @@ public class LogicUtils {
 		return accum;
 	}
 
+	/**
+	 * if 1 means both input spaces are equally present in the blend and in the other end 0 if one or both are not present
+	 * 
+	 * @param blendSpace
+	 * @param mapping
+	 * @return
+	 */
 	public static double calculateInputSpacesBalance(StringGraph blendSpace, Mapping<String> mapping) {
 		Set<String> leftConcepts = mapping.getLeftConcepts();
 		Set<String> rightConcepts = mapping.getRightConcepts();
@@ -100,19 +107,18 @@ public class LogicUtils {
 			} else {
 				if (leftConcepts.contains(concept)) { // used in the mapping as a left concept
 					leftCount += blendSpace.degreeOf(concept);
-				} else if (leftConcepts.contains(concept)) {// used in the mapping as a right concept
+				} else if (rightConcepts.contains(concept)) {// used in the mapping as a right concept
 					rightCount += blendSpace.degreeOf(concept);
 				} else { // not referenced in the mapping
 
 				}
 			}
 		}
+		// prevent divide by zero
 		if (leftCount == 0 || rightCount == 0) {
-			return 0;
+			return 0; // return 0 because we want both input spaces to be somewhat present
 		}
 		double u = (double) Math.min(leftCount, rightCount) / Math.max(leftCount, rightCount);
-		if (u > 0.999)
-			System.lineSeparator();
 		return u;
 	}
 

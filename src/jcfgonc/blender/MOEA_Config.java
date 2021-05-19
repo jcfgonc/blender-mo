@@ -2,7 +2,7 @@ package jcfgonc.blender;
 
 public class MOEA_Config {
 	public static final String ALGORITHM = "eNSGAII";
-	public static int POPULATION_SIZE = 4096;
+	public static int POPULATION_SIZE = 1024;
 	public static int MAX_EPOCHS = 10000; // maximum number of epochs/generations to iterate
 	public static int MOEA_RUNS = 9999; // maximum number of MOEA runs (each run iterates max_epochs)
 	public static double MAX_RUN_TIME = 15.0; // maximum amount of time (minutes) allowed for each MOEA run
@@ -10,7 +10,7 @@ public class MOEA_Config {
 	public static double EDGE_MUTATION_PROBABILITY_POWER = 4;
 	public static double EDGE_MUTATION_NUMBER_STEPS = 1; // it goes from 1 to this number
 
-	public static final String inputSpacePath = "data/conceptnet5v5.csv";
+	public static final String inputSpacePath = "data/conceptnet5v44.csv";
 	public static final String mappingPath = "data/2020-04-29_21-23-37_mappings.csv";
 
 	public static final String framesPath = "data/pattern_resultsV22.tsv";
