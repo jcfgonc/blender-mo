@@ -11,17 +11,12 @@ import java.util.ArrayList;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Solution;
 
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import utils.VariousUtils;
 
-public class DuplicateResultsRemoverMO {
+public class RemoveDominatedResults {
 
 	public static void main(String[] args) throws IOException {
-		String datafile = "C:\\Desktop\\github\\BlenderMO\\results\\no frames 0.tsv";
-		final int numberNonObjectiveColumns = 5;
-		
-		NondominatedPopulation pop = new NondominatedPopulation();
-		ArrayList<Solution> solutions = new ArrayList<Solution>();
-
 		// --- BLENDERMO results HEADER
 		// first columns are the objectives
 		// last 4 columns are
@@ -29,29 +24,41 @@ public class DuplicateResultsRemoverMO {
 		// d:graph's edges
 		// f:novelty
 		// g:blend space
+		final int numberNonObjectiveColumns = 6;
+		String filename = "using frames.tsv";
 
-		String header = readResultsFile(solutions, datafile, numberNonObjectiveColumns);
-		// put the solutions in a ndp
-		for (Solution solution : solutions) {
-			pop.add(solution);
+		ArrayList<Solution> solutions = new ArrayList<Solution>();
+		String header = readResultsFile(solutions, filename, numberNonObjectiveColumns, 0);
+
+		System.out.println("read a total of " + solutions.size() + " solutions");
+
+		// remove dominated solutions
+		NondominatedPopulation pop = new NondominatedPopulation();
+		for (int i = 0; i < solutions.size(); i++) {
+			pop.add(solutions.get(i));
 		}
-		System.out.println("read " + solutions.size() + " solutions");
-		System.out.println("NondominatedPopulation contains " + pop.size() + " solutions");
-		saveResultsFile(pop, VariousUtils.appendSuffixToFilename(datafile, "_merged"), header);
+
+		System.out.printf("%d duplicated solutions\n", (solutions.size() - pop.size()));
+		System.out.println(pop.size() + " unique solutions");
+
+		saveResultsFile(pop, VariousUtils.appendSuffixToFilename(filename, "_nondominated"), header, 0);
 	}
 
-	private static void saveResultsFile(Iterable<Solution> pop, String datafile, String header) throws IOException {
+	private static void saveResultsFile(Iterable<Solution> pop, String datafile, String header, int clazz) throws IOException {
 		BufferedWriter bw = new BufferedWriter(new FileWriter(datafile, StandardCharsets.UTF_8), 1 << 16);
 		bw.write(header);
 		bw.newLine();
 		for (Solution sol : pop) {
+			StringVariable variable = (StringVariable) sol.getVariable(0);
+			if (clazz != variable.getClazz())
+				continue;
+
 			// these are double
 			for (int i = 0; i < sol.getNumberOfObjectives(); i++) {
 				bw.write(Double.toString(sol.getObjective(i)));
 				bw.write('\t');
 			}
 			// now the fields
-			StringVariable variable = (StringVariable) sol.getVariable(0);
 			for (int i = 0; i < variable.getNumberFields(); i++) {
 				String field = variable.getField(i);
 				bw.write(field);
@@ -64,12 +71,14 @@ public class DuplicateResultsRemoverMO {
 		bw.close();
 	}
 
-	private static String readResultsFile(ArrayList<Solution> solutions, String datafile, final int numberNonObjectiveColumns) throws IOException {
+	private static String readResultsFile(ArrayList<Solution> solutions, String datafile, final int numberNonObjectiveColumns, int clazz)
+			throws IOException {
 		BufferedReader br = new BufferedReader(new FileReader(datafile, StandardCharsets.UTF_8), 1 << 24);
 		String line;
 		boolean headRead = false;
 		int numberObjectives = 0;
 		String header = null;
+		int solutionCounter = 0;
 		while ((line = br.readLine()) != null) {
 			line = line.trim();
 			if (line.isEmpty())
@@ -84,6 +93,7 @@ public class DuplicateResultsRemoverMO {
 				Solution solution = new Solution(1, numberObjectives);
 				// class + blend
 				StringVariable variable = new StringVariable(cells[cells.length - 1]);
+				variable.setClazz(clazz);
 
 				for (int i = 0; i < numberObjectives; i++) {
 					double obj = Double.parseDouble(cells[i]);
@@ -98,9 +108,11 @@ public class DuplicateResultsRemoverMO {
 
 				solution.setVariable(0, variable);
 				solutions.add(solution);
+				solutionCounter++;
 			}
 		}
 		br.close();
+		System.out.println("read " + solutionCounter + " solutions from " + datafile);
 		return header;
 	}
 }

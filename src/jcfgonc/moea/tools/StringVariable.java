@@ -13,6 +13,7 @@ public class StringVariable implements Variable {
 	private static final long serialVersionUID = 1325766775637018352L;
 	final private String text;
 	final private ArrayList<String> fields;
+	private int clazz;
 
 	@Override
 	public String toString() {
@@ -51,5 +52,13 @@ public class StringVariable implements Variable {
 
 	public String getField(int i) {
 		return fields.get(i);
+	}
+
+	public int getClazz() {
+		return clazz;
+	}
+
+	public void setClazz(int clazz) {
+		this.clazz = clazz;
 	}
 }

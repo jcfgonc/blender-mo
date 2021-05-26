@@ -1,5 +1,6 @@
 package jcfgonc.blender.logic;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -51,17 +52,6 @@ public class LogicUtils {
 		return mean;
 	}
 
-	public static double getLeastImportantVitalRelation(StringGraph blendSpace, Object2DoubleOpenHashMap<String> vitalRelations) {
-		double leastImportant = Double.MAX_VALUE;
-		for (StringEdge edge : blendSpace.edgeSet()) {
-			double weight = vitalRelations.getDouble(edge.getLabel());
-			if (weight < leastImportant) {
-				leastImportant = weight;
-			}
-		}
-		return leastImportant;
-	}
-
 	public static double calculateMeanImportantanceVitalRelations(StringGraph blendSpace, Object2DoubleOpenHashMap<String> vitalRelations) {
 		double accum = 0;
 		HashSet<String> checkedLabels = new HashSet<String>();
@@ -110,7 +100,6 @@ public class LogicUtils {
 				} else if (rightConcepts.contains(concept)) {// used in the mapping as a right concept
 					rightCount += blendSpace.degreeOf(concept);
 				} else { // not referenced in the mapping
-
 				}
 			}
 		}
@@ -217,6 +206,69 @@ public class LogicUtils {
 		int count = GraphAlgorithms.countBlendedConcepts(blendSpace);
 		double p = (double) count / blendSpace.numberOfVertices();
 		return p;
+	}
+
+	/**
+	 * Calculates the mean of the number of words per concept in the blend space. Words are assumed to be separated by a single underscore, eg,
+	 * "two_words".
+	 * 
+	 * @param blendSpace
+	 * @return
+	 */
+	public static double calculateMeanOfWordsPerConcept(StringGraph blendSpace) {
+		double accum = 0;
+		int[] conceptWords = calculateWordsPerConcept(blendSpace);
+		for (int numWords : conceptWords) {
+			accum += numWords;
+		}
+		double mean = accum / (double) conceptWords.length;
+		return mean;
+	}
+
+	public static double calculateWordsPerConceptScore(StringGraph blendSpace) {
+		double accum = 0;
+		int[] conceptWords = calculateWordsPerConcept(blendSpace);
+		for (int numWords : conceptWords) {
+			if (numWords == 2) { // two words per concept is acceptable, make the same as one
+				numWords = 1;
+			}
+			accum += numWords;
+		}
+		double mean = accum / (double) conceptWords.length;
+		return mean;
+	}
+
+	public static int[] calculateWordsPerConcept(StringGraph blendSpace) {
+		ArrayList<String> concepts = new ArrayList<String>(blendSpace.numberOfVertices() * 2);
+		// create list of simple concepts (split blended into the two components)
+		for (String concept : blendSpace.getVertexSet()) {
+			if (concept.indexOf('|') >= 0) {
+				String[] bconcepts = VariousUtils.fastSplit(concept, '|');
+				concepts.add(bconcepts[0]);
+				concepts.add(bconcepts[1]);
+			} else {
+				concepts.add(concept);
+			}
+		}
+		int numConcepts = concepts.size();
+		int[] conceptWords = new int[numConcepts];
+		for (int i = 0; i < numConcepts; i++) {
+			String concept = concepts.get(i);
+			String[] words = VariousUtils.fastSplit(concept, '_');
+			int numWords = words.length;
+			conceptWords[i] = numWords;
+		}
+		return conceptWords;
+	}
+
+	public static int countChars(String str, char c) {
+		int count = 0;
+		for (int i = 0; i < str.length(); i++) {
+			if (str.charAt(i) == c) {
+				count++;
+			}
+		}
+		return count;
 	}
 
 }
