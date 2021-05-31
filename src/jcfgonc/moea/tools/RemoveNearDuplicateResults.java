@@ -14,6 +14,12 @@ import org.moeaframework.core.Solution;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import utils.VariousUtils;
 
+/**
+ * Removes coincident or nearby (in terms of objective coordinates) blends. Works with two classes (with/without frames)-
+ * 
+ * @author "Joao Goncalves: jcfgonc@gmail.com"
+ *
+ */
 public class RemoveNearDuplicateResults {
 
 	public static void main(String[] args) throws IOException {
@@ -24,7 +30,7 @@ public class RemoveNearDuplicateResults {
 		// d:graph's edges
 		// f:novelty
 		// g:blend space
-		final int numberNonObjectiveColumns = 6;
+		final int numberNonObjectiveColumns = 4;
 
 		ArrayList<Solution> solutions = new ArrayList<Solution>();
 		String header = readResultsFile(solutions, "not using frames.tsv", numberNonObjectiveColumns, 0);

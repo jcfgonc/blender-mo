@@ -1,0 +1,22 @@
+f:mean within-blend semantic similarity	f:mean importance of vital relations	f:input spaces balance	f:mapping mix	f:blended concepts	f:mean of words per concept	d:graphs vertices	d:graphs edges	f:novelty	g:blend space
+-0.07105812704651032	-0.11	-0.75	-0.6666666666666666	0.25	1.0	4	3	1.0	biology|sufism,influencedby,ahmad_sirhindi;chemistry,antonym,biology|sufism;chemistry,influencedby,margaret_naumburg;
+-0.07105812704651032	-0.085	-1.0	-1.0	0.0	1.0	3	2	0.0	cat,influencedby,joy;joy,antonym,bad;
+-0.05852553475313856	-0.38999999999999996	-1.0	-0.6666666666666666	0.25	1.0	4	3	0.6666666666666666	vodka,antonym,candle;vodka,madeof,potato|sugar;candle,influencedby,x_query;
+-0.05434800398868131	-0.295	-0.8	-0.75	0.2	1.0	5	4	0.75	vodka,antonym,candle;vodka,madeof,potato|sugar;candle,influencedby,x_query;potato|sugar,antonym,salt;
+-0.05225923860645268	-0.43600000000000005	-1.0	-0.4	0.3333333333333333	1.25	6	5	0.8	child,antonym,mineral;milk|doll,antonym,cookie;child,madeof,flesh_and_blood|have_sex;milk|doll,madeof,mineral;cookie,influencedby,morning_musume;
+-0.05225923860645268	-0.43600000000000005	-0.6666666666666666	-0.6	0.16666666666666666	1.0	6	5	0.6	vodka,antonym,candle;vodka,madeof,potato|sugar;salt,madeof,sodium_chloride;candle,influencedby,x_query;potato|sugar,antonym,salt;
+-0.0459929424597668	-0.6699999999999999	-1.0	-1.0	0.0	1.0	4	3	0.0	wood,antonym,stone;tile,madeof,stone;tree,madeof,wood;
+6.602757788824789E-4	-0.7525	-1.0	-1.0	0.0	1.0	5	4	0.5	bean,causesdesire,fart;bean,madeof,proton;sun,madeof,gas;sun,antonym,proton;
+0.0205426552230771	-0.8019999999999999	-1.0	-1.0	0.0	1.0	6	5	0.4	ball,partof,hand;hand,capableof,hold_thing;ball,capableof,pop;plant,madeof,rubber;plant,antonym,pop;
+0.03290965909774956	-0.835	-0.8571428571428571	-0.5	0.16666666666666666	1.2857142857142858	6	6	0.3333333333333333	teen,capableof,homework;child,desires,vote_for_contract|have_sex;child,madeof,vote_for_contract|have_sex;child,antonym,teen;homework,partof,education;education,capableof,raise_intelligence;
+0.03290965909774956	-0.835	-0.6666666666666666	-0.6666666666666666	0.3333333333333333	1.5	6	6	0.6666666666666666	judge|homework,partof,education;child,desires,vote_for_contract|have_sex;child,madeof,vote_for_contract|have_sex;child,antonym,teen;teen,capableof,judge|homework;education,capableof,far_my_career;
+0.03734808991747617	-0.835	-0.8888888888888888	-0.8333333333333334	0.5	1.2222222222222223	6	6	0.8333333333333334	judge|homework,partof,education;child,desires,vote_for_contract|have_sex;child,madeof,vote_for_contract|have_sex;child,antonym,teen;teen,capableof,judge|homework;teen,partof,mankind|adulthood;
+0.037613309693366376	-0.835	-1.0	-0.3333333333333333	0.0	1.3333333333333333	6	6	0.5	child,antonym,mineral;doll,madeof,mineral;child,madeof,flesh_and_blood;think,causes,knowledge;child,desires,flesh_and_blood;doll,desires,knowledge;
+0.045757971648569463	-0.835	-1.0	-0.5	0.0	1.6666666666666667	6	6	0.3333333333333333	legislation,antonym,student;student,capableof,die;die,partof,some_human;student,partof,legislation;legislation,capableof,stop_pollution;some_human,capableof,use_tool_to_build_machine;
+0.045757971648569463	-0.835	-0.8888888888888888	-1.0	0.5	1.0	6	6	1.0	mouth|goose,antonym,duck;chew,partof,eat|give_gift;bird,capableof,eat|give_gift;mouth|goose,capableof,chew;duck,capableof,lie_egg|get_bomb;duck,partof,bird;
+0.0469258859484325	-0.808	-1.0	-1.0	0.0	3.8333333333333335	6	5	0.8	try_to_get_yourself_elect_as_polition,motivatedbygoal,drive_to_work;apply_for_job,hasfirstsubevent,make_phone_call;drive_to_work,usedfor,exercise_mind;apply_for_job,usedfor,try_to_get_yourself_elect_as_polition;make_phone_call,usedfor,get_to_hard_to_reach_place;
+0.04803555954697776	-0.835	-1.0	-1.0	0.0	1.0	6	6	1.0	triangle,capableof,cat;stove,capableof,be_itchy;stove,partof,cat;mouth,capableof,pregnancy;mouth,partof,triangle;stove,antonym,mouth;
+0.04808049776594235	-0.88	-1.0	-1.0	0.0	1.0	4	3	1.0	most_person,desires,write_letter;most_person,isa,musician;musician,desires,buy_stuff;
+0.06371536610704248	-0.91	-1.0	-1.0	0.2	1.3333333333333333	5	4	0.75	woman,isa,adult|child;woman,desires,child;adult|child,desires,imagine;child,madeof,research_different_topic;
+0.06570528894647415	-0.9280000000000002	-1.0	-1.0	0.0	1.0	6	5	0.6	pray,isa,imagine;contemplate,usedfor,discover_truth;discover_truth,motivatedbygoal,learn;adult,desires,imagine;pray,motivatedbygoal,contemplate;
+0.06899007829671432	-1.0	-1.0	-1.0	0.0	2.3333333333333335	3	2	1.0	meet_conduct_by_chair_person,partof,church;church,capableof,fire_employee;

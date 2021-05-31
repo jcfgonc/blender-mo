@@ -11,9 +11,14 @@ import java.util.ArrayList;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Solution;
 
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import utils.VariousUtils;
 
+/**
+ * Removes (multi-objective) dominated solutions from the results file.
+ * 
+ * @author "Joao Goncalves: jcfgonc@gmail.com"
+ *
+ */
 public class RemoveDominatedResults {
 
 	public static void main(String[] args) throws IOException {
@@ -24,7 +29,7 @@ public class RemoveDominatedResults {
 		// d:graph's edges
 		// f:novelty
 		// g:blend space
-		final int numberNonObjectiveColumns = 6;
+		final int numberNonObjectiveColumns = 4;
 		String filename = "using frames.tsv";
 
 		ArrayList<Solution> solutions = new ArrayList<Solution>();
