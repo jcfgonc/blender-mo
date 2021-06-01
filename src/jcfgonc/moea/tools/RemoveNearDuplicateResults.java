@@ -31,10 +31,12 @@ public class RemoveNearDuplicateResults {
 		// f:novelty
 		// g:blend space
 		final int numberNonObjectiveColumns = 4;
+		String resultsFilename0 = "..\\BlenderMO\\results\\not using frames.tsv";
+		String resultsFilename1 = "..\\BlenderMO\\results\\using frames.tsv";
 
 		ArrayList<Solution> solutions = new ArrayList<Solution>();
-		String header = readResultsFile(solutions, "not using frames.tsv", numberNonObjectiveColumns, 0);
-		readResultsFile(solutions, "using frames.tsv", numberNonObjectiveColumns, 1);
+		String header = readResultsFile(solutions, resultsFilename0, numberNonObjectiveColumns, 0);
+		readResultsFile(solutions, resultsFilename1, numberNonObjectiveColumns, 1);
 
 		System.out.println("read a total of " + solutions.size() + " solutions");
 
@@ -81,7 +83,7 @@ public class RemoveNearDuplicateResults {
 			StringVariable variable = (StringVariable) solution.getVariable(0);
 			classCounter.addTo(variable.getClazz(), 1);
 		}
-		System.out.println("class ratio = " + classCounter);
+		System.out.println("class cardinality = " + classCounter);
 //		// remove dominated solutions
 //		// put the solutions in a ndp
 //		NondominatedPopulation pop = new NondominatedPopulation();
@@ -91,8 +93,8 @@ public class RemoveNearDuplicateResults {
 
 //		System.out.println("read " + initialNumberSolutions + " solutions");
 //		System.out.println("NondominatedPopulation contains " + solutions.size() + " solutions");
-		saveResultsFile(solutionsNew, "class_0.tsv", header, 0);
-		saveResultsFile(solutionsNew, "class_1.tsv", header, 1);
+		saveResultsFile(solutionsNew, VariousUtils.appendSuffixToFilename(resultsFilename0, "_nondup"), header, 0);
+		saveResultsFile(solutionsNew, VariousUtils.appendSuffixToFilename(resultsFilename1, "_nondup"), header, 1);
 	}
 
 	private static double calculateDistance(Solution s0, Solution s1) {
