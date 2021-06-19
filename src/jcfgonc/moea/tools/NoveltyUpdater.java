@@ -13,10 +13,10 @@ import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Solution;
 
 import graph.GraphReadWrite;
+import graph.StringEdge;
 import graph.StringGraph;
 import jcfgonc.blender.MOEA_Config;
 import jcfgonc.blender.logic.FileTools;
-import jcfgonc.blender.logic.LogicUtils;
 import stream.ParallelConsumer;
 import utils.VariousUtils;
 
@@ -58,7 +58,7 @@ public class NoveltyUpdater {
 					String oldNovelty = variable.getField(2);
 					String vartext = variable.getText();
 					StringGraph blendSpace = GraphReadWrite.readCSVFromString(vartext);
-					double newNovelty = LogicUtils.calculateNovelty(blendSpace,inputSpace );
+					double newNovelty = calculateNovelty(blendSpace, inputSpace);
 					System.lineSeparator();
 				} catch (IOException e) {
 				}
@@ -146,5 +146,20 @@ public class NoveltyUpdater {
 		br.close();
 		System.out.println("read " + solutionCounter + " solutions from " + datafile);
 		return header;
+	}
+
+	public static double calculateNovelty(StringGraph blendSpace, StringGraph inputSpace) {
+		int numberOfEdges = blendSpace.numberOfEdges();
+		double score = 0;
+		for (StringEdge edge : blendSpace.edgeSet()) {
+			if (edge.containsBlendedConcept()) {
+
+			}
+			if (!inputSpace.containsEdge(edge)) {
+				score++;
+			}
+		}
+		double novelty = (double) score / numberOfEdges;
+		return novelty;
 	}
 }

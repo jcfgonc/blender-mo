@@ -85,18 +85,20 @@ public class BlenderMoLauncher {
 		// read frames file
 		ArrayList<SemanticFrame> frames0 = FrameReadWrite.readPatternFrames(MOEA_Config.framesPath);
 		// filter some frames
-		ArrayList<SemanticFrame> frames = new ArrayList<SemanticFrame>(64 * 1024);
+		ArrayList<SemanticFrame> frames = new ArrayList<SemanticFrame>(frames0.size());
 		for (SemanticFrame frame : frames0) {
-			if (frame.getFrame().numberOfEdges() > 10)
+			if (frame.getSemanticSimilarityMean() > 0.2702)
 				continue;
-			if (frame.getMatches() < 2) // less than 100 (10^2) occurrences
-				continue;
-			if (frame.getRelationTypesStd() > 0.01)
-				continue;
-			if (frame.getCycles() > 10)
-				continue;
-			if (frame.getEdgesPerRelationTypes() > 1.1)
-				continue;
+//			if (frame.getFrame().numberOfEdges() > 10)
+//				continue;
+//			if (frame.getMatches() < 2) // less than 100 (10^2) occurrences
+//				continue;
+//			if (frame.getRelationTypesStd() > 0.01)
+//				continue;
+//			if (frame.getCycles() > 10)
+//				continue;
+//			if (frame.getEdgesPerRelationTypes() > 1.1)
+//				continue;
 			frames.add(frame);
 		}
 		// frames = new ArrayList<SemanticFrame>(frames.subList(0, 1024));

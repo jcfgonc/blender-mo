@@ -1,8 +1,6 @@
 package jcfgonc.moea.tools;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -30,13 +28,13 @@ public class RemoveNearDuplicateResults {
 		// d:graph's edges
 		// f:novelty
 		// g:blend space
-		final int numberNonObjectiveColumns = 4;
-		String resultsFilename0 = "..\\BlenderMO\\results\\not using frames.tsv";
-		String resultsFilename1 = "..\\BlenderMO\\results\\using frames.tsv";
+		final int numberNonObjectiveColumns = 6;
+		String resultsFilename0 = "..\\BlenderMO\\results\\study 2\\not using frames_nondup.tsv";
+		String resultsFilename1 = "..\\BlenderMO\\results\\study 2\\using frames ss unrestricted.tsv";
 
 		ArrayList<Solution> solutions = new ArrayList<Solution>();
-		String header = readResultsFile(solutions, resultsFilename0, numberNonObjectiveColumns, 0);
-		readResultsFile(solutions, resultsFilename1, numberNonObjectiveColumns, 1);
+		String header0 = RemoveDominatedResults.readResultsFile(solutions, resultsFilename0, numberNonObjectiveColumns, 0);
+		String header1 = RemoveDominatedResults.readResultsFile(solutions, resultsFilename1, numberNonObjectiveColumns, 1);
 
 		System.out.println("read a total of " + solutions.size() + " solutions");
 
@@ -93,8 +91,8 @@ public class RemoveNearDuplicateResults {
 
 //		System.out.println("read " + initialNumberSolutions + " solutions");
 //		System.out.println("NondominatedPopulation contains " + solutions.size() + " solutions");
-		saveResultsFile(solutionsNew, VariousUtils.appendSuffixToFilename(resultsFilename0, "_nondup"), header, 0);
-		saveResultsFile(solutionsNew, VariousUtils.appendSuffixToFilename(resultsFilename1, "_nondup"), header, 1);
+		saveResultsFile(solutionsNew, VariousUtils.appendSuffixToFilename(resultsFilename0, "_nondup"), header0, 0);
+		saveResultsFile(solutionsNew, VariousUtils.appendSuffixToFilename(resultsFilename1, "_nondup"), header1, 1);
 	}
 
 	private static double calculateDistance(Solution s0, Solution s1) {
@@ -133,50 +131,5 @@ public class RemoveNearDuplicateResults {
 			bw.newLine();
 		}
 		bw.close();
-	}
-
-	private static String readResultsFile(ArrayList<Solution> solutions, String datafile, final int numberNonObjectiveColumns, int clazz)
-			throws IOException {
-		BufferedReader br = new BufferedReader(new FileReader(datafile, StandardCharsets.UTF_8), 1 << 24);
-		String line;
-		boolean headRead = false;
-		int numberObjectives = 0;
-		String header = null;
-		int solutionCounter = 0;
-		while ((line = br.readLine()) != null) {
-			line = line.trim();
-			if (line.isEmpty())
-				continue;
-			String[] cells = VariousUtils.fastSplit(line, "\t");
-			if (!headRead) {
-				headRead = true;
-				numberObjectives = cells.length - numberNonObjectiveColumns;
-				header = line;
-				continue;
-			} else {
-				Solution solution = new Solution(1, numberObjectives);
-				// class + blend
-				StringVariable variable = new StringVariable(cells[cells.length - 1]);
-				variable.setClazz(clazz);
-
-				for (int i = 0; i < numberObjectives; i++) {
-					double obj = Double.parseDouble(cells[i]);
-					solution.setObjective(i, obj);
-				}
-
-				// store remaining fields except the graph
-				for (int i = 0; i < numberNonObjectiveColumns - 1; i++) {
-					String fieldData = cells[numberObjectives + i];
-					variable.addField(fieldData);
-				}
-
-				solution.setVariable(0, variable);
-				solutions.add(solution);
-				solutionCounter++;
-			}
-		}
-		br.close();
-		System.out.println("read " + solutionCounter + " solutions from " + datafile);
-		return header;
 	}
 }

@@ -29,11 +29,11 @@ public class RemoveDominatedResults {
 		// d:graph's edges
 		// f:novelty
 		// g:blend space
-		final int numberNonObjectiveColumns = 4;
-		String filename = "using frames.tsv";
+		final int numberObjectives = 6;
+		String filename = "C:\\Desktop\\blendermo study\\results\\study 2\\using frames ss smaller 0.15_nondup.tsv";
 
 		ArrayList<Solution> solutions = new ArrayList<Solution>();
-		String header = readResultsFile(solutions, filename, numberNonObjectiveColumns, 0);
+		String header = readResultsFile(solutions, filename, numberObjectives, 0);
 
 		System.out.println("read a total of " + solutions.size() + " solutions");
 
@@ -76,12 +76,10 @@ public class RemoveDominatedResults {
 		bw.close();
 	}
 
-	private static String readResultsFile(ArrayList<Solution> solutions, String datafile, final int numberNonObjectiveColumns, int clazz)
-			throws IOException {
+	public static String readResultsFile(ArrayList<Solution> solutions, String datafile, final int numberObjectives, int clazz) throws IOException {
 		BufferedReader br = new BufferedReader(new FileReader(datafile, StandardCharsets.UTF_8), 1 << 24);
 		String line;
 		boolean headRead = false;
-		int numberObjectives = 0;
 		String header = null;
 		int solutionCounter = 0;
 		while ((line = br.readLine()) != null) {
@@ -91,7 +89,6 @@ public class RemoveDominatedResults {
 			String[] cells = VariousUtils.fastSplit(line, "\t");
 			if (!headRead) {
 				headRead = true;
-				numberObjectives = cells.length - numberNonObjectiveColumns;
 				header = line;
 				continue;
 			} else {
@@ -106,8 +103,8 @@ public class RemoveDominatedResults {
 				}
 
 				// store remaining fields except the graph
-				for (int i = 0; i < numberNonObjectiveColumns - 1; i++) {
-					String fieldData = cells[numberObjectives + i];
+				for (int i = numberObjectives; i < cells.length - 1; i++) {
+					String fieldData = cells[i];
 					variable.addField(fieldData);
 				}
 
