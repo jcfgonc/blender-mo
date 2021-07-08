@@ -18,10 +18,12 @@ import java.util.function.Consumer;
 public class StringClipBoardListener extends Thread implements ClipboardOwner {
 	private Clipboard sysClip = Toolkit.getDefaultToolkit().getSystemClipboard();
 	private Consumer<String> clipboardConsumer;
+	private boolean clipboardOwn;
 
 	public StringClipBoardListener(Consumer<String> clipboardConsumer) {
 		this.setDaemon(true);
 		this.clipboardConsumer = clipboardConsumer;
+		this.clipboardOwn = false;
 	}
 
 	@Override
@@ -32,24 +34,30 @@ public class StringClipBoardListener extends Thread implements ClipboardOwner {
 
 	@Override
 	public void lostOwnership(Clipboard c, Transferable t) {
-		try {
-			StringClipBoardListener.sleep(250); // waiting e.g for loading huge elements like word's etc.
-			Transferable contents = sysClip.getContents(this);
-			if (contents != null) {
-				processClipboard(contents, c);
+		clipboardOwn = false;
+		do {
+			try {
+				StringClipBoardListener.sleep(100); // waiting e.g for loading huge elements like word's etc.
+				Transferable contents = sysClip.getContents(this);
+				if (contents != null) {
+					processClipboard(contents, c);
+				}
+				takeOwnership(contents);
+			} catch (InterruptedException e) {
+		//		e.printStackTrace();
+			} catch (UnsupportedFlavorException e) {
+		//		e.printStackTrace();
+			} catch (IOException e) {
+		//		e.printStackTrace();
+			} catch (IllegalStateException e) {
+		//		e.printStackTrace();
 			}
-			takeOwnership(contents);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} catch (UnsupportedFlavorException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		} while (!clipboardOwn);
 	}
 
 	private void takeOwnership(Transferable t) {
 		sysClip.setContents(t, this);
+		clipboardOwn = true;
 	}
 
 	private void processClipboard(Transferable trans, Clipboard c) throws UnsupportedFlavorException, IOException {

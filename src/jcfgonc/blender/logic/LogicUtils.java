@@ -36,20 +36,29 @@ public class LogicUtils {
 		return conceptToVariable;
 	}
 
-	public static double evaluateVitalRelations(StringGraph blendSpace, Object2DoubleOpenHashMap<String> vitalRelations) {
+	/**
+	 * Calculates the arithmetic mean of the scores of the relations present in the blend space. Used to calculate the vital relation score of the
+	 * blend space.
+	 * 
+	 * @param graph
+	 * @param relationWeights
+	 * @return
+	 */
+	public static DescriptiveStatistics calculatePresenceVitalRelations(StringGraph graph, Object2DoubleOpenHashMap<String> relationWeights) {
+		DescriptiveStatistics ds = new DescriptiveStatistics();
 		// histogram of blend relations
-		Object2IntOpenHashMap<String> relHist = GraphAlgorithms.countRelations(blendSpace);
-		// multiply-accumulate
-		double sum = 0;
+		Object2IntOpenHashMap<String> relHist = GraphAlgorithms.countRelations(graph);
+
 		for (Object2IntMap.Entry<String> entry : relHist.object2IntEntrySet()) {
 			String relation = entry.getKey();
 			int occurrences = entry.getIntValue();
-			double weight = vitalRelations.getDouble(relation);
-			sum += occurrences * weight;
+			double weight = relationWeights.getDouble(relation);
+
+			for (int i = 0; i < occurrences; i++) {
+				ds.addValue(weight);
+			}
 		}
-		// normalize score using the number of edges
-		double mean = sum / (double) blendSpace.numberOfEdges();
-		return mean;
+		return ds;
 	}
 
 	public static double calculateMeanImportantanceVitalRelations(StringGraph blendSpace, Object2DoubleOpenHashMap<String> vitalRelations) {
@@ -229,7 +238,7 @@ public class LogicUtils {
 		double accum = 0;
 		int[] conceptWords = calculateWordsPerConcept(blendSpace);
 		for (int numWords : conceptWords) {
-			if (numWords == 2) { // two words per concept is acceptable, make the same as one
+			if (numWords == 3) { // two words per concept is acceptable, make the same as one
 				numWords = 1;
 			}
 			accum += numWords;

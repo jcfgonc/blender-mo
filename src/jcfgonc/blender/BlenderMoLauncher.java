@@ -22,15 +22,16 @@ import org.moeaframework.util.TypedProperties;
 
 import frames.FrameReadWrite;
 import frames.SemanticFrame;
+import graph.GraphReadWrite;
 import graph.StringGraph;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
-import jcfgonc.blender.logic.FileTools;
 import jcfgonc.moea.generic.InteractiveExecutor;
 import jcfgonc.moea.specific.CustomMutation;
 import jcfgonc.moea.specific.CustomProblem;
 import jcfgonc.moea.specific.ResultsWriter;
 import jcfgonc.moea.specific.ResultsWriterBlenderMO;
 import structures.Mapping;
+import structures.Ticker;
 import structures.UnorderedPair;
 import utils.VariousUtils;
 import wordembedding.WordEmbeddingUtils;
@@ -69,63 +70,35 @@ public class BlenderMoLauncher {
 		RandomAdaptor random = new RandomAdaptor(new SynchronizedRandomGenerator(new Well44497b()));
 
 		// read input space
-		StringGraph inputSpace = FileTools.readInputSpace(MOEA_Config.inputSpacePath);
+		StringGraph inputSpace = readInputSpace(MOEA_Config.inputSpacePath);
 
 		// read mappings file (contains multiple mappings)
 		ArrayList<Mapping<String>> mappings = Mapping.readMappingsCSV(new File(MOEA_Config.mappingPath));
-//		Iterator<Mapping<String>> mapIt = mappings.iterator();
-//		while (mapIt.hasNext()) {
-//			Mapping<String> mapping = mapIt.next();
-//			if (mapping.getSize() > 4 && mapping.size() < 100) {
-//				mapIt.remove();
-//			}
-//		}
 		System.out.printf("using %d mappings\n", mappings.size());
 
+		// read vital relations importance
+		Object2DoubleOpenHashMap<String> vitalRelations = VariousUtils.readVitalRelations(MOEA_Config.vitalRelationsPath);
+
 		// read frames file
-		ArrayList<SemanticFrame> frames0 = FrameReadWrite.readPatternFrames(MOEA_Config.framesPath);
-		// filter some frames
-		ArrayList<SemanticFrame> frames = new ArrayList<SemanticFrame>(frames0.size());
-		for (SemanticFrame frame : frames0) {
-			if (frame.getSemanticSimilarityMean() > 0.2702)
-				continue;
-//			if (frame.getFrame().numberOfEdges() > 10)
-//				continue;
-//			if (frame.getMatches() < 2) // less than 100 (10^2) occurrences
-//				continue;
-//			if (frame.getRelationTypesStd() > 0.01)
-//				continue;
-//			if (frame.getCycles() > 10)
-//				continue;
-//			if (frame.getEdgesPerRelationTypes() > 1.1)
-//				continue;
-			frames.add(frame);
-		}
-		// frames = new ArrayList<SemanticFrame>(frames.subList(0, 1024));
+		ArrayList<SemanticFrame> frames = FrameReadWrite.readPatternFrames(MOEA_Config.framesPath);
+
 		System.out.printf("using %d frames\n", frames.size());
-		frames0 = null;
 
 		// read pre-calculated semantic scores of word/relation pairs
 		Object2DoubleOpenHashMap<UnorderedPair<String>> wps = WordEmbeddingUtils.readWordPairScores(MOEA_Config.wordPairScores_filename);
-
-		// read vital relations importance
-		Object2DoubleOpenHashMap<String> vitalRelations = FileTools.readVitalRelations(MOEA_Config.vitalRelationsPath);
-
-		// // test the mutation using a custom GUI
-		// TestMutation.testMutation(inputSpace, mappings);
-
-		System.gc();
 
 		// setup the mutation and the MOEA
 		registerCustomMutation();
 		Properties properties = new Properties();
 		properties.setProperty("operator", "CustomMutation");
 		properties.setProperty("CustomMutation.Rate", "1.0");
+
 		// eNSGA-II
-		properties.setProperty("epsilon", "0.00005"); // default is 0.01
+		properties.setProperty("epsilon", "0.01"); // default is 0.01
 		properties.setProperty("windowSize", "256"); // epoch to trigger eNSGA2 population injection
 		properties.setProperty("maxWindowSize", "480"); // epoch to trigger eNSGA2 hard restart
 //		properties.setProperty("injectionRate", Double.toString(1.0 / 0.25)); // population to archive ratio, default is 0.25
+
 		// NSGA-III
 //		properties.setProperty("divisionsOuter", "10"); // 3
 //		properties.setProperty("divisionsInner", "1"); // 2
@@ -166,6 +139,39 @@ public class BlenderMoLauncher {
 		System.exit(0);
 	}
 
+	@SuppressWarnings("unused")
+	private static ArrayList<Mapping<String>> filterMappings(ArrayList<Mapping<String>> mappings) {
+		ArrayList<Mapping<String>> mappingsNew = new ArrayList<Mapping<String>>(mappings.size());
+		for (Mapping<String> mapping : mappings) {
+			if (mapping.getSize() < 100) {
+				mappingsNew.add(mapping);
+			}
+		}
+		return mappingsNew;
+	}
+
+	@SuppressWarnings("unused")
+	private static ArrayList<SemanticFrame> filterFrames(ArrayList<SemanticFrame> frames) {
+		// filter (or not) some frames
+		ArrayList<SemanticFrame> framesNew = new ArrayList<SemanticFrame>(frames.size());
+		for (SemanticFrame frame : frames) {
+//			if (frame.getSemanticSimilarityMean() > 0.0)
+//				continue;
+//			if (frame.getFrame().numberOfEdges() > 10)
+//				continue;
+//			if (frame.getMatches() < 2) // less than 100 (10^2) occurrences
+//				continue;
+//			if (frame.getRelationTypesStd() > 0.01)
+//				continue;
+//			if (frame.getCycles() > 10)
+//				continue;
+//			if (frame.getEdgesPerRelationTypes() > 1.1)
+//				continue;
+			framesNew.add(frame);
+		}
+		return framesNew;
+	}
+
 	/**
 	 * Merge the separate results into a single population using &epsilon;-box dominance and save them to a file.
 	 * 
@@ -186,5 +192,16 @@ public class BlenderMoLauncher {
 		resultsWriter.writeFileHeader(filename, problem);
 		resultsWriter.appendResultsToFile(filename, mergedResults, problem);
 		resultsWriter.close();
+	}
+
+	public static StringGraph readInputSpace(String inputSpacePath) throws IOException, NoSuchFileException {
+		System.out.println("loading input space from " + inputSpacePath);
+		StringGraph inputSpace = new StringGraph();
+		Ticker ticker = new Ticker();
+		GraphReadWrite.readCSV(inputSpacePath, inputSpace);
+		inputSpace.showStructureSizes();
+		System.out.println("loading took " + ticker.getTimeDeltaLastCall() + " s");
+		System.out.println("-------");
+		return inputSpace;
 	}
 }

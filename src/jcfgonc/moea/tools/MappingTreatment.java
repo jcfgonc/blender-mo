@@ -7,14 +7,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 import graph.StringGraph;
+import jcfgonc.blender.BlenderMoLauncher;
 import jcfgonc.blender.MOEA_Config;
-import jcfgonc.blender.logic.FileTools;
 import structures.Mapping;
 
 public class MappingTreatment {
 	public static void main(String[] args) throws IOException {
 		// read input space
-		StringGraph inputSpace = FileTools.readInputSpace(MOEA_Config.inputSpacePath);
+		StringGraph inputSpace = BlenderMoLauncher.readInputSpace(MOEA_Config.inputSpacePath);
 
 		// remove (currently) useless relations
 //	System.out.print("removing (currently) useless relations... ");

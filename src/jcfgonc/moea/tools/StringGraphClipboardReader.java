@@ -1,6 +1,5 @@
 package jcfgonc.moea.tools;
 
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -59,7 +58,7 @@ public class StringGraphClipboardReader {
 			@Override
 			public void mouseWheelMoved(MouseWheelEvent e) {
 				// if (e.isControlDown()) {
-				System.out.println(e);
+		//		System.out.println(e);
 				if (e.getWheelRotation() < 0) {
 					magnification = magnification / magDelta;
 					vg.changeMagnification(magnification);

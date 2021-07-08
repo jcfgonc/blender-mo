@@ -109,15 +109,11 @@ public class CustomProblem implements Problem, ProblemDescription {
 
 		// calculate frame qualities
 		// process queries/frames results
-		int cardinality = queriesResults.cardinality();
+		int numberMatchedFrames = queriesResults.cardinality();
 		// 10 is an acceptable limit to fit within a small graphical window
 		// (i.e. if it was +Integer.MAX it would be hard to see small values)
 		int edgesLargestFrame = 0; // maximize
-		int numberMatchedFrames = cardinality;// 10; // minimize
-		if (cardinality > 0) {
-//			if (cardinality < numberMatchedFrames) {
-//				numberMatchedFrames = cardinality;
-//			}
+		if (numberMatchedFrames > 0) {
 			// iterate through the set bits in the bitset
 			for (int i = queriesResults.nextSetBit(0); i != -1; i = queriesResults.nextSetBit(i + 1)) {
 				SemanticFrame frame = frames.get(i);
@@ -129,19 +125,6 @@ public class CustomProblem implements Problem, ProblemDescription {
 				}
 			}
 		}
-
-		// now experimenting with blend SS instead of frames SS
-//		double frameSemanticSimilarity;
-//		if (matchedFrames.isEmpty()) {
-//			frameSemanticSimilarity = Double.MAX_VALUE;
-//		} else {
-//			frameSemanticSimilarity = 0;
-//			for (Entry<SemanticFrame> matchedFrame : matchedFrames.object2IntEntrySet()) {
-//				SemanticFrame frame = matchedFrame.getKey();
-//				// TODO perhaps mean of the means?
-//				frameSemanticSimilarity += frame.getSemanticSimilarityMean();
-//			}
-//		}
 
 		// blend edge semantic similarity
 		double blendSemanticSimilarity = 0.0;
@@ -164,13 +147,11 @@ public class CustomProblem implements Problem, ProblemDescription {
 		// cycles
 //		int cycles = GraphAlgorithms.countCycles(blendSpace);
 
-		// vital relations
-		double vitalRelationsScore = LogicUtils.evaluateVitalRelations(blendSpace, vitalRelations);
-		// maximize the least important relation (and consequently the remaining relations which are more important)
-		// double vitalRelationsScore = LogicUtils.calculateMeanImportantanceVitalRelations(blendSpace, vitalRelations);
+		// maximize the presence of vital/important relations
+		double vitalRelationsMean = LogicUtils.calculatePresenceVitalRelations(blendSpace, vitalRelations).getMean();
 
 		// percentage of blended concepts in the blend space (0...1)
-		double blendedConcepts = LogicUtils.calculateBlendedConceptsPercentage(blendSpace);
+//		double blendedConcepts = LogicUtils.calculateBlendedConceptsPercentage(blendSpace);
 
 		double meanWordsPerConcept = LogicUtils.calculateWordsPerConceptScore(blendSpace);
 
@@ -181,17 +162,18 @@ public class CustomProblem implements Problem, ProblemDescription {
 		// set solution's objectives here
 		int obj_i = 0;
 		solution.setObjective(obj_i++, blendSemanticSimilarity);
-		solution.setObjective(obj_i++, -vitalRelationsScore);
+		solution.setObjective(obj_i++, -vitalRelationsMean);
 
 		solution.setObjective(obj_i++, -inputSpacesBalance);
 		solution.setObjective(obj_i++, -mappingMix);
-		solution.setObjective(obj_i++, blendedConcepts);
-		solution.setObjective(obj_i++, meanWordsPerConcept);
 
 		// solution.setObjective(obj_i++, -cycles);
-		solution.setObjective(obj_i++, -edgesLargestFrame);// 7 is the expected max edges of largest frame
-		solution.setObjective(obj_i++, numberMatchedFrames);// 20 is the expected max of number of matched frames and 1 the lowest
+		solution.setObjective(obj_i++, -edgesLargestFrame);
+		solution.setObjective(obj_i++, numberMatchedFrames);
 
+//		solution.setObjective(obj_i++, blendedConcepts);
+		solution.setObjective(obj_i++, meanWordsPerConcept);
+		
 //		solution.setObjective(obj_i++, relationStdDev - 1);
 //		solution.setObjective(obj_i++, -numEdges);
 
@@ -199,32 +181,39 @@ public class CustomProblem implements Problem, ProblemDescription {
 
 		// if required define constraints below
 		// violated constraints are set to 1, otherwise set to 0
-		if (blendSpace.numberOfVertices() < 3 || blendSpace.numberOfVertices() > 6) { // range number of vertices in the blend space
+		if (blendSpace.numberOfVertices() < 3 || blendSpace.numberOfVertices() > 10) { // range number of vertices in the blend space
 			solution.setConstraint(0, 1);
 		} else {
 			solution.setConstraint(0, 0);
 		}
 
-		if (inputSpacesBalance < 0.1) { // input space's ratio at least 0.1
-			solution.setConstraint(1, 1);
-		} else {
+//		if (inputSpacesBalance < 0.1) { // input space's ratio at least 0.1
+//			solution.setConstraint(1, 1);
+//		} else {
 			solution.setConstraint(1, 0);
-		}
+//		}
+
+//		if (numberMatchedFrames < 1 || numberMatchedFrames > 20) {
+	//		solution.setConstraint(2, 1);
+//		} else {
+			solution.setConstraint(2, 0);
+//		}
 
 	}
 
 	private String[] objectivesDescription = { //
 			"f:mean within-blend semantic similarity", //
 			"f:mean importance of vital relations", //
+			
 			"f:input spaces balance", //
 			"f:mapping mix", //
-			"f:blended concepts", //
-			"f:mean of words per concept", //
-			
+
 			// "d:number of cycles", //
-			
 			"d:number of edges of largest frame", //
 			"d:number of matched frames", //
+
+//			"f:blended concepts", //
+			"f:mean of words per concept", //
 
 //			"f:relation balance", //
 //			"d:number of edges", //
@@ -232,7 +221,9 @@ public class CustomProblem implements Problem, ProblemDescription {
 
 	private String[] constraintsDescription = { //
 			"required number of vertices", //
-			"input spaces ratio" };
+			"required input spaces ratio", //
+			"required number matched frames", //
+	};
 
 	@Override
 	/**

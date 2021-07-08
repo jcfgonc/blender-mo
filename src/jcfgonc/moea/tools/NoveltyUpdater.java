@@ -15,8 +15,8 @@ import org.moeaframework.core.Solution;
 import graph.GraphReadWrite;
 import graph.StringEdge;
 import graph.StringGraph;
+import jcfgonc.blender.BlenderMoLauncher;
 import jcfgonc.blender.MOEA_Config;
-import jcfgonc.blender.logic.FileTools;
 import stream.ParallelConsumer;
 import utils.VariousUtils;
 
@@ -45,7 +45,7 @@ public class NoveltyUpdater {
 		System.out.println("read a total of " + solutions.size() + " solutions");
 
 		// read input space
-		StringGraph inputSpace = FileTools.readInputSpace(MOEA_Config.inputSpacePath);
+		StringGraph inputSpace = BlenderMoLauncher.readInputSpace(MOEA_Config.inputSpacePath);
 
 		// calculate novelty
 		ParallelConsumer<Solution> pc = new ParallelConsumer<>(4);

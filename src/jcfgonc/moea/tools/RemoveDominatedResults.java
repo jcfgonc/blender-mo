@@ -29,8 +29,8 @@ public class RemoveDominatedResults {
 		// d:graph's edges
 		// f:novelty
 		// g:blend space
-		final int numberObjectives = 6;
-		String filename = "C:\\Desktop\\blendermo study\\results\\study 2\\using frames ss smaller 0.15_nondup.tsv";
+		final int numberObjectives = 5;
+		String filename = "D:\\Desktop\\blendermo study\\results\\3 - frames ignored and no blended concepts objective.tsv";
 
 		ArrayList<Solution> solutions = new ArrayList<Solution>();
 		String header = readResultsFile(solutions, filename, numberObjectives, 0);
