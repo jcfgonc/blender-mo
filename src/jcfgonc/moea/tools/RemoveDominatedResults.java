@@ -30,7 +30,7 @@ public class RemoveDominatedResults {
 		// f:novelty
 		// g:blend space
 		final int numberObjectives = 5;
-		String filename = "D:\\Desktop\\blendermo study\\results\\3 - frames ignored and no blended concepts objective.tsv";
+		String filename = "F:\\Desktop\\blendermo study\\results v4\\ignoring frames.tsv";
 
 		ArrayList<Solution> solutions = new ArrayList<Solution>();
 		String header = readResultsFile(solutions, filename, numberObjectives, 0);

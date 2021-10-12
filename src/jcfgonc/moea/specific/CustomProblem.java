@@ -14,13 +14,13 @@ import org.moeaframework.core.Solution;
 import frames.SemanticFrame;
 import graph.StringGraph;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
+import jcfgonc.blender.logic.JatalogInterface;
 import jcfgonc.blender.logic.LogicUtils;
 import jcfgonc.blender.structures.Blend;
 import jcfgonc.moea.generic.ProblemDescription;
 import structures.Mapping;
 import structures.Ticker;
 import structures.UnorderedPair;
-import utils.JatalogInterface;
 import utils.OSTools;
 import wordembedding.WordEmbeddingUtils;
 import za.co.wstoop.jatalog.DatalogException;
@@ -82,8 +82,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 
 	@Override
 	/**
-	 * Invoked by MOEA when evaluating a solution. Custom code required here. Remember to define the variable's descriptions in
-	 * MOConfig.OBJECTIVE_DESCRIPTION
+	 * Invoked by MOEA when evaluating a solution. Custom code required here. Remember to define the variable's descriptions in MOConfig.OBJECTIVE_DESCRIPTION
 	 */
 	public void evaluate(Solution solution) {
 		CustomChromosome pc = (CustomChromosome) solution.getVariable(0); // unless the solution domain X has more than one dimension
@@ -173,7 +172,7 @@ public class CustomProblem implements Problem, ProblemDescription {
 
 //		solution.setObjective(obj_i++, blendedConcepts);
 		solution.setObjective(obj_i++, meanWordsPerConcept);
-		
+
 //		solution.setObjective(obj_i++, relationStdDev - 1);
 //		solution.setObjective(obj_i++, -numEdges);
 
@@ -190,21 +189,21 @@ public class CustomProblem implements Problem, ProblemDescription {
 //		if (inputSpacesBalance < 0.1) { // input space's ratio at least 0.1
 //			solution.setConstraint(1, 1);
 //		} else {
-			solution.setConstraint(1, 0);
+		solution.setConstraint(1, 0);
 //		}
 
-//		if (numberMatchedFrames < 1 || numberMatchedFrames > 20) {
-	//		solution.setConstraint(2, 1);
-//		} else {
+		if (numberMatchedFrames < 1) {
+			solution.setConstraint(2, 1);
+		} else {
 			solution.setConstraint(2, 0);
-//		}
+		}
 
 	}
 
 	private String[] objectivesDescription = { //
 			"f:mean within-blend semantic similarity", //
 			"f:mean importance of vital relations", //
-			
+
 			"f:input spaces balance", //
 			"f:mapping mix", //
 

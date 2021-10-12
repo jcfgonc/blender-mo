@@ -63,5 +63,15 @@
 			<artifactId>graphstream-jcfgonc</artifactId>
 			<version>2.0</version>
 		</dependency>
+		<dependency>
+			<groupId>za.co.wstoop</groupId>
+			<artifactId>jatalog</artifactId>
+			<version>0.9-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.githhub.aaronbembenek</groupId>
+			<artifactId>abcDatalog</artifactId>
+			<version>0.3</version>
+		</dependency>
 	</dependencies>
 </project>

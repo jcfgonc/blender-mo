@@ -10,7 +10,7 @@ public class MOEA_Config {
 	public static double EDGE_MUTATION_PROBABILITY_POWER = 4;
 	public static double EDGE_MUTATION_NUMBER_STEPS = 1; // it goes from 1 to this number
 
-	public static final String inputSpacePath = "data/conceptnet5v44.csv";
+	public static final String inputSpacePath = "data/conceptnet5v45.csv";
 	public static final String mappingPath = "data/2020-04-29_21-23-37_mappings.csv";
 
 	public static final String framesPath = "data/pattern_resultsV3.tsv";
