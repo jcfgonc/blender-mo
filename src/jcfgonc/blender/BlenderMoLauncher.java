@@ -1,7 +1,10 @@
 package jcfgonc.blender;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Properties;
@@ -63,8 +66,28 @@ public class BlenderMoLauncher {
 		});
 	}
 
-	public static void main(String[] args) throws NoSuchFileException, IOException, ClassNotFoundException, InstantiationException,
-			IllegalAccessException, UnsupportedLookAndFeelException, InterruptedException {
+	public static Object2DoubleOpenHashMap<String> readVitalRelations(String path) throws IOException {
+		Object2DoubleOpenHashMap<String> relationToImportance = new Object2DoubleOpenHashMap<String>();
+		BufferedReader br = new BufferedReader(new FileReader(path, StandardCharsets.UTF_8), 1 << 24);
+		String line;
+		boolean firstLine = true;
+		while ((line = br.readLine()) != null) {
+			if (firstLine) {
+				firstLine = false;
+				continue;
+			}
+			String[] cells = VariousUtils.fastSplitWhiteSpace(line);
+			String relation = cells[0];
+			double importance = Double.parseDouble(cells[1]);
+			relationToImportance.put(relation, importance);
+		}
+		br.close();
+		System.out.printf("using the definition of %d vital relations from %s\n", relationToImportance.size(), path);
+		return relationToImportance;
+	}
+
+	public static void main(String[] args) throws NoSuchFileException, IOException, ClassNotFoundException, InstantiationException, IllegalAccessException,
+			UnsupportedLookAndFeelException, InterruptedException {
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
 		RandomAdaptor random = new RandomAdaptor(new SynchronizedRandomGenerator(new Well44497b()));
@@ -77,7 +100,7 @@ public class BlenderMoLauncher {
 		System.out.printf("using %d mappings\n", mappings.size());
 
 		// read vital relations importance
-		Object2DoubleOpenHashMap<String> vitalRelations = VariousUtils.readVitalRelations(MOEA_Config.vitalRelationsPath);
+		Object2DoubleOpenHashMap<String> vitalRelations = readVitalRelations(MOEA_Config.vitalRelationsPath);
 
 		// read frames file
 		ArrayList<SemanticFrame> frames = FrameReadWrite.readPatternFrames(MOEA_Config.framesPath);

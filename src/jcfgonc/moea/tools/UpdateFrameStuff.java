@@ -1,6 +1,9 @@
 package jcfgonc.moea.tools;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -16,6 +19,26 @@ import utils.VariousUtils;
 
 public class UpdateFrameStuff {
 
+	public static Object2DoubleOpenHashMap<String> readVitalRelations(String path) throws IOException {
+		Object2DoubleOpenHashMap<String> relationToImportance = new Object2DoubleOpenHashMap<String>();
+		BufferedReader br = new BufferedReader(new FileReader(path, StandardCharsets.UTF_8), 1 << 24);
+		String line;
+		boolean firstLine = true;
+		while ((line = br.readLine()) != null) {
+			if (firstLine) {
+				firstLine = false;
+				continue;
+			}
+			String[] cells = VariousUtils.fastSplitWhiteSpace(line);
+			String relation = cells[0];
+			double importance = Double.parseDouble(cells[1]);
+			relationToImportance.put(relation, importance);
+		}
+		br.close();
+		System.out.printf("using the definition of %d vital relations from %s\n", relationToImportance.size(), path);
+		return relationToImportance;
+	}
+	
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 		// read frames file
@@ -23,8 +46,7 @@ public class UpdateFrameStuff {
 		ArrayList<SemanticFrame> frames = FrameReadWrite.readPatternFrames(framespath);
 
 		// read vital relations importance
-		Object2DoubleOpenHashMap<String> vitalRelations = VariousUtils
-				.readVitalRelations(MOEA_Config.vitalRelationsPath);
+		Object2DoubleOpenHashMap<String> vitalRelations = readVitalRelations(MOEA_Config.vitalRelationsPath);
 
 		ArrayList<SemanticFrame> framesNew = new ArrayList<SemanticFrame>(frames.size());
 
